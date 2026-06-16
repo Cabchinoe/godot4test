@@ -21,7 +21,7 @@ Main (Node2D)                          ← 根节点, Y Sort Enabled
 ── Cover1 (TileMapLayer)              ← 高亮覆盖层, scale=(4,4)
 │   └── CoverSprite (Sprite2D)         ← 鼠标悬停指示器
 └── Player (Node2D)                    ← 角色, scale=(4,4), z_index=1
-    └── Sprite2D                       ← 角色贴图, offset=(8,8), region=16×16
+	└── Sprite2D                       ← 角色贴图, offset=(8,8), region=16×16
 ```
 
 ---
