@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d305a113p11xq"
-path="res://.godot/imported/player.png-2dd0af52de4b213777cd8c9df94c0978.ctex"
+uid="uid://dje081cq1xkev"
+path="res://.godot/imported/goodpath.png-820cb9987ca6b25ca9506691d540202e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://player.png"
-dest_files=["res://.godot/imported/player.png-2dd0af52de4b213777cd8c9df94c0978.ctex"]
+source_file="res://HUD/goodpath.png"
+dest_files=["res://.godot/imported/goodpath.png-820cb9987ca6b25ca9506691d540202e.ctex"]
 
 [params]
 

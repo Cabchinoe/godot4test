@@ -4,14 +4,14 @@ extends Node2D
 @onready var ground_layer: TileMapLayer = $Ground10
 @onready var obstacle_layer: TileMapLayer = $Ground11
 @onready var highlight_layer: TileMapLayer = $Cover1
-@onready var hover_sprite: Sprite2D = $Cover1/CoverSprite
+@onready var hover_sprite: Line2D = $Cover1/CoverSprite
 
 var reachable_cells: Array[Vector2i] = []
 var player_selected: bool = false
+var last_hover_grid: Vector2i = Vector2i(-999999, -999999)
 
 func _ready():
 	hover_sprite.visible = false
-	hover_sprite.modulate = Color(1, 1, 1, 0.5)
 	player.init_unit("Player", "player", 5, [ground_layer], obstacle_layer)
 	print("Player start grid: ", player.grid_pos, " world: ", player.global_position)
 
@@ -21,14 +21,17 @@ func _process(delta: float):
 	var mouse_grid = ground_layer.local_to_map(mouse_local)
 
 	if player_selected and reachable_cells.has(mouse_grid) and mouse_grid != player.grid_pos:
-		var cell_local = ground_layer.map_to_local(mouse_grid)
-		var cell_world = ground_layer.to_global(cell_local)
-		# CoverSprite is child of Cover1, so use Cover1 local coords
-		var cover_local = (cell_world - highlight_layer.global_position) / highlight_layer.scale
-		hover_sprite.position = cover_local
 		hover_sprite.visible = true
+
+		if mouse_grid != last_hover_grid:
+			last_hover_grid = mouse_grid
+			var path = player.pathfinder.find_path(player.grid_pos, mouse_grid)
+			_draw_path(path)
 	else:
 		hover_sprite.visible = false
+		if last_hover_grid != Vector2i(-999999, -999999):
+			last_hover_grid = Vector2i(-999999, -999999)
+			hover_sprite.clear_points()
 
 func _unhandled_input(event: InputEvent):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -43,6 +46,9 @@ func _unhandled_input(event: InputEvent):
 				player.set_move_path(path)
 			player_selected = false
 			highlight_layer.clear()
+			hover_sprite.visible = false
+			hover_sprite.clear_points()
+			last_hover_grid = Vector2i(-999999, -999999)
 		else:
 			if click_grid == player.grid_pos:
 				player_selected = true
@@ -50,6 +56,9 @@ func _unhandled_input(event: InputEvent):
 			else:
 				player_selected = false
 				highlight_layer.clear()
+				hover_sprite.visible = false
+				hover_sprite.clear_points()
+				last_hover_grid = Vector2i(-999999, -999999)
 
 func _show_move_range():
 	highlight_layer.clear()
@@ -59,3 +68,11 @@ func _show_move_range():
 		if cell == player.grid_pos:
 			continue
 		highlight_layer.set_cell(cell, 0, Vector2i(0, 0))
+
+func _draw_path(path: Array[Vector2i]):
+	hover_sprite.clear_points()
+	for cell in path:
+		var cell_local = ground_layer.map_to_local(cell)
+		var cell_world = ground_layer.to_global(cell_local)
+		var cover_local = (cell_world - highlight_layer.global_position) / highlight_layer.scale
+		hover_sprite.add_point(cover_local)

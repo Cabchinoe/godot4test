@@ -1,10 +1,11 @@
 [gd_scene format=4 uid="uid://djeb0cuoeaeet"]
 
-[ext_resource type="Texture2D" uid="uid://cqop2mkx2xq6u" path="res://urban.png" id="1_ig7tw"]
-[ext_resource type="Texture2D" uid="uid://d305a113p11xq" path="res://player.png" id="2_0xm2m"]
-[ext_resource type="Texture2D" uid="uid://dje081cq1xkev" path="res://goodpath.png" id="3_lquwl"]
-[ext_resource type="Script" uid="uid://bkpl2eys4kgy3" path="res://main.gd" id="script_main"]
-[ext_resource type="Script" uid="uid://l743efe0mkta" path="res://unit.gd" id="script_unit"]
+[ext_resource type="Texture2D" uid="uid://cqop2mkx2xq6u" path="res://MAP/urban.png" id="1_ig7tw"]
+[ext_resource type="Texture2D" uid="uid://d305a113p11xq" path="res://Unit/player.png" id="2_0xm2m"]
+[ext_resource type="Texture2D" uid="uid://sp3tlnxhv8ne" path="res://HUD/moverange.png" id="3_7mycd"]
+[ext_resource type="Texture2D" uid="uid://dje081cq1xkev" path="res://HUD/goodpath.png" id="3_lquwl"]
+[ext_resource type="Script" uid="uid://bkpl2eys4kgy3" path="res://Script/main.gd" id="script_main"]
+[ext_resource type="Script" uid="uid://l743efe0mkta" path="res://Script/unit.gd" id="script_unit"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_7dm0k"]
 load_path = "res://.godot/imported/urban.png-83ab3e85881a22b8a03cb022469fd227.ctex"
@@ -1709,14 +1710,14 @@ custom_data_layer_0/name = "height"
 custom_data_layer_0/type = 2
 sources/0 = SubResource("TileSetAtlasSource_0xm2m")
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_7mycd"]
-texture = ExtResource("3_lquwl")
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_272bh"]
+texture = ExtResource("3_7mycd")
 separation = Vector2i(1, 1)
 texture_region_size = Vector2i(14, 14)
 0:0/0 = 0
 
 [sub_resource type="TileSet" id="TileSet_1bvp3"]
-sources/0 = SubResource("TileSetAtlasSource_7mycd")
+sources/0 = SubResource("TileSetAtlasSource_272bh")
 
 [node name="Main" type="Node2D" unique_id=33713993]
 y_sort_enabled = true
@@ -1726,7 +1727,6 @@ script = ExtResource("script_main")
 scale = Vector2(4, 4)
 tile_map_data = PackedByteArray("AAAAAAAAAwABAA8AAAAAAAEAAwABABAAAAAAAAIAAwABABEAAAABAAAAAwABAA8AAAABAAEAAwABABAAAAABAAIAAwABABEAAAACAAAAAwABAA8AAAACAAEAAwABABAAAAACAAIAAwABABEAAAADAAAAAwABAA8AAAADAAEAAwABABAAAAAEAAAAAwAAAA8AAAAEAAEAAwAAABAAAAAEAAIAAwAAABEAAAAFAAAAAwABAA8AAAAFAAEAAwABABAAAAAFAAIAAwABABEAAAAGAAAAAwABAA8AAAAGAAEAAwABABAAAAAGAAIAAwABABEAAAAHAAAAAwABAA8AAAAHAAEAAwABABAAAAAHAAIAAwABABEAAAAIAAAAAwABAA8AAAAIAAEAAwABABAAAAAIAAIAAwABABEAAAAJAAAAAwABAA8AAAAJAAEAAwABABAAAAAJAAIAAwABABEAAAAKAAAAAwABAA8AAAAKAAEAAwABABAAAAAKAAIAAwABABEAAAAAAAMAAwAJAAMAAAABAAMAAwAJAAMAAAACAAMAAwAJAAMAAAADAAMAAwAKAAMAAAAFAAMAAwAIAAMAAAAGAAMAAwAJAAMAAAAHAAMAAwAJAAMAAAAIAAMAAwAJAAMAAAAJAAMAAwAJAAMAAAAKAAMAAwAJAAMAAAADAAQAAwAKAAQAAAADAAUAAwAKAAQAAAAFAAQAAwAIAAQAAAAFAAUAAwAIAAQAAAAEAAMAAwADABEAAAAEAAQAAwADABEAAAAEAAUAAwADABEAAAADAAIAAwABABEAAAAAAAQAAwAJAAQAAAABAAQAAwAJAAQAAAACAAQAAwAKAAQAAAACAAUAAwAKAAQAAAABAAUAAwAJAAQAAAAAAAUAAwAJAAQAAAAGAAQAAwAJAAQAAAAHAAQAAwAJAAQAAAAIAAQAAwAJAAQAAAAJAAQAAwAJAAQAAAAJAAUAAwAJAAQAAAAKAAUAAwAJAAQAAAAKAAQAAwAJAAQAAAAIAAUAAwAJAAQAAAAHAAUAAwAJAAQAAAAGAAUAAwAJAAQAAAADAAYAAwAKAAUAAAAFAAYAAwAKAAQAAAAGAAYAAwAKAAQAAAAHAAcAAwAIAAUAAAACAAYAAwAIAAUAAAAEAAYAAwADABEAAAAEAAcAAwADABEAAAADAAcAAwAJABEAAAACAAcAAwAJABEAAAABAAcAAwAKAAQAAAAAAAcAAwAIAAMAAAABAAYAAwAIAAQAAAAAAAYAAwAJAAQAAAAFAAcAAwAJABEAAAAGAAcAAwAJABEAAAAHAAYAAwAJABEAAAAIAAYAAwAJABEAAAAJAAYAAwAJABEAAAAKAAYAAwAJABEAAAAKAAcAAwAJABEAAAAJAAcAAwAIAAMAAAAIAAcAAwAJABEAAAAAAAgAAwAJABEAAAABAAgAAwAJABEAAAACAAgAAwAKAAQAAAADAAgAAwAIAAMAAAAEAAgAAwAJABEAAAAFAAgAAwAJABEAAAAGAAgAAwAJABEAAAAHAAgAAwAJABEAAAAIAAgAAwAJAAUAAAAJAAgAAwAJABEAAAAKAAgAAwAJABEAAAAKAAkAAwAIAAUAAAAJAAkAAwAJABEAAAAIAAkAAwAJABEAAAAHAAkAAwAKAAQAAAAGAAkAAwAIAAQAAAAFAAkAAwAJABEAAAAEAAkAAwAJABEAAAADAAkAAwAKAAQAAAACAAkAAwAJABEAAAABAAkAAwAJABEAAAAAAAkAAwAKAAQAAAAAAAoAAwAJABEAAAABAAoAAwAJABEAAAACAAoAAwAIAAMAAAADAAoAAwAJABEAAAAEAAoAAwAJAAUAAAAFAAoAAwAJAAUAAAAGAAoAAwAJABEAAAAHAAoAAwAJABEAAAAIAAoAAwAIAAUAAAAJAAoAAwAJABEAAAAKAAoAAwAJABEAAAAKAAsAAwAJABEAAAAJAAsAAwAJABEAAAAIAAsAAwAJABEAAAAHAAsAAwAJABEAAAAGAAsAAwAJABEAAAAFAAsAAwAJABEAAAAEAAsAAwAJABEAAAADAAsAAwAJABEAAAACAAsAAwAJABEAAAABAAsAAwAJABEAAAAAAAsAAwAJABEAAAA=")
 tile_set = SubResource("TileSet_7dm0k")
-metadata/is_ground = true
 
 [node name="Ground11" type="TileMapLayer" parent="." unique_id=395563045]
 z_index = 1
@@ -1739,8 +1739,9 @@ occlusion_enabled = false
 scale = Vector2(4, 4)
 tile_set = SubResource("TileSet_1bvp3")
 
-[node name="CoverSprite" type="Sprite2D" parent="Cover1" unique_id=659449558]
-texture = ExtResource("3_lquwl")
+[node name="CoverSprite" type="Line2D" parent="Cover1" unique_id=659449558]
+default_color = Color(0.392157, 1, 0.392157, 0.313725)
+width = 4.0
 
 [node name="Player" type="Node2D" parent="." unique_id=1783472142]
 z_index = 1

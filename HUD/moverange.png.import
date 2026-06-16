@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dje081cq1xkev"
-path="res://.godot/imported/goodpath.png-87c5451b539445cbca2bc459d9dfaffe.ctex"
+uid="uid://sp3tlnxhv8ne"
+path="res://.godot/imported/moverange.png-8b79eb306f625cb28ab8307cc0a9afbb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://goodpath.png"
-dest_files=["res://.godot/imported/goodpath.png-87c5451b539445cbca2bc459d9dfaffe.ctex"]
+source_file="res://HUD/moverange.png"
+dest_files=["res://.godot/imported/moverange.png-8b79eb306f625cb28ab8307cc0a9afbb.ctex"]
 
 [params]
 
