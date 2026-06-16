@@ -50,7 +50,7 @@ func is_walkable(grid: Vector2i) -> bool:
 	if obstacle_layer:
 		var obstacle_data = obstacle_layer.get_cell_tile_data(grid)
 		if obstacle_data != null:
-			if obstacle_data.get_custom_data("height") != 0:
+			if not obstacle_data.get_custom_data("can_walk"):
 				return false
 
 	return true

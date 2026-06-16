@@ -3,8 +3,8 @@ extends Node2D
 @onready var player: Unit = $Player
 @onready var ground_layer: TileMapLayer = $Ground10
 @onready var obstacle_layer: TileMapLayer = $Ground11
-@onready var highlight_layer: TileMapLayer = $Cover1
-@onready var hover_sprite: Line2D = $Cover1/CoverSprite
+@onready var highlight_layer: TileMapLayer = $HUD
+@onready var hover_sprite: Line2D = $HUD/CoverSprite
 
 var reachable_cells: Array[Vector2i] = []
 var player_selected: bool = false
