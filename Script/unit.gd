@@ -23,6 +23,12 @@ func init_unit(p_name: String, p_faction: String, p_move_range: int, p_level_man
 	level_manager = p_level_manager
 	current_level = p_start_level
 	pathfinder = Pathfinder.new(level_manager)
+	_update_z_index()
+
+func _update_z_index():
+	var obstacle = level_manager.get_layer(current_level, "obstacle")
+	if obstacle:
+		z_index = obstacle.z_index + 1
 
 func start_turn():
 	action_points = move_range
@@ -54,6 +60,7 @@ func _step_to_next():
 	world_pos.y += level_manager.get_offset(current_level)
 	var sprite_offset = Vector2(8, 8) * scale
 	global_position = world_pos - sprite_offset
+	_update_z_index()
 	if move_path.size() == 0:
 		is_moving = false
 

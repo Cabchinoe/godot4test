@@ -1,6 +1,7 @@
 extends Node2D
 
 @onready var player: Unit = $Player
+@onready var player_sprite: AnimatedSprite2D = $Player/Sprite2D
 @onready var ground_layer: TileMapLayer = $Ground10
 @onready var obstacle_layer: TileMapLayer = $Ground10/obstacle
 @onready var hud_layer_1: TileMapLayer = $Ground10/HUD
@@ -67,6 +68,7 @@ func _on_context_menu_pressed(id: int):
 
 func _clear_selection():
 	player_selected = false
+	player_sprite.stop()
 	pending_recalc_range = false
 	_clear_all_highlights()
 	hover_sprite.visible = false
@@ -162,9 +164,11 @@ func _handle_left_click():
 					pending_recalc_range = true
 				else:
 					player_selected = false
+					player_sprite.stop()
 	else:
 		if _is_same_node(click_node, player_node):
 			player_selected = true
+			player_sprite.play("walk")
 			_show_move_range()
 		else:
 			_clear_selection()
