@@ -9,20 +9,19 @@ const DIR_MASK = {
 
 const DIRS = [Vector2i(1,0), Vector2i(-1,0), Vector2i(0,1), Vector2i(0,-1)]
 
-var ground_layer: TileMapLayer
-var obstacle_layer: TileMapLayer
+var level_manager: LevelManager
 
-func _init(ground: TileMapLayer, obstacle: TileMapLayer = null):
-	ground_layer = ground
-	obstacle_layer = obstacle
+func _init(p_level_manager: LevelManager):
+	level_manager = p_level_manager
 
-func can_move(from: Vector2i, to: Vector2i) -> bool:
-	if not is_walkable(to):
+func can_move(from: Vector2i, to: Vector2i, level: int) -> bool:
+	if not is_walkable(to, level):
 		return false
 
 	var move_dir = to - from
 	var enter_side = -move_dir
-	var to_data = ground_layer.get_cell_tile_data(to)
+	var ground = level_manager.get_layer(level, "ground")
+	var to_data = ground.get_cell_tile_data(to)
 	if to_data:
 		var wall_block = to_data.get_custom_data("wall_block")
 		if wall_block > 0:
@@ -30,7 +29,7 @@ func can_move(from: Vector2i, to: Vector2i) -> bool:
 			if (wall_block & enter_mask) != 0:
 				return false
 
-	var from_data = ground_layer.get_cell_tile_data(from)
+	var from_data = ground.get_cell_tile_data(from)
 	if from_data:
 		var wall_block = from_data.get_custom_data("wall_block")
 		if wall_block > 0:
@@ -40,79 +39,116 @@ func can_move(from: Vector2i, to: Vector2i) -> bool:
 
 	return true
 
-func is_walkable(grid: Vector2i) -> bool:
-	var ground_data = ground_layer.get_cell_tile_data(grid)
+func is_walkable(grid: Vector2i, level: int) -> bool:
+	var ground = level_manager.get_layer(level, "ground")
+	var obstacle = level_manager.get_layer(level, "obstacle")
+	
+	var ground_data = ground.get_cell_tile_data(grid)
 	if ground_data == null:
 		return false
 	if ground_data.get_custom_data("terrain") != 0:
 		return false
 
-	if obstacle_layer:
-		var obstacle_data = obstacle_layer.get_cell_tile_data(grid)
+	if obstacle:
+		var obstacle_data = obstacle.get_cell_tile_data(grid)
 		if obstacle_data != null:
 			if not obstacle_data.get_custom_data("can_walk"):
 				return false
 
 	return true
 
-func bfs(start: Vector2i, max_steps: int) -> Array[Vector2i]:
+func is_stairs(grid: Vector2i, level: int) -> bool:
+	var obstacle = level_manager.get_layer(level, "obstacle")
+	if obstacle == null:
+		return false
+	var data = obstacle.get_cell_tile_data(grid)
+	if data == null:
+		return false
+	return data.get_custom_data("is_stairs")
+
+func get_neighbors(grid: Vector2i, level: int) -> Array[Dictionary]:
+	var neighbors: Array[Dictionary] = []
+	
+	# 同层四方向移动（检查墙体阻挡）
+	for dir in DIRS:
+		var next_grid = grid + dir
+		if can_move(grid, next_grid, level):
+			neighbors.append({"grid": next_grid, "level": level})
+	
+	# 上楼: 当前格是楼梯，周围上层可走
+	if is_stairs(grid, level):
+		var max_level = level_manager.get_max_level()
+		if level < max_level:
+			for dir in DIRS:
+				var next_grid = grid + dir
+				if is_walkable(next_grid, level + 1):
+					neighbors.append({"grid": next_grid, "level": level + 1})
+	
+	# 下楼: 周围下层是楼梯
+	if level > 1:
+		for dir in DIRS:
+			var next_grid = grid + dir
+			if is_stairs(next_grid, level - 1):
+				neighbors.append({"grid": next_grid, "level": level - 1})
+	
+	return neighbors
+
+func bfs(start: Vector2i, start_level: int, max_steps: int) -> Array[Dictionary]:
 	var visited: Dictionary = {}
 	var queue: Array[Array] = []
-	var result: Array[Vector2i] = []
+	var result: Array[Dictionary] = []
 
-	queue.append([start, 0])
-	visited[start] = true
+	var start_node = {"grid": start, "level": start_level}
+	queue.append([start_node, 0])
+	visited[start_node] = true
 
 	while queue.size() > 0:
 		var current: Array = queue.pop_front()
-		var pos: Vector2i = current[0]
+		var node: Dictionary = current[0]
 		var steps: int = current[1]
 
-		result.append(pos)
+		result.append(node)
 
 		if steps >= max_steps:
 			continue
 
-		for dir in DIRS:
-			var next = pos + dir
-			if visited.has(next):
+		for neighbor in get_neighbors(node["grid"], node["level"]):
+			if visited.has(neighbor):
 				continue
-			if not can_move(pos, next):
-				continue
-			visited[next] = true
-			queue.append([next, steps + 1])
+			visited[neighbor] = true
+			queue.append([neighbor, steps + 1])
 
 	return result
 
-func find_path(from: Vector2i, to: Vector2i) -> Array[Vector2i]:
+func find_path(from: Vector2i, from_level: int, to: Vector2i, to_level: int) -> Array[Dictionary]:
 	var visited: Dictionary = {}
 	var queue: Array = []
 	var parent: Dictionary = {}
 
-	queue.append(from)
-	visited[from] = true
-	parent[from] = null
+	var start_node = {"grid": from, "level": from_level}
+	var end_node = {"grid": to, "level": to_level}
+	
+	queue.append(start_node)
+	visited[start_node] = true
+	parent[start_node] = null
 
 	while queue.size() > 0:
-		var pos: Vector2i = queue.pop_front()
+		var node: Dictionary = queue.pop_front()
 
-		if pos == to:
-			var path: Array[Vector2i] = []
-			var current = to
+		if node["grid"] == to and node["level"] == to_level:
+			var path: Array[Dictionary] = []
+			var current = end_node
 			while current != null:
 				path.append(current)
 				current = parent[current]
 			path.reverse()
 			return path
 
-		for dir in DIRS:
-			var next = pos + dir
-			if visited.has(next):
+		for neighbor in get_neighbors(node["grid"], node["level"]):
+			if visited.has(neighbor):
 				continue
-			if not can_move(pos, next):
-				continue
-			visited[next] = true
-			parent[next] = pos
-			queue.append(next)
+			visited[neighbor] = true
+			parent[neighbor] = node
+			queue.append(neighbor)
 
 	return []
