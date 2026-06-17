@@ -51,25 +51,27 @@ func _on_turn_started(_turn: int):
 	_update_hud()
 
 func _on_game_over():
-	player_selected = false
-	_clear_all_highlights()
-	hover_sprite.visible = false
-	hover_sprite.clear_points()
+	_clear_selection()
 	end_turn_button.disabled = true
-	last_hover_node = {}
 
 func _on_end_turn_pressed():
+	_clear_selection()
 	turn_controller.end_turn()
 
 func _on_context_menu_pressed(id: int):
 	if id == 0:
+		_clear_selection()
 		turn_controller.end_turn()
 	elif id == 1:
-		player_selected = false
-		_clear_all_highlights()
-		hover_sprite.visible = false
-		hover_sprite.clear_points()
-		last_hover_node = {}
+		_clear_selection()
+
+func _clear_selection():
+	player_selected = false
+	pending_recalc_range = false
+	_clear_all_highlights()
+	hover_sprite.visible = false
+	hover_sprite.clear_points()
+	last_hover_node = {}
 
 func _process(delta: float):
 	if turn_controller.is_game_over:
@@ -140,7 +142,9 @@ func _handle_left_click():
 	var click_node = _get_closest_walkable_node(mouse_world)
 	var player_node = {"grid": player.grid_pos, "level": player.current_level}
 
-	if player_selected and _is_node_reachable(click_node):
+	if player_selected and _is_same_node(click_node, player_node):
+		_clear_selection()
+	elif player_selected and _is_node_reachable(click_node):
 		var path = player.pathfinder.find_path(
 			player.grid_pos, player.current_level,
 			click_node["grid"], click_node["level"]
@@ -163,19 +167,11 @@ func _handle_left_click():
 			player_selected = true
 			_show_move_range()
 		else:
-			player_selected = false
-			_clear_all_highlights()
-			hover_sprite.visible = false
-			hover_sprite.clear_points()
-			last_hover_node = {}
+			_clear_selection()
 
 func _handle_right_click():
 	if player_selected:
-		player_selected = false
-		_clear_all_highlights()
-		hover_sprite.visible = false
-		hover_sprite.clear_points()
-		last_hover_node = {}
+		_clear_selection()
 	else:
 		_show_context_menu()
 
@@ -243,5 +239,5 @@ func _clear_all_highlights():
 			hud.clear()
 
 func _update_hud():
-	ap_label.text = "AP: %d/%d" % [player.action_points, player.move_range]
+	ap_label.text = "行动点: %d/%d" % [player.action_points, player.move_range]
 	turn_label.text = "回合 %d/%d" % [turn_controller.current_turn, turn_controller.max_turns]
