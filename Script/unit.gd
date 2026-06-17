@@ -13,14 +13,25 @@ var move_path: Array[Dictionary] = []
 var move_timer: float = 0.0
 var move_interval: float = 0.15
 var is_moving: bool = false
+var action_points: int = 0
 
 func init_unit(p_name: String, p_faction: String, p_move_range: int, p_level_manager: LevelManager, p_start_level: int = 1):
 	unit_name = p_name
 	faction = p_faction
 	move_range = p_move_range
+	action_points = move_range
 	level_manager = p_level_manager
 	current_level = p_start_level
 	pathfinder = Pathfinder.new(level_manager)
+
+func start_turn():
+	action_points = move_range
+
+func spend_ap(cost: int) -> bool:
+	if action_points >= cost:
+		action_points -= cost
+		return true
+	return false
 
 func _process(delta: float):
 	if is_moving and move_path.size() > 0:

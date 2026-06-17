@@ -9,31 +9,91 @@ extends Node2D
 @onready var hud_layer_2: TileMapLayer = $Ground20/HUD
 @onready var hover_layer: TileMapLayer = $HUD
 @onready var hover_sprite: Line2D = $HUD/CoverSprite
+@onready var camera: Camera2D = $Camera2D
+@onready var ap_label: Label = $UILayer/UIRoot/StatusBar/APLabel
+@onready var turn_label: Label = $UILayer/UIRoot/StatusBar/TurnLabel
+@onready var end_turn_button: Button = $UILayer/UIRoot/StatusBar/EndTurnButton
+@onready var context_menu: PopupMenu = $UILayer/UIRoot/ContextMenu
+
+const DRAG_THRESHOLD: float = 5.0
 
 var level_manager: LevelManager
+var turn_controller: TurnController
 var reachable_cells: Array[Dictionary] = []
 var player_selected: bool = false
 var last_hover_node: Dictionary = {}
 
+var is_dragging: bool = false
+var press_pos: Vector2 = Vector2.ZERO
+var last_mouse_pos: Vector2 = Vector2.ZERO
+var pending_recalc_range: bool = false
+
 func _ready():
 	hover_sprite.visible = false
 
-	# 初始化 LevelManager
 	level_manager = LevelManager.new()
 	level_manager.add_level(1, ground_layer, obstacle_layer, hud_layer_1, 0)
 	level_manager.add_level(2, ground_layer_2, obstacle_layer_2, hud_layer_2, -16)
 
-	# 初始化 Player
 	player.init_unit("Player", "player", 5, level_manager, 1)
 	print("Player start grid: ", player.grid_pos, " level: ", player.current_level, " world: ", player.global_position)
 
+	turn_controller = TurnController.new(10)
+	turn_controller.turn_started.connect(_on_turn_started)
+	turn_controller.game_over.connect(_on_game_over)
+	turn_controller.start_game()
+
+	end_turn_button.pressed.connect(_on_end_turn_pressed)
+	context_menu.id_pressed.connect(_on_context_menu_pressed)
+
+func _on_turn_started(_turn: int):
+	player.start_turn()
+	_update_hud()
+
+func _on_game_over():
+	player_selected = false
+	_clear_all_highlights()
+	hover_sprite.visible = false
+	hover_sprite.clear_points()
+	end_turn_button.disabled = true
+	last_hover_node = {}
+
+func _on_end_turn_pressed():
+	turn_controller.end_turn()
+
+func _on_context_menu_pressed(id: int):
+	if id == 0:
+		turn_controller.end_turn()
+	elif id == 1:
+		player_selected = false
+		_clear_all_highlights()
+		hover_sprite.visible = false
+		hover_sprite.clear_points()
+		last_hover_node = {}
+
 func _process(delta: float):
+	if turn_controller.is_game_over:
+		return
+
+	if is_dragging:
+		var current_mouse = get_global_mouse_position()
+		var screen_mouse = get_viewport().get_mouse_position()
+		camera.position -= (screen_mouse - last_mouse_pos)
+		last_mouse_pos = screen_mouse
+		return
+
+	if player.is_moving:
+		return
+
+	if pending_recalc_range and player_selected:
+		pending_recalc_range = false
+		_show_move_range()
+
 	var mouse_world = get_global_mouse_position()
 	var hover_node = _get_closest_walkable_node(mouse_world)
 
 	if player_selected and _is_node_reachable(hover_node) and not _is_same_node(hover_node, {"grid": player.grid_pos, "level": player.current_level}):
 		hover_sprite.visible = true
-
 		if hover_node != last_hover_node:
 			last_hover_node = hover_node
 			var path = player.pathfinder.find_path(
@@ -48,39 +108,87 @@ func _process(delta: float):
 			hover_sprite.clear_points()
 
 func _unhandled_input(event: InputEvent):
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		var mouse_world = get_global_mouse_position()
-		var click_node = _get_closest_walkable_node(mouse_world)
-		print("click_node: ", click_node, " player_node: ", {"grid": player.grid_pos, "level": player.current_level})
+	if turn_controller.is_game_over:
+		return
+	if player.is_moving:
+		return
 
-		var player_node = {"grid": player.grid_pos, "level": player.current_level}
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if event.pressed:
+				press_pos = event.position
+				last_mouse_pos = event.position
+				is_dragging = false
+			else:
+				var drag_dist = event.position.distance_to(press_pos)
+				if drag_dist < DRAG_THRESHOLD:
+					_handle_left_click()
+				is_dragging = false
+		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			_handle_right_click()
+		return
 
-		if player_selected and _is_node_reachable(click_node):
-			var path = player.pathfinder.find_path(
-				player.grid_pos, player.current_level,
-				click_node["grid"], click_node["level"]
-			)
-			if path.size() > 0:
+	if event is InputEventMouseMotion:
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			var current_pos = event.position
+			if not is_dragging and current_pos.distance_to(press_pos) >= DRAG_THRESHOLD:
+				is_dragging = true
+				last_mouse_pos = current_pos
+
+func _handle_left_click():
+	var mouse_world = get_global_mouse_position()
+	var click_node = _get_closest_walkable_node(mouse_world)
+	var player_node = {"grid": player.grid_pos, "level": player.current_level}
+
+	if player_selected and _is_node_reachable(click_node):
+		var path = player.pathfinder.find_path(
+			player.grid_pos, player.current_level,
+			click_node["grid"], click_node["level"]
+		)
+		if path.size() > 0:
+			var steps = path.size() - 1
+			if player.spend_ap(steps):
 				player.set_move_path(path)
+				_update_hud()
+				_clear_all_highlights()
+				hover_sprite.visible = false
+				hover_sprite.clear_points()
+				last_hover_node = {}
+				if player.action_points > 0:
+					pending_recalc_range = true
+				else:
+					player_selected = false
+	else:
+		if _is_same_node(click_node, player_node):
+			player_selected = true
+			_show_move_range()
+		else:
 			player_selected = false
 			_clear_all_highlights()
 			hover_sprite.visible = false
 			hover_sprite.clear_points()
 			last_hover_node = {}
-		else:
-			if _is_same_node(click_node, player_node):
-				player_selected = true
-				_show_move_range()
-			else:
-				player_selected = false
-				_clear_all_highlights()
-				hover_sprite.visible = false
-				hover_sprite.clear_points()
-				last_hover_node = {}
+
+func _handle_right_click():
+	if player_selected:
+		player_selected = false
+		_clear_all_highlights()
+		hover_sprite.visible = false
+		hover_sprite.clear_points()
+		last_hover_node = {}
+	else:
+		_show_context_menu()
+
+func _show_context_menu():
+	context_menu.clear()
+	context_menu.add_item("结束回合", 0)
+	var menu_pos = get_viewport().get_mouse_position()
+	context_menu.position = Vector2i(menu_pos.x, menu_pos.y)
+	context_menu.popup()
 
 func _show_move_range():
 	_clear_all_highlights()
-	reachable_cells = player.pathfinder.bfs(player.grid_pos, player.current_level, player.move_range)
+	reachable_cells = player.pathfinder.bfs(player.grid_pos, player.current_level, player.action_points)
 	print("Player at: ", player.grid_pos, " level: ", player.current_level, " Reachable: ", reachable_cells.size())
 	for node in reachable_cells:
 		if node["grid"] == player.grid_pos and node["level"] == player.current_level:
@@ -88,7 +196,6 @@ func _show_move_range():
 		var hud = level_manager.get_layer(node["level"], "hud")
 		if hud == null:
 			continue
-		# HUD 和 ground 的 grid 坐标一致，直接用 node["grid"]
 		hud.set_cell(node["grid"], 0, Vector2i(0, 0))
 
 func _draw_path(path: Array[Dictionary]):
@@ -97,21 +204,16 @@ func _draw_path(path: Array[Dictionary]):
 		var ground = level_manager.get_layer(node["level"], "ground")
 		var cell_local = ground.map_to_local(node["grid"])
 		var cell_world = ground.to_global(cell_local)
-		# hover_sprite 在 $HUD/CoverSprite 下，转换到 hover_layer 的本地坐标
 		var cover_local = hover_layer.to_local(cell_world)
 		hover_sprite.add_point(cover_local)
 
 func _get_closest_walkable_node(mouse_world: Vector2) -> Dictionary:
 	var best_node = {}
 	var best_dist = INF
-
 	for level in level_manager.get_all_levels():
 		var ground = level_manager.get_layer(level, "ground")
-
-		# ground.to_global 已经包含 ground 节点的 position.y 偏移
 		var mouse_local = ground.to_local(mouse_world)
 		var grid = ground.local_to_map(mouse_local)
-
 		if player.pathfinder.is_walkable(grid, level):
 			var cell_local = ground.map_to_local(grid)
 			var cell_world = ground.to_global(cell_local)
@@ -119,7 +221,6 @@ func _get_closest_walkable_node(mouse_world: Vector2) -> Dictionary:
 			if dist < best_dist:
 				best_dist = dist
 				best_node = {"grid": grid, "level": level}
-
 	return best_node
 
 func _is_node_reachable(node: Dictionary) -> bool:
@@ -140,3 +241,7 @@ func _clear_all_highlights():
 		var hud = level_manager.get_layer(level, "hud")
 		if hud:
 			hud.clear()
+
+func _update_hud():
+	ap_label.text = "AP: %d/%d" % [player.action_points, player.move_range]
+	turn_label.text = "回合 %d/%d" % [turn_controller.current_turn, turn_controller.max_turns]
