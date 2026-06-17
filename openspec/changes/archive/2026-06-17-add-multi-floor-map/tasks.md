@@ -34,14 +34,14 @@
 
 ## 5. Tile 数据配置（需手动配置）
 
-- [ ] 5.1 在 TileSet 中为楼梯 tile 添加 `is_stairs` custom_data
-- [ ] 5.2 创建 Ground20 和 Ground21 TileMapLayer 节点
-- [ ] 5.3 配置 Ground20 的 y_offset 为 -32
+- [x] 5.1 在 TileSet 中为楼梯 tile 添加 `is_stairs` custom_data
+- [x] 5.2 创建 Ground20 和 Ground21 TileMapLayer 节点
+- [x] 5.3 配置 Ground20 的 y_offset 为 -32
 
 ## 6. 测试验证（需手动测试）
 
-- [ ] 6.1 测试同层寻路正常
-- [ ] 6.2 测试上楼梯寻路（L1 → L2）
-- [ ] 6.3 测试下楼梯寻路（L2 → L1）
-- [ ] 6.4 测试点击检测在多层场景下正确选择层
-- [ ] 6.5 测试人物渲染在楼层切换时 Y 偏移正确
+- [x] 6.1 测试同层寻路正常
+- [x] 6.2 测试上楼梯寻路（L1 → L2）
+- [x] 6.3 测试下楼梯寻路（L2 → L1）
+- [x] 6.4 测试点击检测在多层场景下正确选择层
+- [x] 6.5 测试人物渲染在楼层切换时 Y 偏移正确
