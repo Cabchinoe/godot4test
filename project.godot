@@ -11,9 +11,13 @@ config_version=5
 [application]
 
 config/name="新建游戏项目"
-run/main_scene="uid://djeb0cuoeaeet"
+run/main_scene="res://Boot.tscn"
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
+
+[autoload]
+
+ItemDB="*res://Script/item_db.gd"
 
 [physics]
 

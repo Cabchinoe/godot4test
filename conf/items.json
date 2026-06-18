@@ -1,0 +1,134 @@
+[
+  {
+    "id": "weapon_pistol_01",
+    "name": "手枪",
+    "type": "WEAPON",
+    "icon": "res://Items/icons/pistol.png",
+    "description": "标准配发手枪",
+    "price": 200,
+    "stackable": false,
+    "max_stack": 1,
+    "quality": "C"
+  },
+  {
+    "id": "weapon_rifle_01",
+    "name": "步枪",
+    "type": "WEAPON",
+    "icon": "res://Items/icons/rifle.png",
+    "description": "精准远程武器",
+    "price": 500,
+    "stackable": false,
+    "max_stack": 1,
+    "quality": "B"
+  },
+  {
+    "id": "ammo_pistol_01",
+    "name": "手枪弹药",
+    "type": "AMMO",
+    "icon": "res://Items/icons/ammo_pistol.png",
+    "description": "手枪通用弹药",
+    "price": 20,
+    "stackable": true,
+    "max_stack": 30,
+    "quality": "D"
+  },
+  {
+    "id": "ammo_rifle_01",
+    "name": "步枪弹药",
+    "type": "AMMO",
+    "icon": "res://Items/icons/ammo_rifle.png",
+    "description": "步枪通用弹药",
+    "price": 30,
+    "stackable": true,
+    "max_stack": 20,
+    "quality": "D"
+  },
+  {
+    "id": "helmet_basic_01",
+    "name": "基础头盔",
+    "type": "HELMET",
+    "icon": "res://Items/icons/helmet.png",
+    "description": "基础防护头盔",
+    "price": 150,
+    "stackable": false,
+    "max_stack": 1,
+    "quality": "D"
+  },
+  {
+    "id": "armor_basic_01",
+    "name": "基础护甲",
+    "type": "ARMOR",
+    "icon": "res://Items/icons/armor.png",
+    "description": "基础防护护甲",
+    "price": 300,
+    "stackable": false,
+    "max_stack": 1,
+    "quality": "C"
+  },
+  {
+    "id": "chestrig_basic_01",
+    "name": "基础胸挂",
+    "type": "CHESTRIG",
+    "icon": "res://Items/icons/chestrig.png",
+    "description": "基础战术胸挂",
+    "price": 250,
+    "stackable": false,
+    "max_stack": 1,
+    "quality": "C"
+  },
+  {
+    "id": "backpack_basic_01",
+    "name": "基础背包",
+    "type": "BACKPACK",
+    "icon": "res://Items/icons/backpack.png",
+    "description": "基础行军背包",
+    "price": 180,
+    "stackable": false,
+    "max_stack": 1,
+    "quality": "D"
+  },
+  {
+    "id": "material_metal_01",
+    "name": "金属碎片",
+    "type": "MATERIAL",
+    "icon": "res://Items/icons/metal.png",
+    "description": "可用于制造的金属碎片",
+    "price": 10,
+    "stackable": true,
+    "max_stack": 99,
+    "quality": "D"
+  },
+  {
+    "id": "collectible_badge_01",
+    "name": "荣誉徽章",
+    "type": "COLLECTIBLE",
+    "icon": "res://Items/icons/badge.png",
+    "description": "珍贵的荣誉徽章",
+    "price": 0,
+    "stackable": true,
+    "max_stack": 10,
+    "quality": "A"
+  },
+  {
+    "id": "consumable_medkit_01",
+    "name": "急救包",
+    "type": "CONSUMABLE",
+    "icon": "res://Items/icons/medkit.png",
+    "description": "恢复少量生命值",
+    "price": 50,
+    "stackable": true,
+    "max_stack": 5,
+    "quality": "D"
+  },
+  {
+    "id": "consumable_adrenaline_01",
+    "name": "肾上腺素",
+    "type": "CONSUMABLE",
+    "icon": "res://Items/icons/adrenaline.png",
+    "description": "临时提升行动力",
+    "price": 120,
+    "stackable": true,
+    "max_stack": 3,
+    "quality": "B"
+  }
+]
