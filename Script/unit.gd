@@ -58,7 +58,8 @@ func _step_to_next():
 	var local = ground.map_to_local(grid_pos)
 	var world_pos = ground.to_global(local)
 	world_pos.y += level_manager.get_offset(current_level)
-	var sprite_offset = Vector2(8, 8) * scale
+	var sprite = get_node("Sprite2D")
+	var sprite_offset = sprite.offset * scale
 	global_position = world_pos - sprite_offset
 	_update_z_index()
 	if move_path.size() == 0:

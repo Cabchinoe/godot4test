@@ -1,22 +1,22 @@
-[gd_resource type="SpriteFrames" format=3 uid="uid://c1lcl3vegy2ip"]
+[gd_resource type="SpriteFrames" format=3 uid="uid://ofi7fum0mrp6"]
 
-[ext_resource type="Texture2D" uid="uid://bk0u0j3i6ee8j" path="res://Unit/player_walk.png" id="1_walk"]
+[ext_resource type="Texture2D" uid="uid://de771ikc7uqhm" path="res://Unit/player2_walk.png" id="1_walk"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame0"]
 atlas = ExtResource("1_walk")
-region = Rect2(0, 0, 16, 16)
+region = Rect2(0, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame1"]
 atlas = ExtResource("1_walk")
-region = Rect2(16, 0, 16, 16)
+region = Rect2(64, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame2"]
 atlas = ExtResource("1_walk")
-region = Rect2(32, 0, 16, 16)
+region = Rect2(128, 0, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_frame3"]
 atlas = ExtResource("1_walk")
-region = Rect2(48, 0, 16, 16)
+region = Rect2(192, 0, 64, 64)
 
 [resource]
 animations = [{
