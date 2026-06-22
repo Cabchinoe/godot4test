@@ -11,7 +11,11 @@ static func create(id: String, quantity: int = 1):
 		return null
 	var item_type: String = data.get("type", "")
 	var item
-	if item_type in EQUIP_TYPES:
+	if item_type == "WEAPON":
+		item = Weapon.new()
+	elif item_type == "WEAPON_ATTACHMENT":
+		item = WeaponAttachment.new()
+	elif item_type in EQUIP_TYPES:
 		item = EquipItem.new()
 	elif item_type == "CONSUMABLE":
 		item = UseItem.new()

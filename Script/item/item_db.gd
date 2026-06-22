@@ -1,9 +1,17 @@
 extends Node
 
-const VALID_TYPES := [
-	"WEAPON", "AMMO", "HELMET", "ARMOR", "CHESTRIG",
-	"BACKPACK", "MATERIAL", "COLLECTIBLE", "CONSUMABLE"
-]
+const VALID_TYPES := {
+	"WEAPON": "武器",
+	"AMMO": "弹药",
+	"HELMET": "头盔",
+	"ARMOR": "护甲",
+	"CHESTRIG": "胸挂",
+	"BACKPACK": "背包",
+	"MATERIAL": "材料",
+	"COLLECTIBLE": "收藏品",
+	"CONSUMABLE": "消耗品",
+	"WEAPON_ATTACHMENT": "武器配件",
+}
 
 const QUALITY_COLORS := {
 	"S": Color(0.72, 0.28, 0.28),
