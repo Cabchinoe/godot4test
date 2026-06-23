@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://djmkdy0qua8w"]
 
 [ext_resource type="Script" uid="uid://ct4gwiyjh5rnl" path="res://Script/main_menu.gd" id="1_menu"]
+[ext_resource type="PackedScene" path="res://Script/save/ui/save_load_ui.tscn" id="save_load_ui"]
 
 [node name="MainMenu" type="Control" unique_id=1945193937]
 layout_mode = 3
@@ -29,11 +30,20 @@ theme_override_constants/separation = 20
 [node name="Title" type="Label" parent="VBoxContainer" unique_id=2041963455]
 layout_mode = 2
 text = "三角篓行动
-逃离加沙"
+逃离噶扎"
 horizontal_alignment = 1
 
 [node name="StartButton" type="Button" parent="VBoxContainer" unique_id=1801564063]
 layout_mode = 2
 text = "开始新救赎"
 
+[node name="ContinueButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "继续游戏"
+
+[node name="SaveLoadUI" parent="." instance=ExtResource("save_load_ui")]
+visible = false
+
 [connection signal="pressed" from="VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/ContinueButton" to="." method="_on_continue_button_pressed"]
+[connection signal="closed" from="SaveLoadUI" to="." method="_on_save_load_closed"]

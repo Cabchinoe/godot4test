@@ -1,0 +1,39 @@
+[gd_scene load_steps=2 format=4]
+
+[ext_resource type="Script" path="res://Script/save/ui/save_slot_item.gd" id="1_script"]
+
+[node name="SaveSlotItem" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 80)
+script = ExtResource("1_script")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SlotLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = "槽位 1"
+
+[node name="InfoLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = "空槽位"
+
+[node name="Buttons" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SaveBtn" type="Button" parent="VBox/Buttons"]
+layout_mode = 2
+text = "保存"
+
+[node name="LoadBtn" type="Button" parent="VBox/Buttons"]
+layout_mode = 2
+text = "读取"
+
+[node name="DeleteBtn" type="Button" parent="VBox/Buttons"]
+layout_mode = 2
+text = "删除"
+
+[connection signal="pressed" from="VBox/Buttons/SaveBtn" to="." method="_on_save_btn_pressed"]
+[connection signal="pressed" from="VBox/Buttons/LoadBtn" to="." method="_on_load_btn_pressed"]
+[connection signal="pressed" from="VBox/Buttons/DeleteBtn" to="." method="_on_delete_btn_pressed"]

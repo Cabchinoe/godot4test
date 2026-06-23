@@ -11,15 +11,16 @@ extends Node2D
 @onready var hover_layer: TileMapLayer = $HUD
 @onready var hover_sprite: Line2D = $HUD/CoverSprite
 @onready var camera: Camera2D = $Camera2D
-@onready var ap_label: Label = $UILayer/UIRoot/StatusBar/APLabel
-@onready var turn_label: Label = $UILayer/UIRoot/StatusBar/TurnLabel
-@onready var end_turn_button: Button = $UILayer/UIRoot/StatusBar/EndTurnButton
-@onready var context_menu: PopupMenu = $UILayer/UIRoot/ContextMenu
+@onready var save_button: Button = $UILayer/UIRoot/TopBar/SaveButton
+@onready var load_button: Button = $UILayer/UIRoot/TopBar/LoadButton
+@onready var battle_button: Button = $UILayer/UIRoot/TopBar/BattleButton
+@onready var menu_button: Button = $UILayer/UIRoot/TopBar/MenuButton
+@onready var save_load_ui = $UILayer/UIRoot/SaveLoadUI
 
 const DRAG_THRESHOLD: float = 5.0
+const BASE_AP: int = 50
 
 var level_manager: LevelManager
-var turn_controller: TurnController
 var reachable_cells: Array[Dictionary] = []
 var player_selected: bool = false
 var last_hover_node: Dictionary = {}
@@ -36,39 +37,33 @@ func _ready():
 	level_manager.add_level(1, ground_layer, obstacle_layer, hud_layer_1, 0)
 	level_manager.add_level(2, ground_layer_2, obstacle_layer_2, hud_layer_2, -16)
 
-	player.init_unit("Player", "player", 5, level_manager, 1)
-	if SaveManager.has_current_data() and SaveManager.current_data.player:
-		var player_provider = PlayerSaveProvider.new(player)
-		SaveManager.register_provider(player_provider)
-		player_provider.read_from(SaveManager.current_data)
-	print("Player start grid: ", player.grid_pos, " level: ", player.current_level, " world: ", player.global_position)
+	player.init_unit("Player", "player", BASE_AP, level_manager, 1)
 
-	turn_controller = TurnController.new(10)
-	turn_controller.turn_started.connect(_on_turn_started)
-	turn_controller.game_over.connect(_on_game_over)
-	turn_controller.start_game()
+	var player_provider = PlayerSaveProvider.new(player)
+	SaveManager.register_provider(player_provider)
 
-	end_turn_button.pressed.connect(_on_end_turn_pressed)
-	context_menu.id_pressed.connect(_on_context_menu_pressed)
+	save_button.pressed.connect(_on_save_pressed)
+	load_button.pressed.connect(_on_load_pressed)
+	battle_button.pressed.connect(_on_battle_pressed)
+	menu_button.pressed.connect(_on_menu_pressed)
+	save_load_ui.closed.connect(_on_save_load_closed)
 
-func _on_turn_started(_turn: int):
-	player.start_turn()
-	_update_hud()
+func _on_save_pressed():
+	save_load_ui.visible = true
+	save_load_ui.refresh_slots()
 
-func _on_game_over():
-	_clear_selection()
-	end_turn_button.disabled = true
+func _on_load_pressed():
+	save_load_ui.visible = true
+	save_load_ui.refresh_slots()
 
-func _on_end_turn_pressed():
-	_clear_selection()
-	turn_controller.end_turn()
+func _on_save_load_closed():
+	save_load_ui.visible = false
 
-func _on_context_menu_pressed(id: int):
-	if id == 0:
-		_clear_selection()
-		turn_controller.end_turn()
-	elif id == 1:
-		_clear_selection()
+func _on_battle_pressed():
+	get_tree().change_scene_to_file("res://main.tscn")
+
+func _on_menu_pressed():
+	get_tree().change_scene_to_file("res://MainMenu.tscn")
 
 func _clear_selection():
 	player_selected = false
@@ -80,9 +75,6 @@ func _clear_selection():
 	last_hover_node = {}
 
 func _process(delta: float):
-	if turn_controller.is_game_over:
-		return
-
 	if is_dragging:
 		var current_mouse = get_global_mouse_position()
 		var screen_mouse = get_viewport().get_mouse_position()
@@ -95,6 +87,7 @@ func _process(delta: float):
 
 	if pending_recalc_range and player_selected:
 		pending_recalc_range = false
+		player.action_points = BASE_AP
 		_show_move_range()
 
 	var mouse_world = get_global_mouse_position()
@@ -116,8 +109,6 @@ func _process(delta: float):
 			hover_sprite.clear_points()
 
 func _unhandled_input(event: InputEvent):
-	if turn_controller.is_game_over:
-		return
 	if player.is_moving:
 		return
 
@@ -133,7 +124,8 @@ func _unhandled_input(event: InputEvent):
 					_handle_left_click()
 				is_dragging = false
 		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-			_handle_right_click()
+			if player_selected:
+				_clear_selection()
 		return
 
 	if event is InputEventMouseMotion:
@@ -156,19 +148,12 @@ func _handle_left_click():
 			click_node["grid"], click_node["level"]
 		)
 		if path.size() > 0:
-			var steps = path.size() - 1
-			if player.spend_ap(steps):
-				player.set_move_path(path)
-				_update_hud()
-				_clear_all_highlights()
-				hover_sprite.visible = false
-				hover_sprite.clear_points()
-				last_hover_node = {}
-				if player.action_points > 0:
-					pending_recalc_range = true
-				else:
-					player_selected = false
-					player_sprite.stop()
+			player.set_move_path(path)
+			_clear_all_highlights()
+			hover_sprite.visible = false
+			hover_sprite.clear_points()
+			last_hover_node = {}
+			pending_recalc_range = true
 	else:
 		if _is_same_node(click_node, player_node):
 			player_selected = true
@@ -177,23 +162,9 @@ func _handle_left_click():
 		else:
 			_clear_selection()
 
-func _handle_right_click():
-	if player_selected:
-		_clear_selection()
-	else:
-		_show_context_menu()
-
-func _show_context_menu():
-	context_menu.clear()
-	context_menu.add_item("结束回合", 0)
-	var menu_pos = get_viewport().get_mouse_position()
-	context_menu.position = Vector2i(menu_pos.x, menu_pos.y)
-	context_menu.popup()
-
 func _show_move_range():
 	_clear_all_highlights()
 	reachable_cells = player.pathfinder.bfs(player.grid_pos, player.current_level, player.action_points)
-	print("Player at: ", player.grid_pos, " level: ", player.current_level, " Reachable: ", reachable_cells.size())
 	for node in reachable_cells:
 		if node["grid"] == player.grid_pos and node["level"] == player.current_level:
 			continue
@@ -245,7 +216,3 @@ func _clear_all_highlights():
 		var hud = level_manager.get_layer(level, "hud")
 		if hud:
 			hud.clear()
-
-func _update_hud():
-	ap_label.text = "行动点: %d/%d" % [player.action_points, player.move_range]
-	turn_label.text = "回合 %d/%d" % [turn_controller.current_turn, turn_controller.max_turns]
