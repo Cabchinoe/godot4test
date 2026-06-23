@@ -11,6 +11,7 @@ extends Node2D
 @onready var hover_layer: TileMapLayer = $HUD
 @onready var hover_sprite: Line2D = $HUD/CoverSprite
 @onready var camera: Camera2D = $Camera2D
+@onready var top_bar: HBoxContainer = $UILayer/UIRoot/TopBar
 @onready var save_button: Button = $UILayer/UIRoot/TopBar/SaveButton
 @onready var load_button: Button = $UILayer/UIRoot/TopBar/LoadButton
 @onready var battle_button: Button = $UILayer/UIRoot/TopBar/BattleButton
@@ -73,6 +74,7 @@ func _clear_selection():
 	hover_sprite.visible = false
 	hover_sprite.clear_points()
 	last_hover_node = {}
+	top_bar.visible = true
 
 func _process(delta: float):
 	if is_dragging:
@@ -159,6 +161,7 @@ func _handle_left_click():
 			player_selected = true
 			player_sprite.play("walk")
 			_show_move_range()
+			top_bar.visible = false
 		else:
 			_clear_selection()
 
