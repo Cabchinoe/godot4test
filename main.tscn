@@ -2312,6 +2312,11 @@ z_index = 10
 width = 4.0
 default_color = Color(0.392157, 1, 0.392157, 0.313725)
 
+[node name="CoverSprite2" type="Line2D" parent="HUD" unique_id=2051523490]
+z_index = 10
+width = 2.0
+default_color = Color(1, 0.06999999, 0.10099995, 0.3137255)
+
 [node name="Player" type="Node2D" parent="." unique_id=1783472142]
 script = ExtResource("script_unit")
 

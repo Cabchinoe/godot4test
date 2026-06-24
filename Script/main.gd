@@ -10,6 +10,7 @@ extends Node2D
 @onready var hud_layer_2: TileMapLayer = $Ground20/HUD
 @onready var hover_layer: TileMapLayer = $HUD
 @onready var hover_sprite: Line2D = $HUD/CoverSprite
+@onready var hover_sprite2: Line2D = $HUD/CoverSprite2
 @onready var camera: Camera2D = $Camera2D
 @onready var ap_label: Label = $UILayer/UIRoot/StatusBar/APLabel
 @onready var turn_label: Label = $UILayer/UIRoot/StatusBar/TurnLabel
@@ -17,11 +18,15 @@ extends Node2D
 @onready var context_menu: PopupMenu = $UILayer/UIRoot/ContextMenu
 
 const DRAG_THRESHOLD: float = 5.0
+const ATTACK_RANGE: int = 5
 
 var level_manager: LevelManager
 var turn_controller: TurnController
+var bullet_range: BulletRange
 var reachable_cells: Array[Dictionary] = []
+var attack_cells: Array[Dictionary] = []
 var player_selected: bool = false
+var attack_mode: bool = false
 var last_hover_node: Dictionary = {}
 
 var is_dragging: bool = false
@@ -29,8 +34,10 @@ var press_pos: Vector2 = Vector2.ZERO
 var last_mouse_pos: Vector2 = Vector2.ZERO
 var pending_recalc_range: bool = false
 
+
 func _ready():
 	hover_sprite.visible = false
+	hover_sprite2.visible = false
 
 	level_manager = LevelManager.new()
 	level_manager.add_level(1, ground_layer, obstacle_layer, hud_layer_1, 0)
@@ -51,6 +58,8 @@ func _ready():
 	end_turn_button.pressed.connect(_on_end_turn_pressed)
 	context_menu.id_pressed.connect(_on_context_menu_pressed)
 
+	bullet_range = BulletRange.new(level_manager)
+
 func _on_turn_started(_turn: int):
 	player.start_turn()
 	_update_hud()
@@ -65,10 +74,10 @@ func _on_end_turn_pressed():
 
 func _on_context_menu_pressed(id: int):
 	if id == 0:
-		_clear_selection()
-		turn_controller.end_turn()
+		_enter_attack_mode()
 	elif id == 1:
 		_clear_selection()
+		turn_controller.end_turn()
 
 func _clear_selection():
 	player_selected = false
@@ -91,6 +100,9 @@ func _process(delta: float):
 		return
 
 	if player.is_moving:
+		return
+
+	if attack_mode:
 		return
 
 	if pending_recalc_range and player_selected:
@@ -146,6 +158,16 @@ func _unhandled_input(event: InputEvent):
 func _handle_left_click():
 	var mouse_world = get_global_mouse_position()
 	var click_node = _get_closest_walkable_node(mouse_world)
+
+	if attack_mode:
+		if _is_in_attack_cells(click_node):
+			var path = bullet_range.get_bullet_path(player.grid_pos, click_node["grid"])
+			print("[Attack] origin=", player.grid_pos, " lv=", player.current_level, " target=", click_node)
+			for step in path:
+				print("  step: ", step)
+			_draw_gun_line(click_node["grid"], click_node["level"])
+		return
+
 	var player_node = {"grid": player.grid_pos, "level": player.current_level}
 
 	if player_selected and _is_same_node(click_node, player_node):
@@ -178,14 +200,17 @@ func _handle_left_click():
 			_clear_selection()
 
 func _handle_right_click():
-	if player_selected:
+	if attack_mode:
+		_exit_attack_mode()
+	elif player_selected:
 		_clear_selection()
 	else:
 		_show_context_menu()
 
 func _show_context_menu():
 	context_menu.clear()
-	context_menu.add_item("结束回合", 0)
+	context_menu.add_item("攻击", 0)
+	context_menu.add_item("结束回合", 1)
 	var menu_pos = get_viewport().get_mouse_position()
 	context_menu.position = Vector2i(menu_pos.x, menu_pos.y)
 	context_menu.popup()
@@ -201,6 +226,43 @@ func _show_move_range():
 		if hud == null:
 			continue
 		hud.set_cell(node["grid"], 0, Vector2i(0, 0))
+
+func _enter_attack_mode():
+	_clear_selection()
+	attack_mode = true
+	attack_cells = bullet_range.get_reachable_cells(player.grid_pos, player.current_level, ATTACK_RANGE)
+	print("[Attack] enter mode, cells=", attack_cells.size())
+	_clear_all_highlights()
+	for cell in attack_cells:
+		var hud = level_manager.get_layer(cell["level"], "hud")
+		if hud == null:
+			continue
+		hud.set_cell(cell["grid"], 0, Vector2i(0, 0))
+
+func _exit_attack_mode():
+	attack_mode = false
+	attack_cells = []
+	_clear_all_highlights()
+	hover_sprite2.visible = false
+	hover_sprite2.clear_points()
+
+func _draw_gun_line(target_grid: Vector2i, target_level: int):
+	hover_sprite2.clear_points()
+	var origin_ground := level_manager.get_layer(player.current_level, "ground")
+	var origin_world := origin_ground.to_global(origin_ground.map_to_local(player.grid_pos))
+	hover_sprite2.add_point(hover_layer.to_local(origin_world))
+	var target_ground := level_manager.get_layer(target_level, "ground")
+	var target_world := target_ground.to_global(target_ground.map_to_local(target_grid))
+	hover_sprite2.add_point(hover_layer.to_local(target_world))
+	hover_sprite2.visible = true
+
+func _is_in_attack_cells(node: Dictionary) -> bool:
+	if node.is_empty():
+		return false
+	for cell in attack_cells:
+		if cell["grid"] == node["grid"] and cell["level"] == node["level"]:
+			return true
+	return false
 
 func _draw_path(path: Array[Dictionary]):
 	hover_sprite.clear_points()
