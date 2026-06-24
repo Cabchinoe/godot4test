@@ -103,6 +103,17 @@ func _process(delta: float):
 		return
 
 	if attack_mode:
+		var attack_mouse_world = get_global_mouse_position()
+		var attack_hover = _get_closest_walkable_node(attack_mouse_world)
+		if _is_in_attack_cells(attack_hover):
+			if attack_hover != last_hover_node:
+				last_hover_node = attack_hover
+				_draw_gun_line(attack_hover["grid"], attack_hover["level"])
+		else:
+			if last_hover_node != {}:
+				last_hover_node = {}
+				hover_sprite2.visible = false
+				hover_sprite2.clear_points()
 		return
 
 	if pending_recalc_range and player_selected:
@@ -165,7 +176,6 @@ func _handle_left_click():
 			print("[Attack] origin=", player.grid_pos, " lv=", player.current_level, " target=", click_node)
 			for step in path:
 				print("  step: ", step)
-			_draw_gun_line(click_node["grid"], click_node["level"])
 		return
 
 	var player_node = {"grid": player.grid_pos, "level": player.current_level}
