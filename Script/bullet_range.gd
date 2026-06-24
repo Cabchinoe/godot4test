@@ -24,6 +24,15 @@ func get_level_at(grid: Vector2i) -> int:
 	return -1
 
 func _has_wall(grid: Vector2i, dir: Vector2i, level: int) -> bool:
+	if _has_wall_single(grid, dir, level):
+		return true
+	var neighbor: Vector2i = grid + dir
+	var neighbor_level: int = get_level_at(neighbor)
+	if neighbor_level == -1:
+		return false
+	return _has_wall_single(neighbor, -dir, neighbor_level)
+
+func _has_wall_single(grid: Vector2i, dir: Vector2i, level: int) -> bool:
 	var ground := level_manager.get_layer(level, "ground")
 	if ground == null:
 		return false
