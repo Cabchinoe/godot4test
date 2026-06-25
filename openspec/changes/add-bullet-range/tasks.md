@@ -50,3 +50,14 @@
 - [x] 7.1 在 `main.gd` 临时加调试调用 `BulletRange.new(level_manager).get_reachable_cells(player.grid_pos, player.current_level, 5)`，`print` 结果
 - [ ] 7.2 Godot 运行 main 场景，检查输出格子数和分布是否合理
 - [ ] 7.3 移除临时调试代码
+
+## 8. 动态目标格阻挡 (改进)
+
+- [x] 8.1 将 `get_reachable_cells` 重命名为 `get_targetable_cells`，签名加 `targetable_cells: Array` 参数
+- [x] 8.2 候选枚举从 bounding box 改为遍历 `targetable_cells`，按切比雪夫距离过滤
+- [x] 8.3 `_is_path_clear` 加 `targetable_cells` 和 `block_on_unit` 参数
+- [x] 8.4 平射时（`target_level == origin_level`）启用 unit 阻挡：路径中间 `to_grid` 在 `targetable_cells` 内即返回 false
+- [x] 8.5 高打低时不启用 unit 阻挡
+- [x] 8.6 目标格自身（`is_last`）不视为阻挡
+- [x] 8.7 添加 `_is_in_cells(grid, level, cells)` 工具方法
+- [x] 8.8 `main.gd` 调用同步：`get_targetable_cells`，并加 `_collect_targetable_cells()` 占位（接入其他 unit 时填充）

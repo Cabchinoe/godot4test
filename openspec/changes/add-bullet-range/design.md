@@ -106,17 +106,43 @@
 - *把跨角拆成两次单边跨越*：增加路径长度且语义不清
 - *要求墙体必须双向对偶设置*：制作负担大，对外不友好
 
-### Decision 8: 每个目标格独立判定
+### Decision 8: 候选目标由外部传入而非全格枚举
 
-**选择**: 对 bounding box 内每个候选格分别跑一次 DDA + 路径检查
+**选择**: `get_targetable_cells(origin, origin_level, max_range, targetable_cells)` 接收外部传入的候选目标列表（通常是其他 unit 所在格），返回其中可被命中的子集。不再做 bounding box 全格 fan-out。
 
 **理由**:
-- 实现简单，每次 DDA 终点就是目标格
-- 在射程 5（候选 ~120 格）尺度下性能可接受
-- 后续若需优化可改为单次"全方向扩散"算法（如 shadowcasting）
+- 实战只需要知道"能打到哪些敌人"，不需要枚举所有空地
+- targetable_cells 同时充当"动态阻挡"列表，统一概念
+- 性能更好：候选规模 = unit 数（小），而非 (2*range+1)^2
+- API 更简洁、语义更清
 
 **替代方案**:
-- *单次 360° 扫描 + 缓存*：更高效但实现复杂，本次过度设计
+- *fan-out + 单独 occupied 参数*：候选 = 全格、阻挡 = unit 列表，两套概念，复杂
+- *拆成两个 API*：维护成本高，UI 层也用不到全格 fan-out
+
+### Decision 9: 动态目标格阻挡只在平射启用
+
+**选择**:
+- 平射（同 level）：路径中间在 `targetable_cells` 内 → 阻挡（打到中间的人）
+- 高打低：路径中间忽略 `targetable_cells` → 不阻挡
+- 低打高：只有 1 步相邻，无中间格，无意义
+
+**理由**:
+- 视觉直觉：从高处俯射，前方矮个不挡视线；平视则会被前面的人挡住
+- 用户明确诉求
+- 简化逻辑：`block_on_unit = (target_level == origin_level)` 一行判断
+
+**实现**:
+- `_is_path_clear` 加 `targetable_cells` 和 `block_on_unit` 参数
+- 仅对非最后一步 `to_grid` 在 `targetable_cells` 中且 `block_on_unit == true` 时返回 false
+
+### Decision 10: 候选目标自身永远不阻挡自己
+
+**选择**: `_is_path_clear` 中通过 `is_last = (i == path.size() - 1)` 区分目标格与中间格，目标格即使在 `targetable_cells` 中也不阻挡。
+
+**理由**:
+- 目标格就是命中对象，把"自己挡住自己"是悖论
+- 实现简洁：单个布尔标记区分
 
 ## Risks / Trade-offs
 

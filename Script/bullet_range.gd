@@ -108,8 +108,11 @@ func _dda_path(origin: Vector2i, target: Vector2i) -> Array:
 
 	return steps
 
-func _is_path_clear(path: Array, travel_level: int) -> bool:
-	for step in path:
+func _is_path_clear(path: Array, travel_level: int, targetable_cells: Array, block_on_unit: bool) -> bool:
+	var path_size: int = path.size()
+	for i in range(path_size):
+		var step = path[i]
+		var is_last: bool = (i == path_size - 1)
 		var from_grid: Vector2i = step["from"]
 		var to_grid: Vector2i = step["to"]
 		var cross_v: bool = step["cross_v"]
@@ -146,51 +149,63 @@ func _is_path_clear(path: Array, travel_level: int) -> bool:
 		if _has_obstacle_block(to_grid, to_lv):
 			return false
 
+		if block_on_unit and not is_last:
+			if _is_in_cells(to_grid, to_lv, targetable_cells):
+				return false
+
 	return true
+
+func _is_in_cells(grid: Vector2i, level: int, cells: Array) -> bool:
+	for c in cells:
+		if c["grid"] == grid and c["level"] == level:
+			return true
+	return false
 
 func get_bullet_path(origin: Vector2i, target: Vector2i) -> Array:
 	return _dda_path(origin, target)
 
-func get_reachable_cells(origin: Vector2i, origin_level: int, max_range: int) -> Array[Dictionary]:
+func get_targetable_cells(origin: Vector2i, origin_level: int, max_range: int, targetable_cells: Array) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 
-	for dy in range(-max_range, max_range + 1):
-		for dx in range(-max_range, max_range + 1):
-			if dx == 0 and dy == 0:
-				continue
-			var target := Vector2i(origin.x + dx, origin.y + dy)
-			var target_level := get_level_at(target)
-			if target_level == -1:
-				continue
+	for t in targetable_cells:
+		var target: Vector2i = t["grid"]
+		var target_level: int = t["level"]
+		if target == origin and target_level == origin_level:
+			continue
+		var dx: int = target.x - origin.x
+		var dy: int = target.y - origin.y
+		if max(abs(dx), abs(dy)) > max_range:
+			continue
 
-			if target_level > origin_level:
-				if abs(dx) > 1 or abs(dy) > 1:
+		if target_level > origin_level:
+			if abs(dx) > 1 or abs(dy) > 1:
+				continue
+			if dx != 0 and dy != 0:
+				var v_dir := Vector2i(dx, 0)
+				var h_dir := Vector2i(0, dy)
+				if _has_wall(origin, v_dir, origin_level):
 					continue
-				if dx != 0 and dy != 0:
-					var v_dir := Vector2i(dx, 0)
-					var h_dir := Vector2i(0, dy)
-					if _has_wall(origin, v_dir, origin_level):
-						continue
-					if _has_wall(origin, h_dir, origin_level):
-						continue
-					if _has_wall(target, -v_dir, target_level):
-						continue
-					if _has_wall(target, -h_dir, target_level):
-						continue
-				else:
-					var move_dir := Vector2i(dx, dy)
-					if _has_wall(origin, move_dir, origin_level):
-						continue
-					if _has_wall(target, -move_dir, target_level):
-						continue
-				if _has_obstacle_block(target, target_level):
+				if _has_wall(origin, h_dir, origin_level):
 					continue
-				result.append({"grid": target, "level": target_level})
+				if _has_wall(target, -v_dir, target_level):
+					continue
+				if _has_wall(target, -h_dir, target_level):
+					continue
 			else:
-				var path := _dda_path(origin, target)
-				if path.is_empty():
+				var move_dir := Vector2i(dx, dy)
+				if _has_wall(origin, move_dir, origin_level):
 					continue
-				if _is_path_clear(path, target_level):
-					result.append({"grid": target, "level": target_level})
+				if _has_wall(target, -move_dir, target_level):
+					continue
+			if _has_obstacle_block(target, target_level):
+				continue
+			result.append({"grid": target, "level": target_level})
+		else:
+			var path := _dda_path(origin, target)
+			if path.is_empty():
+				continue
+			var block_on_unit: bool = (target_level == origin_level)
+			if _is_path_clear(path, target_level, targetable_cells, block_on_unit):
+				result.append({"grid": target, "level": target_level})
 
 	return result

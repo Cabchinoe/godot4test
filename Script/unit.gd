@@ -1,9 +1,11 @@
 class_name Unit
 extends Node2D
 
+signal movement_finished
+
 var unit_name: String = ""
 var faction: String = ""
-var move_range: int = 5
+var ap_max: int = 5
 var pathfinder: Pathfinder
 var level_manager: LevelManager
 
@@ -15,15 +17,17 @@ var move_interval: float = 0.15
 var is_moving: bool = false
 var action_points: int = 0
 
-func init_unit(p_name: String, p_faction: String, p_move_range: int, p_level_manager: LevelManager, p_start_level: int = 1):
+func init_unit(p_name: String, p_faction: String, p_ap_max: int, p_level_manager: LevelManager, p_start_level: int = 1):
 	unit_name = p_name
 	faction = p_faction
-	move_range = p_move_range
-	action_points = move_range
+	ap_max = p_ap_max
+	action_points = ap_max
 	level_manager = p_level_manager
 	current_level = p_start_level
 	pathfinder = Pathfinder.new(level_manager)
 	_update_z_index()
+	add_to_group("units")
+	add_to_group(faction)
 
 func _update_z_index():
 	var obstacle = level_manager.get_layer(current_level, "obstacle")
@@ -31,7 +35,7 @@ func _update_z_index():
 		z_index = obstacle.z_index + 1
 
 func start_turn():
-	action_points = move_range
+	action_points = ap_max
 
 func spend_ap(cost: int) -> bool:
 	if action_points >= cost:
@@ -48,7 +52,9 @@ func _process(delta: float):
 
 func _step_to_next():
 	if move_path.size() == 0:
-		is_moving = false
+		if is_moving:
+			is_moving = false
+			movement_finished.emit()
 		return
 	var next_node = move_path.pop_front()
 	grid_pos = next_node["grid"]
@@ -64,10 +70,15 @@ func _step_to_next():
 	_update_z_index()
 	if move_path.size() == 0:
 		is_moving = false
+		movement_finished.emit()
 
 func set_move_path(path: Array[Dictionary]):
 	move_path = path
 	move_timer = 0.0
-	is_moving = true
 	if move_path.size() > 0 and move_path[0]["grid"] == grid_pos and move_path[0]["level"] == current_level:
 		move_path.pop_front()
+	if move_path.size() == 0:
+		is_moving = false
+		movement_finished.emit()
+		return
+	is_moving = true

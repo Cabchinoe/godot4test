@@ -14,8 +14,8 @@ var level_manager: LevelManager
 func _init(p_level_manager: LevelManager):
 	level_manager = p_level_manager
 
-func can_move(from: Vector2i, to: Vector2i, level: int) -> bool:
-	if not is_walkable(to, level):
+func can_move(from: Vector2i, to: Vector2i, level: int, exclude_unit = null) -> bool:
+	if not is_walkable(to, level, exclude_unit):
 		return false
 
 	var move_dir = to - from
@@ -39,7 +39,7 @@ func can_move(from: Vector2i, to: Vector2i, level: int) -> bool:
 
 	return true
 
-func is_walkable(grid: Vector2i, level: int) -> bool:
+func is_walkable(grid: Vector2i, level: int, exclude_unit = null) -> bool:
 	var ground = level_manager.get_layer(level, "ground")
 	var obstacle = level_manager.get_layer(level, "obstacle")
 	
@@ -55,6 +55,14 @@ func is_walkable(grid: Vector2i, level: int) -> bool:
 			if not obstacle_data.get_custom_data("can_walk"):
 				return false
 
+	var tree = Engine.get_main_loop() as SceneTree
+	if tree:
+		for u in tree.get_nodes_in_group("units"):
+			if u == exclude_unit:
+				continue
+			if u.grid_pos == grid and u.current_level == level:
+				return false
+
 	return true
 
 func is_stairs(grid: Vector2i, level: int) -> bool:
@@ -66,13 +74,13 @@ func is_stairs(grid: Vector2i, level: int) -> bool:
 		return false
 	return data.get_custom_data("is_stairs")
 
-func get_neighbors(grid: Vector2i, level: int) -> Array[Dictionary]:
+func get_neighbors(grid: Vector2i, level: int, exclude_unit = null) -> Array[Dictionary]:
 	var neighbors: Array[Dictionary] = []
 	
 	# 同层四方向移动（检查墙体阻挡）
 	for dir in DIRS:
 		var next_grid = grid + dir
-		if can_move(grid, next_grid, level):
+		if can_move(grid, next_grid, level, exclude_unit):
 			neighbors.append({"grid": next_grid, "level": level})
 	
 	# 上楼: 当前格是楼梯，周围上层可走
@@ -81,7 +89,7 @@ func get_neighbors(grid: Vector2i, level: int) -> Array[Dictionary]:
 		if level < max_level:
 			for dir in DIRS:
 				var next_grid = grid + dir
-				if is_walkable(next_grid, level + 1):
+				if is_walkable(next_grid, level + 1, exclude_unit):
 					neighbors.append({"grid": next_grid, "level": level + 1})
 	
 	# 下楼: 周围下层是楼梯
@@ -93,7 +101,7 @@ func get_neighbors(grid: Vector2i, level: int) -> Array[Dictionary]:
 	
 	return neighbors
 
-func bfs(start: Vector2i, start_level: int, max_steps: int) -> Array[Dictionary]:
+func bfs(start: Vector2i, start_level: int, max_steps: int, self_unit = null) -> Array[Dictionary]:
 	var visited: Dictionary = {}
 	var queue: Array[Array] = []
 	var result: Array[Dictionary] = []
@@ -112,7 +120,7 @@ func bfs(start: Vector2i, start_level: int, max_steps: int) -> Array[Dictionary]
 		if steps >= max_steps:
 			continue
 
-		for neighbor in get_neighbors(node["grid"], node["level"]):
+		for neighbor in get_neighbors(node["grid"], node["level"], self_unit):
 			if visited.has(neighbor):
 				continue
 			visited[neighbor] = true
@@ -120,7 +128,7 @@ func bfs(start: Vector2i, start_level: int, max_steps: int) -> Array[Dictionary]
 
 	return result
 
-func find_path(from: Vector2i, from_level: int, to: Vector2i, to_level: int) -> Array[Dictionary]:
+func find_path(from: Vector2i, from_level: int, to: Vector2i, to_level: int, self_unit = null) -> Array[Dictionary]:
 	var visited: Dictionary = {}
 	var queue: Array = []
 	var parent: Dictionary = {}
@@ -144,7 +152,7 @@ func find_path(from: Vector2i, from_level: int, to: Vector2i, to_level: int) -> 
 			path.reverse()
 			return path
 
-		for neighbor in get_neighbors(node["grid"], node["level"]):
+		for neighbor in get_neighbors(node["grid"], node["level"], self_unit):
 			if visited.has(neighbor):
 				continue
 			visited[neighbor] = true

@@ -101,7 +101,8 @@ func _process(delta: float):
 			last_hover_node = hover_node
 			var path = player.pathfinder.find_path(
 				player.grid_pos, player.current_level,
-				hover_node["grid"], hover_node["level"]
+				hover_node["grid"], hover_node["level"],
+				player
 			)
 			_draw_path(path)
 	else:
@@ -147,7 +148,8 @@ func _handle_left_click():
 	elif player_selected and _is_node_reachable(click_node):
 		var path = player.pathfinder.find_path(
 			player.grid_pos, player.current_level,
-			click_node["grid"], click_node["level"]
+			click_node["grid"], click_node["level"],
+			player
 		)
 		if path.size() > 0:
 			player.set_move_path(path)
@@ -167,7 +169,7 @@ func _handle_left_click():
 
 func _show_move_range():
 	_clear_all_highlights()
-	reachable_cells = player.pathfinder.bfs(player.grid_pos, player.current_level, player.action_points)
+	reachable_cells = player.pathfinder.bfs(player.grid_pos, player.current_level, player.action_points, player)
 	for node in reachable_cells:
 		if node["grid"] == player.grid_pos and node["level"] == player.current_level:
 			continue
@@ -192,7 +194,7 @@ func _get_closest_walkable_node(mouse_world: Vector2) -> Dictionary:
 		var ground = level_manager.get_layer(level, "ground")
 		var mouse_local = ground.to_local(mouse_world)
 		var grid = ground.local_to_map(mouse_local)
-		if player.pathfinder.is_walkable(grid, level):
+		if player.pathfinder.is_walkable(grid, level, player):
 			var cell_local = ground.map_to_local(grid)
 			var cell_world = ground.to_global(cell_local)
 			var dist = abs(mouse_world.y - cell_world.y)

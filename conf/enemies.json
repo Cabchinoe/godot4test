@@ -1,0 +1,8 @@
+[
+  {
+    "id": "infantry",
+    "name": "步兵",
+    "ap_max": 4,
+    "sprite_frames_path": "res://Unit/player2_sprites.tres"
+  }
+]

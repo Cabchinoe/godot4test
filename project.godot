@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 ItemDB="*res://Script/item/item_db.gd"
 SaveManager="*res://Script/save/save_manager.gd"
+EnemyDB="*res://Script/enemy_db.gd"
 
 [physics]
 

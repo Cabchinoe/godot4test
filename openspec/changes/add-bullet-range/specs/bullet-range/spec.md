@@ -2,25 +2,53 @@
 
 ### Requirement: BulletRange 类独立计算子弹可达格子
 
-系统 SHALL 提供独立的 `BulletRange` 类，与 `Pathfinder` 解耦，专门计算从指定起点和 level 出发的子弹可命中格子集合。类 MUST 接受 `LevelManager` 实例以查询地图层信息。
+系统 SHALL 提供独立的 `BulletRange` 类，与 `Pathfinder` 解耦，专门计算从指定起点和 level 出发能命中的目标格子。类 MUST 接受 `LevelManager` 实例以查询地图层信息。
 
 #### Scenario: 创建 BulletRange 实例
 - **WHEN** 调用方使用 `LevelManager` 实例构造 `BulletRange`
 - **THEN** 实例成功创建，且能基于该 `LevelManager` 查询任意 level 的 `ground` 和 `obstacle` 层
 
-#### Scenario: 计算可达格子集合
-- **WHEN** 调用方提供起点格子、起点 level、射程参数
-- **THEN** 返回 `Array[Dictionary]`，每项包含 `grid: Vector2i` 和 `level: int`，表示子弹可命中的格子及其所在 level
+#### Scenario: 计算可命中目标集合
+- **WHEN** 调用方提供起点格子、起点 level、射程参数、候选目标列表 `targetable_cells`
+- **THEN** 返回 `Array[Dictionary]`，每项包含 `grid: Vector2i` 和 `level: int`，表示候选目标中能被命中的子集
 - **AND** 结果不包含起点本身
+- **AND** 候选目标格同时充当路径中的动态阻挡物（视具体规则）
 
 ### Requirement: 射程边界约束
 
-子弹可达格子 MUST 限制在以起点为中心、边长为 `2 * range + 1` 的正方形包围盒内。
+候选目标 MUST 满足与起点的切比雪夫距离 ≤ `max_range`。
 
 #### Scenario: 射程为 5，起点 (10,10)
-- **WHEN** 计算可达格子
-- **THEN** 候选格子范围为 x ∈ [5, 15] 且 y ∈ [5, 15]
-- **AND** 起点 (10,10) 不在结果中
+- **WHEN** 候选目标距起点切比雪夫距离 > 5
+- **THEN** 该目标 MUST 被排除
+
+#### Scenario: 起点本身在候选列表中
+- **WHEN** `targetable_cells` 包含起点
+- **THEN** 起点 MUST 被排除，不出现在结果中
+
+### Requirement: 动态目标格阻挡
+
+`targetable_cells` 中的格子在 DDA 路径中间出现时 MUST 按 level 关系决定是否阻挡子弹：
+
+- 平射（`target_level == origin_level`）：路径中间格若在 `targetable_cells` 内 → 阻挡（子弹打到中间的人身上）
+- 高打低（`target_level < origin_level`）：忽略中间格的 `targetable_cells` → 不阻挡
+- 低打高（`target_level > origin_level`）：路径只有 1 步（相邻），无中间格
+
+目标格自身（路径最后一步的 `to`）即使在 `targetable_cells` 中也 MUST 不阻挡 —— 它本就是命中对象。
+
+#### Scenario: 平射时路径中间有目标格
+- **WHEN** 平射弹道，DDA 路径中间某格 G 在 `targetable_cells` 中（非目标终点）
+- **THEN** 子弹在 G 处阻断
+- **AND** 目标终点不加入结果
+
+#### Scenario: 高打低时路径中间有目标格
+- **WHEN** 子弹从高处射向低处，DDA 路径中间某格 G 在 `targetable_cells` 中
+- **THEN** G 不视为阻挡，子弹继续前进
+- **AND** 目标终点若其他检查通过，加入结果
+
+#### Scenario: 目标自身在 targetable_cells 中
+- **WHEN** DDA 路径终点（目标格）也在 `targetable_cells` 中
+- **THEN** 不视为阻挡，目标可命中
 
 ### Requirement: Level 关系决定子弹弹道规则
 

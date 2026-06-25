@@ -16,6 +16,7 @@ extends Node2D
 @onready var turn_label: Label = $UILayer/UIRoot/StatusBar/TurnLabel
 @onready var end_turn_button: Button = $UILayer/UIRoot/StatusBar/EndTurnButton
 @onready var context_menu: PopupMenu = $UILayer/UIRoot/ContextMenu
+@onready var enemies_container: Node2D = $Enemies
 
 const DRAG_THRESHOLD: float = 5.0
 const ATTACK_RANGE: int = 5
@@ -23,6 +24,8 @@ const ATTACK_RANGE: int = 5
 var level_manager: LevelManager
 var turn_controller: TurnController
 var bullet_range: BulletRange
+var enemy_spawner: EnemySpawner
+var enemy_ai: EnemyAI
 var reachable_cells: Array[Dictionary] = []
 var attack_cells: Array[Dictionary] = []
 var player_selected: bool = false
@@ -34,6 +37,10 @@ var press_pos: Vector2 = Vector2.ZERO
 var last_mouse_pos: Vector2 = Vector2.ZERO
 var pending_recalc_range: bool = false
 
+const DEFAULT_MOVE_INTERVAL: float = 0.15
+const FAST_MOVE_INTERVAL: float = 0.01
+var skip_held: bool = false
+
 
 func _ready():
 	hover_sprite.visible = false
@@ -44,21 +51,25 @@ func _ready():
 	level_manager.add_level(2, ground_layer_2, obstacle_layer_2, hud_layer_2, -16)
 
 	player.init_unit("Player", "player", 5, level_manager, 1)
-	if SaveManager.has_current_data() and SaveManager.current_data.player:
-		var player_provider = PlayerSaveProvider.new(player)
-		SaveManager.register_provider(player_provider)
-		player_provider.read_from(SaveManager.current_data)
 	print("Player start grid: ", player.grid_pos, " level: ", player.current_level, " world: ", player.global_position)
 
 	turn_controller = TurnController.new(10)
 	turn_controller.turn_started.connect(_on_turn_started)
 	turn_controller.game_over.connect(_on_game_over)
+	turn_controller.phase_changed.connect(_on_phase_changed)
 	turn_controller.start_game()
 
 	end_turn_button.pressed.connect(_on_end_turn_pressed)
 	context_menu.id_pressed.connect(_on_context_menu_pressed)
 
 	bullet_range = BulletRange.new(level_manager)
+
+	enemy_spawner = EnemySpawner.new(level_manager, enemies_container)
+	enemy_spawner.spawn_batch([
+		{"id": "infantry", "grid": Vector2i(5, 3), "level": 1},
+		{"id": "infantry", "grid": Vector2i(7, 5), "level": 1},
+	])
+	enemy_ai = EnemyAI.new()
 
 func _on_turn_started(_turn: int):
 	player.start_turn()
@@ -67,6 +78,37 @@ func _on_turn_started(_turn: int):
 func _on_game_over():
 	_clear_selection()
 	end_turn_button.disabled = true
+
+func _on_phase_changed(phase):
+	if phase == TurnController.Phase.ENEMY_PHASE:
+		await _run_enemy_phase()
+		turn_controller.end_enemy_phase()
+	else:
+		_set_all_units_move_interval(DEFAULT_MOVE_INTERVAL)
+		skip_held = false
+
+func _run_enemy_phase() -> void:
+	for e in get_tree().get_nodes_in_group("enemy"):
+		e.start_turn()
+		await enemy_ai.run_turn(e)
+
+func _set_all_units_move_interval(interval: float) -> void:
+	for u in get_tree().get_nodes_in_group("units"):
+		u.move_interval = interval
+
+func _update_skip_input() -> void:
+	if turn_controller.current_phase != TurnController.Phase.ENEMY_PHASE:
+		if skip_held:
+			skip_held = false
+			_set_all_units_move_interval(DEFAULT_MOVE_INTERVAL)
+		return
+	var pressed: bool = Input.is_key_pressed(KEY_SPACE)
+	if pressed and not skip_held:
+		skip_held = true
+		_set_all_units_move_interval(FAST_MOVE_INTERVAL)
+	elif not pressed and skip_held:
+		skip_held = false
+		_set_all_units_move_interval(DEFAULT_MOVE_INTERVAL)
 
 func _on_end_turn_pressed():
 	_clear_selection()
@@ -92,6 +134,11 @@ func _process(delta: float):
 	if turn_controller.is_game_over:
 		return
 
+	_update_skip_input()
+
+	if turn_controller.current_phase != TurnController.Phase.PLAYER_PHASE:
+		return
+
 	if is_dragging:
 		var current_mouse = get_global_mouse_position()
 		var screen_mouse = get_viewport().get_mouse_position()
@@ -104,7 +151,7 @@ func _process(delta: float):
 
 	if attack_mode:
 		var attack_mouse_world = get_global_mouse_position()
-		var attack_hover = _get_closest_walkable_node(attack_mouse_world)
+		var attack_hover = _get_closest_attack_node(attack_mouse_world)
 		if _is_in_attack_cells(attack_hover):
 			if attack_hover != last_hover_node:
 				last_hover_node = attack_hover
@@ -129,7 +176,8 @@ func _process(delta: float):
 			last_hover_node = hover_node
 			var path = player.pathfinder.find_path(
 				player.grid_pos, player.current_level,
-				hover_node["grid"], hover_node["level"]
+				hover_node["grid"], hover_node["level"],
+				player
 			)
 			_draw_path(path)
 	else:
@@ -140,6 +188,8 @@ func _process(delta: float):
 
 func _unhandled_input(event: InputEvent):
 	if turn_controller.is_game_over:
+		return
+	if turn_controller.current_phase != TurnController.Phase.PLAYER_PHASE:
 		return
 	if player.is_moving:
 		return
@@ -168,16 +218,17 @@ func _unhandled_input(event: InputEvent):
 
 func _handle_left_click():
 	var mouse_world = get_global_mouse_position()
-	var click_node = _get_closest_walkable_node(mouse_world)
 
 	if attack_mode:
-		if _is_in_attack_cells(click_node):
-			var path = bullet_range.get_bullet_path(player.grid_pos, click_node["grid"])
-			print("[Attack] origin=", player.grid_pos, " lv=", player.current_level, " target=", click_node)
+		var attack_click_node = _get_closest_attack_node(mouse_world)
+		if _is_in_attack_cells(attack_click_node):
+			var path = bullet_range.get_bullet_path(player.grid_pos, attack_click_node["grid"])
+			print("[Attack] origin=", player.grid_pos, " lv=", player.current_level, " target=", attack_click_node)
 			for step in path:
 				print("  step: ", step)
 		return
 
+	var click_node = _get_closest_walkable_node(mouse_world)
 	var player_node = {"grid": player.grid_pos, "level": player.current_level}
 
 	if player_selected and _is_same_node(click_node, player_node):
@@ -185,7 +236,8 @@ func _handle_left_click():
 	elif player_selected and _is_node_reachable(click_node):
 		var path = player.pathfinder.find_path(
 			player.grid_pos, player.current_level,
-			click_node["grid"], click_node["level"]
+			click_node["grid"], click_node["level"],
+			player
 		)
 		if path.size() > 0:
 			var steps = path.size() - 1
@@ -227,7 +279,7 @@ func _show_context_menu():
 
 func _show_move_range():
 	_clear_all_highlights()
-	reachable_cells = player.pathfinder.bfs(player.grid_pos, player.current_level, player.action_points)
+	reachable_cells = player.pathfinder.bfs(player.grid_pos, player.current_level, player.action_points, player)
 	print("Player at: ", player.grid_pos, " level: ", player.current_level, " Reachable: ", reachable_cells.size())
 	for node in reachable_cells:
 		if node["grid"] == player.grid_pos and node["level"] == player.current_level:
@@ -240,7 +292,7 @@ func _show_move_range():
 func _enter_attack_mode():
 	_clear_selection()
 	attack_mode = true
-	attack_cells = bullet_range.get_reachable_cells(player.grid_pos, player.current_level, ATTACK_RANGE)
+	attack_cells = bullet_range.get_targetable_cells(player.grid_pos, player.current_level, ATTACK_RANGE, _collect_targetable_cells())
 	print("[Attack] enter mode, cells=", attack_cells.size())
 	_clear_all_highlights()
 	for cell in attack_cells:
@@ -274,6 +326,12 @@ func _is_in_attack_cells(node: Dictionary) -> bool:
 			return true
 	return false
 
+func _collect_targetable_cells() -> Array:
+	var cells: Array = []
+	for e in get_tree().get_nodes_in_group("enemy"):
+		cells.append({"grid": e.grid_pos, "level": e.current_level})
+	return cells
+
 func _draw_path(path: Array[Dictionary]):
 	hover_sprite.clear_points()
 	for node in path:
@@ -290,13 +348,26 @@ func _get_closest_walkable_node(mouse_world: Vector2) -> Dictionary:
 		var ground = level_manager.get_layer(level, "ground")
 		var mouse_local = ground.to_local(mouse_world)
 		var grid = ground.local_to_map(mouse_local)
-		if player.pathfinder.is_walkable(grid, level):
+		if player.pathfinder.is_walkable(grid, level, player):
 			var cell_local = ground.map_to_local(grid)
 			var cell_world = ground.to_global(cell_local)
 			var dist = abs(mouse_world.y - cell_world.y)
 			if dist < best_dist:
 				best_dist = dist
 				best_node = {"grid": grid, "level": level}
+	return best_node
+
+func _get_closest_attack_node(mouse_world: Vector2) -> Dictionary:
+	var best_node = {}
+	for level in level_manager.get_all_levels():
+		var ground = level_manager.get_layer(level, "ground")
+		if ground == null:
+			continue
+		var mouse_local = ground.to_local(mouse_world)
+		var grid = ground.local_to_map(mouse_local)
+		for cell in attack_cells:
+			if cell["grid"] == grid and cell["level"] == level:
+				return cell
 	return best_node
 
 func _is_node_reachable(node: Dictionary) -> bool:
@@ -319,5 +390,5 @@ func _clear_all_highlights():
 			hud.clear()
 
 func _update_hud():
-	ap_label.text = "行动点: %d/%d" % [player.action_points, player.move_range]
+	ap_label.text = "行动点: %d/%d" % [player.action_points, player.ap_max]
 	turn_label.text = "回合 %d/%d" % [turn_controller.current_turn, turn_controller.max_turns]
