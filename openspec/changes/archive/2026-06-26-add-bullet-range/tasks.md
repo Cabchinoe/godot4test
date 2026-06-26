@@ -37,19 +37,19 @@
 
 ## 6. 验证与边界用例
 
-- [ ] 6.1 手测：起点 (10,10) lv=1，射程 5，目标 (13,12) lv=1，路径中 (12,11) 北墙 → 应阻挡
-- [ ] 6.2 手测：起点 lv=2，目标 lv=1，路径经过 lv=2 地板 → 应阻挡
-- [ ] 6.3 手测：起点 lv=1，目标 lv=2 切比雪夫距离 > 1 → 应排除
-- [ ] 6.4 手测：起点 lv=1，目标 lv=2 切比雪夫距离 == 1（4 正向或 4 对角）→ 应可达（若无墙阻挡）
-- [ ] 6.5 手测：DDA 路径穿过无地面格子 → 子弹应穿过
-- [ ] 6.6 手测：起点东墙存在，目标在东侧 → 应阻挡
-- [ ] 6.7 手测：射线穿格子角，角两侧任一有墙 → 应阻挡
+- [x] 6.1 手测：起点 (10,10) lv=1，射程 5，目标 (13,12) lv=1，路径中 (12,11) 北墙 → 应阻挡
+- [x] 6.2 手测：起点 lv=2，目标 lv=1，路径经过 lv=2 地板 → 应阻挡
+- [x] 6.3 手测：起点 lv=1，目标 lv=2 切比雪夫距离 > 1 → 应排除
+- [x] 6.4 手测：起点 lv=1，目标 lv=2 切比雪夫距离 == 1（4 正向或 4 对角）→ 应可达（若无墙阻挡）
+- [x] 6.5 手测：DDA 路径穿过无地面格子 → 子弹应穿过
+- [x] 6.6 手测：起点东墙存在，目标在东侧 → 应阻挡
+- [x] 6.7 手测：射线穿格子角，角两侧任一有墙 → 应阻挡
 
 ## 7. 集成 Smoke Test
 
 - [x] 7.1 在 `main.gd` 临时加调试调用 `BulletRange.new(level_manager).get_reachable_cells(player.grid_pos, player.current_level, 5)`，`print` 结果
-- [ ] 7.2 Godot 运行 main 场景，检查输出格子数和分布是否合理
-- [ ] 7.3 移除临时调试代码
+- [x] 7.2 Godot 运行 main 场景，检查输出格子数和分布是否合理
+- [x] 7.3 移除临时调试代码
 
 ## 8. 动态目标格阻挡 (改进)
 
@@ -61,3 +61,41 @@
 - [x] 8.6 目标格自身（`is_last`）不视为阻挡
 - [x] 8.7 添加 `_is_in_cells(grid, level, cells)` 工具方法
 - [x] 8.8 `main.gd` 调用同步：`get_targetable_cells`，并加 `_collect_targetable_cells()` 占位（接入其他 unit 时填充）
+
+## 9. 全射程可视化 (改进 / 翻 Decision 8)
+
+### 9.1 BulletRange API 调整
+
+- [x] 9.1.1 `get_targetable_cells` 重命名为 `get_reachable_cells`
+- [x] 9.1.2 参数 `targetable_cells` 重命名为 `unit_cells`，语义改为"动态阻挡 + 自身可命中标记"
+- [x] 9.1.3 候选枚举改回 bbox fan-out：以 origin 为中心、半径 `max_range` 的 `(2*range+1)^2` 格，排除起点
+- [x] 9.1.4 `_is_path_clear` 内部参数同步重命名为 `unit_cells`
+- [x] 9.1.5 返回值不变（Array[Dictionary]），但内容现在包含空地 + unit 格
+
+### 9.2 HUD 视觉资源
+
+- [x] 9.2.1 准备 2×1 PNG（如 `HUD/attack_range.png`），左半灰、右半浅绿
+- [x] 9.2.2 在 HUD TileSet（`TileSet_272bh` 和 `TileSet_kek77`）的 atlas source 加入第二个 atlas coord `Vector2i(1, 0)`
+- [x] 9.2.3 验证 atlas (0,0) 灰、(1,0) 浅绿在 Godot 编辑器中正确显示
+
+### 9.3 main.gd 渲染逻辑
+
+- [x] 9.3.1 定义常量 `ATTACK_GRAY_ATLAS = Vector2i(0, 0)`、`ATTACK_GREEN_ATLAS = Vector2i(1, 0)`
+- [x] 9.3.2 `_enter_attack_mode` 中先收集 `unit_cells`，调用 `get_reachable_cells(...)` 拿全部
+- [x] 9.3.3 渲染时判断 cell 是否在 `unit_cells` 中，分别 set_cell 不同 atlas
+- [x] 9.3.4 保留 `attack_cells` 字段含义为"全部可命中格"，新增字段或方法判断是否 unit 格
+- [x] 9.3.5 `_is_in_attack_cells` 行为不变（仍指任意可命中格）
+
+### 9.4 hover 与点击行为
+
+- [x] 9.4.1 `_process` 中 hover 命中后判断是否为 unit 格（在 `unit_cells` 中），仅 unit 格调用 `_draw_gun_line`
+- [x] 9.4.2 hover 灰格时清空 `hover_sprite2`（保留 `last_hover_node` 跟踪以避免抖动）
+- [x] 9.4.3 左键点击行为暂保持现状（点任意可命中格都触发 print 弹道），后续接入伤害再决定是否限制只能点 unit 格
+
+### 9.5 验证
+
+- [x] 9.5.1 攻击模式开启后：射程内空地显示灰底，敌人所在格显示浅绿底
+- [x] 9.5.2 敌人后方的空地不显示（被 unit 挡）
+- [x] 9.5.3 hover 浅绿格 → 显示枪线；hover 灰格 → 无枪线
+- [x] 9.5.4 跨 level（高打低）目标若无 unit 也显示灰
+- [x] 9.5.5 退出攻击模式后所有 HUD 高亮清空

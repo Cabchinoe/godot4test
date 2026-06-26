@@ -24,8 +24,20 @@
 ### Modified Capabilities
 （无，BFS 寻路逻辑不变）
 
+## Phase 2 改进（全射程可视化）
+
+- 翻 Decision 8：候选目标重新由 bbox fan-out 生成，而非外部 unit 列表
+- 重命名主入口 `get_targetable_cells` → `get_reachable_cells`
+- 参数 `targetable_cells` → `unit_cells`，仅承担"动态阻挡 + 自身可命中"语义，不再充当候选源
+- 返回值包含全部射程内可命中格（空地 + unit 所在格）
+- main.gd 攻击模式渲染两种底色：
+  - 灰色 = 子弹能到的空地
+  - 浅绿 = 上面站着 unit 的格
+  - hover 浅绿格时显示枪线，hover 灰格不显示
+
 ## Impact
 
 - 新增文件: `Script/bullet_range.gd`
 - 不修改 `Pathfinder`，但复用其 `LevelManager` 和 `wall_block` 位掩码定义
-- `main.gd` 后续可用于高亮子弹射程（不在本次变更范围内，由后续 UI 集成处理）
+- `main.gd` 攻击模式 HUD 渲染逻辑变更，hover 行为变更
+- HUD tileset 新增第二个 atlas tile（浅绿底）；纹理拼成 2×1 PNG，atlas (0,0) = 灰、(1,0) = 浅绿

@@ -8,47 +8,58 @@
 - **WHEN** 调用方使用 `LevelManager` 实例构造 `BulletRange`
 - **THEN** 实例成功创建，且能基于该 `LevelManager` 查询任意 level 的 `ground` 和 `obstacle` 层
 
-#### Scenario: 计算可命中目标集合
-- **WHEN** 调用方提供起点格子、起点 level、射程参数、候选目标列表 `targetable_cells`
-- **THEN** 返回 `Array[Dictionary]`，每项包含 `grid: Vector2i` 和 `level: int`，表示候选目标中能被命中的子集
+#### Scenario: 计算可命中格集合
+- **WHEN** 调用方提供起点格子、起点 level、射程参数、`unit_cells` 列表
+- **THEN** 返回 `Array[Dictionary]`，每项包含 `grid: Vector2i` 和 `level: int`
+- **AND** 结果包含射程内所有能被子弹命中的格子（空地 + 含 unit 的格子）
 - **AND** 结果不包含起点本身
-- **AND** 候选目标格同时充当路径中的动态阻挡物（视具体规则）
+- **AND** `unit_cells` 仅作为动态阻挡列表与"自身可命中"标记，不充当候选源
+
+### Requirement: 候选枚举使用 bbox fan-out
+
+候选目标 SHALL 通过以起点为中心、半径 `max_range` 的切比雪夫 bbox 生成（`(2*max_range+1)^2` 格），不依赖外部传入的候选列表。
+
+#### Scenario: 射程为 5，起点 (10,10)
+- **WHEN** 计算可命中格
+- **THEN** 候选格集合为 `x ∈ [5,15], y ∈ [5,15]` 的所有格，去掉起点本身
+- **AND** 每个候选格独立运行 DDA 判定
+
+#### Scenario: 候选格无地面
+- **WHEN** 候选格 `get_level_at` 返回 -1
+- **THEN** 该候选格 MUST 被排除（虚空无法命中）
 
 ### Requirement: 射程边界约束
 
 候选目标 MUST 满足与起点的切比雪夫距离 ≤ `max_range`。
 
-#### Scenario: 射程为 5，起点 (10,10)
-- **WHEN** 候选目标距起点切比雪夫距离 > 5
-- **THEN** 该目标 MUST 被排除
-
-#### Scenario: 起点本身在候选列表中
-- **WHEN** `targetable_cells` 包含起点
+#### Scenario: 起点本身
+- **WHEN** 候选枚举遍历到起点格
 - **THEN** 起点 MUST 被排除，不出现在结果中
 
-### Requirement: 动态目标格阻挡
+### Requirement: 动态 unit 格阻挡
 
-`targetable_cells` 中的格子在 DDA 路径中间出现时 MUST 按 level 关系决定是否阻挡子弹：
+`unit_cells` 中的格子在 DDA 路径中间出现时 MUST 按 level 关系决定是否阻挡子弹：
 
-- 平射（`target_level == origin_level`）：路径中间格若在 `targetable_cells` 内 → 阻挡（子弹打到中间的人身上）
-- 高打低（`target_level < origin_level`）：忽略中间格的 `targetable_cells` → 不阻挡
+- 平射（`target_level == origin_level`）：路径中间格若在 `unit_cells` 内 → 阻挡（子弹打到中间的人身上）
+- 高打低（`target_level < origin_level`）：忽略中间格的 `unit_cells` → 不阻挡
 - 低打高（`target_level > origin_level`）：路径只有 1 步（相邻），无中间格
 
-目标格自身（路径最后一步的 `to`）即使在 `targetable_cells` 中也 MUST 不阻挡 —— 它本就是命中对象。
+目标格自身（路径最后一步的 `to`）即使在 `unit_cells` 中也 MUST 不阻挡 —— 它本就是命中对象。
 
-#### Scenario: 平射时路径中间有目标格
-- **WHEN** 平射弹道，DDA 路径中间某格 G 在 `targetable_cells` 中（非目标终点）
+#### Scenario: 平射时路径中间有 unit 格
+- **WHEN** 平射弹道，DDA 路径中间某格 G 在 `unit_cells` 中（非目标终点）
 - **THEN** 子弹在 G 处阻断
 - **AND** 目标终点不加入结果
 
-#### Scenario: 高打低时路径中间有目标格
-- **WHEN** 子弹从高处射向低处，DDA 路径中间某格 G 在 `targetable_cells` 中
+#### Scenario: 高打低时路径中间有 unit 格
+- **WHEN** 子弹从高处射向低处，DDA 路径中间某格 G 在 `unit_cells` 中
 - **THEN** G 不视为阻挡，子弹继续前进
 - **AND** 目标终点若其他检查通过，加入结果
 
-#### Scenario: 目标自身在 targetable_cells 中
-- **WHEN** DDA 路径终点（目标格）也在 `targetable_cells` 中
+#### Scenario: 目标自身在 unit_cells 中
+- **WHEN** DDA 路径终点（目标格）也在 `unit_cells` 中
 - **THEN** 不视为阻挡，目标可命中
+- **AND** 目标格加入结果，调用方可识别其为 unit 格
 
 ### Requirement: Level 关系决定子弹弹道规则
 
@@ -149,3 +160,13 @@
 - **WHEN** DDA 从起点向目标格前进过程中任一格未通过检查
 - **THEN** 目标格不加入可达结果
 - **AND** 中途已通过的格子也不自动加入（每个目标格独立判定）
+
+### Requirement: 主入口 API 命名
+
+主入口 SHALL 命名为 `get_reachable_cells(origin, origin_level, max_range, unit_cells)`，返回所有可命中格的列表。
+
+#### Scenario: 调用 get_reachable_cells
+- **WHEN** 调用 `get_reachable_cells(Vector2i(10,10), 1, 5, unit_cells)`
+- **THEN** 返回 `Array[Dictionary]` 包含所有能被子弹命中的格子
+- **AND** 包含空地可达格与 `unit_cells` 中的可命中格
+- **AND** 不区分两类（区分由调用方根据 `unit_cells` 求交完成）

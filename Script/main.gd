@@ -20,6 +20,10 @@ extends Node2D
 
 const DRAG_THRESHOLD: float = 5.0
 const ATTACK_RANGE: int = 5
+const MOVE_RANGE_SOURCE_ID: int = 0
+const ATTACK_RANGE_SOURCE_ID: int = 1
+const ATTACK_GRAY_ATLAS := Vector2i(0, 0)
+const ATTACK_GREEN_ATLAS := Vector2i(1, 0)
 
 var level_manager: LevelManager
 var turn_controller: TurnController
@@ -28,6 +32,7 @@ var enemy_spawner: EnemySpawner
 var enemy_ai: EnemyAI
 var reachable_cells: Array[Dictionary] = []
 var attack_cells: Array[Dictionary] = []
+var attack_unit_cells: Array = []
 var player_selected: bool = false
 var attack_mode: bool = false
 var last_hover_node: Dictionary = {}
@@ -152,7 +157,7 @@ func _process(delta: float):
 	if attack_mode:
 		var attack_mouse_world = get_global_mouse_position()
 		var attack_hover = _get_closest_attack_node(attack_mouse_world)
-		if _is_in_attack_cells(attack_hover):
+		if _is_in_attack_cells(attack_hover) and _is_in_unit_cells(attack_hover):
 			if attack_hover != last_hover_node:
 				last_hover_node = attack_hover
 				_draw_gun_line(attack_hover["grid"], attack_hover["level"])
@@ -287,23 +292,26 @@ func _show_move_range():
 		var hud = level_manager.get_layer(node["level"], "hud")
 		if hud == null:
 			continue
-		hud.set_cell(node["grid"], 0, Vector2i(0, 0))
+		hud.set_cell(node["grid"], MOVE_RANGE_SOURCE_ID, Vector2i(0, 0))
 
 func _enter_attack_mode():
 	_clear_selection()
 	attack_mode = true
-	attack_cells = bullet_range.get_targetable_cells(player.grid_pos, player.current_level, ATTACK_RANGE, _collect_targetable_cells())
+	attack_unit_cells = _collect_targetable_cells()
+	attack_cells = bullet_range.get_reachable_cells(player.grid_pos, player.current_level, ATTACK_RANGE, attack_unit_cells)
 	print("[Attack] enter mode, cells=", attack_cells.size())
 	_clear_all_highlights()
 	for cell in attack_cells:
 		var hud = level_manager.get_layer(cell["level"], "hud")
 		if hud == null:
 			continue
-		hud.set_cell(cell["grid"], 0, Vector2i(0, 0))
+		var atlas: Vector2i = ATTACK_GREEN_ATLAS if _is_in_unit_cells(cell) else ATTACK_GRAY_ATLAS
+		hud.set_cell(cell["grid"], ATTACK_RANGE_SOURCE_ID, atlas)
 
 func _exit_attack_mode():
 	attack_mode = false
 	attack_cells = []
+	attack_unit_cells = []
 	_clear_all_highlights()
 	hover_sprite2.visible = false
 	hover_sprite2.clear_points()
@@ -322,6 +330,14 @@ func _is_in_attack_cells(node: Dictionary) -> bool:
 	if node.is_empty():
 		return false
 	for cell in attack_cells:
+		if cell["grid"] == node["grid"] and cell["level"] == node["level"]:
+			return true
+	return false
+
+func _is_in_unit_cells(node: Dictionary) -> bool:
+	if node.is_empty():
+		return false
+	for cell in attack_unit_cells:
 		if cell["grid"] == node["grid"] and cell["level"] == node["level"]:
 			return true
 	return false

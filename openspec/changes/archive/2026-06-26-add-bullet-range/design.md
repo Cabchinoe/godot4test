@@ -144,6 +144,50 @@
 - 目标格就是命中对象，把"自己挡住自己"是悖论
 - 实现简洁：单个布尔标记区分
 
+### Decision 11: 翻案 Decision 8 —— 候选改回 bbox fan-out
+
+**背景**: Decision 8 当初为简化 API 把候选 = unit 列表，但 UI 集成阶段发现玩家需要看"全射程内所有能打到的格子"（含空地）作为攻击意图反馈，仅展示 unit 格信息不足。
+
+**选择**:
+- 候选枚举改回切比雪夫 bbox：以 origin 为中心，半径 `max_range` 的 `(2*range+1)^2` 格
+- `unit_cells` 参数保留，但语义收窄为"动态阻挡列表 + 自身可命中标记"，不再充当候选源
+- 主入口重命名 `get_targetable_cells` → `get_reachable_cells`，返回值包含所有能打到的格（空地 + unit 所在格）
+- 调用方（main.gd）自行求 `result ∩ unit_cells` 得到"有 unit 的可命中格"用于绿色高亮
+
+**理由**:
+- UI 要求展示完整射程覆盖，不能因为格子上无 unit 就丢失"能否打到"信息
+- 单次 DDA 扫描已能覆盖所有需求，无须二次 API
+- `unit_cells` 充当阻挡 + 命中标记仍由 `_is_path_clear` 内部消费，逻辑改动小
+- 性能可接受：range = 5 时候选 121 个，每个一次 DDA，远低于一帧预算
+
+**与 Decision 8 的关系**: Decision 8 的"性能"理由仍成立（unit 数量远小于 bbox 格数），但其"实战只需打到敌人"被 UI 反馈需求推翻；保留 Decision 8 文本作为历史，本 Decision 11 取代之。
+
+### Decision 12: 双层视觉用同一 TileSet 的两个 atlas coord
+
+**背景**: 攻击模式 HUD 要画两种底色：灰（空地可达）+ 浅绿（unit 可命中）。
+
+**选择**: 拼一张 2×1 PNG（`HUD/attack_range.png`，28×14 region size），TileSet 单 source 双 atlas coord：
+- `Vector2i(0, 0)` → 灰底
+- `Vector2i(1, 0)` → 浅绿底
+
+**理由**:
+- 复用单 TileMapLayer，无需新增节点层级
+- main.gd 渲染逻辑只多一行 `set_cell(grid, 0, atlas_coord)` 判断
+- 移动范围用现有 `moverange.png`（atlas (0,0)），不冲突，由 main.gd 控制 set_cell 时机
+
+**替代方案**:
+- *两个 TileMapLayer 各 modulate 整层*：层级膨胀，z_index 管理复杂
+- *运行时 modulate 逐格*：TileMapLayer 不支持逐格 modulate
+
+### Decision 13: hover 枪线仅在 unit 格触发
+
+**选择**: `_process` hover 检测时，仅当 hover 命中的格子同时在 `unit_cells` 中（即 green 格）才绘制枪线 Line2D；hover 灰格清空 Line2D。
+
+**理由**:
+- 视觉直觉：射击意图针对具体目标，空地无目标可瞄
+- 减少无意义的弹道预览噪声
+- 点击行为保持现状（左键点 green 格才打）
+
 ## Risks / Trade-offs
 
 | 风险 | 缓解 |
@@ -151,7 +195,7 @@
 | DDA 在垂直/水平射线（dir.x==0 或 dir.y==0）时除零 | 用 `INF` 表示无穷 t，DDA 步进自然只跨另一方向边 |
 | 跨角浮点误差导致跨垂直边/水平边判定不稳定 | 用 `abs(t_x - t_y) < EPSILON` 显式判跨角 |
 | 起点对自身格的离开方向检查与角色站立的"先离开再到达"语义冲突 | DDA 步进首步即处理起点离开 wall_block |
-| Bounding box 包含很多明显被墙挡的格 | 不优化（射程通常 ≤10，总格数有限） |
+| Bounding box 包含很多明显被墙挡的格 | 不优化（射程通常 ≤10，总格数有限）；Decision 11 已确认仍走 bbox |
 | 多 level 楼板规则与未来楼层洞口 / 跳跃打击需求可能冲突 | 当前作用域仅"打到地板"，洞口规则不实现 |
 | `get_level_at` 每次遍历所有 level 性能 | level 数量小（当前 2 层），可接受；若扩展可加缓存 |
 
