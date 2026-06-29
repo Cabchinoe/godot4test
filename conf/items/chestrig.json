@@ -1,0 +1,13 @@
+[
+	{
+		"id": "chestrig_basic_01",
+		"name": "基础胸挂",
+		"type": "CHESTRIG",
+		"icon": "res://Items/icons/chestrig/chestrig_basic_01.png",
+		"description": "基础战术胸挂",
+		"price": 250,
+		"stackable": false,
+		"max_stack": 1,
+		"quality": "C"
+	}
+]

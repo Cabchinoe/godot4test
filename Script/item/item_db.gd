@@ -25,25 +25,44 @@ const DEFAULT_COLOR := Color(0.5, 0.5, 0.5)
 
 var _items: Dictionary = {}
 
-func load_from_file(path: String) -> void:
+func load_from_dir(dir_path: String) -> void:
+	for type_key in VALID_TYPES:
+		var path := dir_path.path_join(type_key.to_lower() + ".json")
+		_load_type_file(path)
+	print("ItemDB: loaded ", _items.size(), " items")
+	_validate_icons()
+
+func _load_type_file(path: String) -> void:
 	if not FileAccess.file_exists(path):
-		print("ItemDB: file not found: ", path)
+		print("ItemDB: file not found (skipped): ", path)
 		return
 	var file := FileAccess.open(path, FileAccess.READ)
 	var json := JSON.new()
 	var err := json.parse(file.get_as_text())
 	file.close()
 	if err != OK:
-		print("ItemDB: JSON parse error: ", json.get_error_message())
+		print("ItemDB: JSON parse error in ", path, ": ", json.get_error_message())
 		return
 	var data = json.data
 	if not data is Array:
-		print("ItemDB: JSON root must be an array")
+		print("ItemDB: JSON root must be an array: ", path)
 		return
 	for entry in data:
 		if _validate_entry(entry):
 			_items[entry["id"]] = entry
-	print("ItemDB: loaded ", _items.size(), " items")
+
+func _validate_icons() -> void:
+	var missing: Array = []
+	for item in _items.values():
+		if not item.has("icon"):
+			continue
+		if not FileAccess.file_exists(item["icon"]):
+			missing.append([item["id"], item["icon"]])
+	if missing.is_empty():
+		return
+	print("ItemDB: ", missing.size(), " item icon(s) missing:")
+	for entry in missing:
+		print("  - ", entry[0], " -> ", entry[1])
 
 func _validate_entry(entry: Dictionary) -> bool:
 	if not entry.has("id") or not entry.has("type"):

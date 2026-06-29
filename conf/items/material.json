@@ -1,0 +1,13 @@
+[
+	{
+		"id": "material_metal_01",
+		"name": "金属碎片",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_metal_01.png",
+		"description": "可用于制造的金属碎片",
+		"price": 10,
+		"stackable": false,
+		"max_stack": 1,
+		"quality": "D"
+	}
+]

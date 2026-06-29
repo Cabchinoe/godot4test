@@ -1,0 +1,13 @@
+[
+	{
+		"id": "backpack_basic_01",
+		"name": "基础背包",
+		"type": "BACKPACK",
+		"icon": "res://Items/icons/backpack/backpack_basic_01.png",
+		"description": "基础行军背包",
+		"price": 180,
+		"stackable": false,
+		"max_stack": 1,
+		"quality": "D"
+	}
+]

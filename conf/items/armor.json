@@ -1,0 +1,13 @@
+[
+	{
+		"id": "armor_basic_01",
+		"name": "基础护甲",
+		"type": "ARMOR",
+		"icon": "res://Items/icons/armor/armor_basic_01.png",
+		"description": "基础防护护甲",
+		"price": 300,
+		"stackable": false,
+		"max_stack": 1,
+		"quality": "C"
+	}
+]

@@ -1,0 +1,13 @@
+[
+	{
+		"id": "collectible_badge_01",
+		"name": "荣誉徽章",
+		"type": "COLLECTIBLE",
+		"icon": "res://Items/icons/collectible/collectible_badge_01.png",
+		"description": "珍贵的荣誉徽章",
+		"price": 0,
+		"stackable": false,
+		"max_stack": 1,
+		"quality": "A"
+	}
+]

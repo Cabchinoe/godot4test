@@ -1,0 +1,13 @@
+[
+	{
+		"id": "helmet_basic_01",
+		"name": "基础头盔",
+		"type": "HELMET",
+		"icon": "res://Items/icons/helmet/helmet_basic_01.png",
+		"description": "基础防护头盔",
+		"price": 150,
+		"stackable": false,
+		"max_stack": 1,
+		"quality": "D"
+	}
+]

@@ -1,0 +1,24 @@
+[
+	{
+		"id": "consumable_medkit_01",
+		"name": "急救包",
+		"type": "CONSUMABLE",
+		"icon": "res://Items/icons/consumable/consumable_medkit_01.png",
+		"description": "恢复少量生命值",
+		"price": 50,
+		"stackable": false,
+		"max_stack": 1,
+		"quality": "D"
+	},
+	{
+		"id": "consumable_adrenaline_01",
+		"name": "肾上腺素",
+		"type": "CONSUMABLE",
+		"icon": "res://Items/icons/consumable/consumable_adrenaline_01.png",
+		"description": "临时提升行动力",
+		"price": 120,
+		"stackable": false,
+		"max_stack": 1,
+		"quality": "B"
+	}
+]
