@@ -28,13 +28,14 @@ const ATTACK_GREEN_ATLAS := Vector2i(1, 0)
 var level_manager: LevelManager
 var turn_controller: TurnController
 var bullet_range: BulletRange
+enum State { IDLE, MOVE_STATE, MENU_STATE, ATTACK_STATE }
+var current_state: int = State.IDLE
+var _attack_from_menu: bool = false
 var enemy_spawner: EnemySpawner
 var enemy_ai: EnemyAI
 var reachable_cells: Array[Dictionary] = []
 var attack_cells: Array[Dictionary] = []
 var attack_unit_cells: Array = []
-var player_selected: bool = false
-var attack_mode: bool = false
 var last_hover_node: Dictionary = {}
 
 var is_dragging: bool = false
@@ -66,6 +67,7 @@ func _ready():
 
 	end_turn_button.pressed.connect(_on_end_turn_pressed)
 	context_menu.id_pressed.connect(_on_context_menu_pressed)
+	context_menu.popup_hide.connect(_on_context_menu_hide)
 
 	bullet_range = BulletRange.new(level_manager)
 
@@ -121,15 +123,23 @@ func _on_end_turn_pressed():
 
 func _on_context_menu_pressed(id: int):
 	if id == 0:
+		_attack_from_menu = true
 		_enter_attack_mode()
 	elif id == 1:
 		_clear_selection()
 		turn_controller.end_turn()
 
+func _on_context_menu_hide():
+	if _attack_from_menu:
+		_attack_from_menu = false
+		return
+	_clear_selection()
+
 func _clear_selection():
-	player_selected = false
+	current_state = State.IDLE
 	player_sprite.stop()
 	pending_recalc_range = false
+	reachable_cells = []
 	_clear_all_highlights()
 	hover_sprite.visible = false
 	hover_sprite.clear_points()
@@ -154,7 +164,7 @@ func _process(delta: float):
 	if player.is_moving:
 		return
 
-	if attack_mode:
+	if current_state == State.ATTACK_STATE:
 		var attack_mouse_world = get_global_mouse_position()
 		var attack_hover = _get_closest_attack_node(attack_mouse_world)
 		if _is_in_attack_cells(attack_hover) and _is_in_unit_cells(attack_hover):
@@ -168,28 +178,32 @@ func _process(delta: float):
 				hover_sprite2.clear_points()
 		return
 
-	if pending_recalc_range and player_selected:
+	if current_state == State.MENU_STATE:
+		return
+
+	if pending_recalc_range and current_state == State.MOVE_STATE:
 		pending_recalc_range = false
 		_show_move_range()
 
-	var mouse_world = get_global_mouse_position()
-	var hover_node = _get_closest_walkable_node(mouse_world)
+	if current_state == State.MOVE_STATE:
+		var mouse_world = get_global_mouse_position()
+		var hover_node = _get_closest_walkable_node(mouse_world)
 
-	if player_selected and _is_node_reachable(hover_node) and not _is_same_node(hover_node, {"grid": player.grid_pos, "level": player.current_level}):
-		hover_sprite.visible = true
-		if hover_node != last_hover_node:
-			last_hover_node = hover_node
-			var path = player.pathfinder.find_path(
-				player.grid_pos, player.current_level,
-				hover_node["grid"], hover_node["level"],
-				player
-			)
-			_draw_path(path)
-	else:
-		hover_sprite.visible = false
-		if last_hover_node != {}:
-			last_hover_node = {}
-			hover_sprite.clear_points()
+		if _is_node_reachable(hover_node) and not _is_same_node(hover_node, {"grid": player.grid_pos, "level": player.current_level}):
+			hover_sprite.visible = true
+			if hover_node != last_hover_node:
+				last_hover_node = hover_node
+				var path = player.pathfinder.find_path(
+					player.grid_pos, player.current_level,
+					hover_node["grid"], hover_node["level"],
+					player
+				)
+				_draw_path(path)
+		else:
+			hover_sprite.visible = false
+			if last_hover_node != {}:
+				last_hover_node = {}
+				hover_sprite.clear_points()
 
 func _unhandled_input(event: InputEvent):
 	if turn_controller.is_game_over:
@@ -198,8 +212,20 @@ func _unhandled_input(event: InputEvent):
 		return
 	if player.is_moving:
 		return
-
+	
 	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			if context_menu.visible:
+				context_menu.hide()
+				_clear_selection()
+				return
+			_handle_right_click(event)
+			return
+		if context_menu.visible:
+			if event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+				context_menu.hide()
+				_clear_selection()
+			return
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
 				press_pos = event.position
@@ -210,9 +236,7 @@ func _unhandled_input(event: InputEvent):
 				if drag_dist < DRAG_THRESHOLD:
 					_handle_left_click()
 				is_dragging = false
-		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-			_handle_right_click()
-		return
+			return
 
 	if event is InputEventMouseMotion:
 		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
@@ -224,7 +248,7 @@ func _unhandled_input(event: InputEvent):
 func _handle_left_click():
 	var mouse_world = get_global_mouse_position()
 
-	if attack_mode:
+	if current_state == State.ATTACK_STATE:
 		var attack_click_node = _get_closest_attack_node(mouse_world)
 		if _is_in_attack_cells(attack_click_node):
 			var path = bullet_range.get_bullet_path(player.grid_pos, attack_click_node["grid"])
@@ -233,46 +257,62 @@ func _handle_left_click():
 				print("  step: ", step)
 		return
 
+	if current_state == State.MENU_STATE:
+		return
+
 	var click_node = _get_closest_walkable_node(mouse_world)
 	var player_node = {"grid": player.grid_pos, "level": player.current_level}
 
-	if player_selected and _is_same_node(click_node, player_node):
-		_clear_selection()
-	elif player_selected and _is_node_reachable(click_node):
-		var path = player.pathfinder.find_path(
-			player.grid_pos, player.current_level,
-			click_node["grid"], click_node["level"],
-			player
-		)
-		if path.size() > 0:
-			var steps = path.size() - 1
-			if player.spend_ap(steps):
-				player.set_move_path(path)
-				_update_hud()
-				_clear_all_highlights()
-				hover_sprite.visible = false
-				hover_sprite.clear_points()
-				last_hover_node = {}
-				if player.action_points > 0:
-					pending_recalc_range = true
-				else:
-					player_selected = false
-					player_sprite.stop()
-	else:
-		if _is_same_node(click_node, player_node):
-			player_selected = true
-			player_sprite.play("walk")
-			_show_move_range()
+	if current_state == State.MOVE_STATE:
+		if _is_node_reachable(click_node) and not _is_same_node(click_node, player_node):
+			var path = player.pathfinder.find_path(
+				player.grid_pos, player.current_level,
+				click_node["grid"], click_node["level"],
+				player
+			)
+			if path.size() > 0:
+				var steps = path.size() - 1
+				if player.spend_ap(steps):
+					player.set_move_path(path)
+					_update_hud()
+					_clear_all_highlights()
+					hover_sprite.visible = false
+					hover_sprite.clear_points()
+					last_hover_node = {}
+					if player.action_points > 0:
+						pending_recalc_range = true
+					else:
+						reachable_cells = []
+						current_state = State.MOVE_STATE
+						player_sprite.play("walk")
 		else:
 			_clear_selection()
+		return
 
-func _handle_right_click():
-	if attack_mode:
+	if current_state == State.IDLE:
+		if _is_same_node(click_node, player_node):
+			current_state = State.MOVE_STATE
+			player_sprite.play("walk")
+			_show_move_range()
+
+func _handle_right_click(event: InputEvent):
+	if current_state == State.ATTACK_STATE:
 		_exit_attack_mode()
-	elif player_selected:
+		return
+	if current_state == State.MENU_STATE:
 		_clear_selection()
-	else:
-		_show_context_menu()
+		return
+	if current_state == State.MOVE_STATE:
+		_clear_selection()
+		return
+	if current_state == State.IDLE:
+		var mouse_world = get_global_mouse_position()
+		var click_node = _get_closest_walkable_node(mouse_world)
+		var player_node = {"grid": player.grid_pos, "level": player.current_level}
+		if _is_same_node(click_node, player_node):
+			current_state = State.MENU_STATE
+			player_sprite.play("walk")
+			_show_context_menu()
 
 func _show_context_menu():
 	context_menu.clear()
@@ -295,12 +335,16 @@ func _show_move_range():
 		hud.set_cell(node["grid"], MOVE_RANGE_SOURCE_ID, Vector2i(0, 0))
 
 func _enter_attack_mode():
-	_clear_selection()
-	attack_mode = true
+	if not _attack_from_menu:
+		_clear_selection()
+	else:
+		_clear_all_highlights()
+	_attack_from_menu = false
+	current_state = State.ATTACK_STATE
+	player_sprite.play("walk")
 	attack_unit_cells = _collect_targetable_cells()
 	attack_cells = bullet_range.get_reachable_cells(player.grid_pos, player.current_level, ATTACK_RANGE, attack_unit_cells)
 	print("[Attack] enter mode, cells=", attack_cells.size())
-	_clear_all_highlights()
 	for cell in attack_cells:
 		var hud = level_manager.get_layer(cell["level"], "hud")
 		if hud == null:
@@ -309,7 +353,8 @@ func _enter_attack_mode():
 		hud.set_cell(cell["grid"], ATTACK_RANGE_SOURCE_ID, atlas)
 
 func _exit_attack_mode():
-	attack_mode = false
+	current_state = State.IDLE
+	player_sprite.stop()
 	attack_cells = []
 	attack_unit_cells = []
 	_clear_all_highlights()
