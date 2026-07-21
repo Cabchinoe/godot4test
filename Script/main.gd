@@ -30,7 +30,6 @@ var turn_controller: TurnController
 var bullet_range: BulletRange
 enum State { IDLE, MOVE_STATE, MENU_STATE, ATTACK_STATE }
 var current_state: int = State.IDLE
-var _attack_from_menu: bool = false
 var enemy_spawner: EnemySpawner
 var enemy_ai: EnemyAI
 var reachable_cells: Array[Dictionary] = []
@@ -83,7 +82,7 @@ func _on_turn_started(_turn: int):
 	_update_hud()
 
 func _on_game_over():
-	_clear_selection()
+	_change_state(State.IDLE)
 	end_turn_button.disabled = true
 
 func _on_phase_changed(phase):
@@ -118,32 +117,50 @@ func _update_skip_input() -> void:
 		_set_all_units_move_interval(DEFAULT_MOVE_INTERVAL)
 
 func _on_end_turn_pressed():
-	_clear_selection()
+	_change_state(State.IDLE)
 	turn_controller.end_turn()
 
 func _on_context_menu_pressed(id: int):
 	if id == 0:
-		_attack_from_menu = true
-		_enter_attack_mode()
+		_change_state(State.ATTACK_STATE)
 	elif id == 1:
-		_clear_selection()
+		_change_state(State.IDLE)
 		turn_controller.end_turn()
 
 func _on_context_menu_hide():
-	if _attack_from_menu:
-		_attack_from_menu = false
-		return
-	_clear_selection()
+	if current_state == State.MENU_STATE:
+		_change_state(State.IDLE)
 
-func _clear_selection():
-	current_state = State.IDLE
+func _change_state(new_state: int):
+	current_state = new_state
+
 	player_sprite.stop()
-	pending_recalc_range = false
 	reachable_cells = []
-	_clear_all_highlights()
+	attack_cells = []
+	attack_unit_cells = []
+	pending_recalc_range = false
+	last_hover_node = {}
 	hover_sprite.visible = false
 	hover_sprite.clear_points()
-	last_hover_node = {}
+	hover_sprite2.visible = false
+	hover_sprite2.clear_points()
+	_clear_all_highlights()
+	if context_menu.visible:
+		context_menu.hide()
+
+	match new_state:
+		State.IDLE:
+			pass
+		State.MOVE_STATE:
+			player_sprite.play("walk")
+			if player.action_points > 0:
+				_show_move_range()
+		State.MENU_STATE:
+			player_sprite.play("walk")
+			_show_context_menu()
+		State.ATTACK_STATE:
+			player_sprite.play("walk")
+			_enter_attack()
 
 func _process(delta: float):
 	if turn_controller.is_game_over:
@@ -216,15 +233,13 @@ func _unhandled_input(event: InputEvent):
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 			if context_menu.visible:
-				context_menu.hide()
-				_clear_selection()
+				_change_state(State.IDLE)
 				return
 			_handle_right_click(event)
 			return
 		if context_menu.visible:
 			if event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
-				context_menu.hide()
-				_clear_selection()
+				_change_state(State.IDLE)
 			return
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
@@ -257,9 +272,6 @@ func _handle_left_click():
 				print("  step: ", step)
 		return
 
-	if current_state == State.MENU_STATE:
-		return
-
 	var click_node = _get_closest_walkable_node(mouse_world)
 	var player_node = {"grid": player.grid_pos, "level": player.current_level}
 
@@ -283,36 +295,27 @@ func _handle_left_click():
 						pending_recalc_range = true
 					else:
 						reachable_cells = []
-						current_state = State.MOVE_STATE
-						player_sprite.play("walk")
 		else:
-			_clear_selection()
+			_change_state(State.IDLE)
 		return
 
 	if current_state == State.IDLE:
 		if _is_same_node(click_node, player_node):
-			current_state = State.MOVE_STATE
-			player_sprite.play("walk")
-			_show_move_range()
+			_change_state(State.MOVE_STATE)
 
 func _handle_right_click(event: InputEvent):
 	if current_state == State.ATTACK_STATE:
-		_exit_attack_mode()
-		return
-	if current_state == State.MENU_STATE:
-		_clear_selection()
+		_change_state(State.IDLE)
 		return
 	if current_state == State.MOVE_STATE:
-		_clear_selection()
+		_change_state(State.IDLE)
 		return
 	if current_state == State.IDLE:
 		var mouse_world = get_global_mouse_position()
 		var click_node = _get_closest_walkable_node(mouse_world)
 		var player_node = {"grid": player.grid_pos, "level": player.current_level}
 		if _is_same_node(click_node, player_node):
-			current_state = State.MENU_STATE
-			player_sprite.play("walk")
-			_show_context_menu()
+			_change_state(State.MENU_STATE)
 
 func _show_context_menu():
 	context_menu.clear()
@@ -334,14 +337,7 @@ func _show_move_range():
 			continue
 		hud.set_cell(node["grid"], MOVE_RANGE_SOURCE_ID, Vector2i(0, 0))
 
-func _enter_attack_mode():
-	if not _attack_from_menu:
-		_clear_selection()
-	else:
-		_clear_all_highlights()
-	_attack_from_menu = false
-	current_state = State.ATTACK_STATE
-	player_sprite.play("walk")
+func _enter_attack():
 	attack_unit_cells = _collect_targetable_cells()
 	attack_cells = bullet_range.get_reachable_cells(player.grid_pos, player.current_level, ATTACK_RANGE, attack_unit_cells)
 	print("[Attack] enter mode, cells=", attack_cells.size())
@@ -351,15 +347,6 @@ func _enter_attack_mode():
 			continue
 		var atlas: Vector2i = ATTACK_GREEN_ATLAS if _is_in_unit_cells(cell) else ATTACK_GRAY_ATLAS
 		hud.set_cell(cell["grid"], ATTACK_RANGE_SOURCE_ID, atlas)
-
-func _exit_attack_mode():
-	current_state = State.IDLE
-	player_sprite.stop()
-	attack_cells = []
-	attack_unit_cells = []
-	_clear_all_highlights()
-	hover_sprite2.visible = false
-	hover_sprite2.clear_points()
 
 func _draw_gun_line(target_grid: Vector2i, target_level: int):
 	hover_sprite2.clear_points()
