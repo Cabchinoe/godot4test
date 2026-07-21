@@ -1,33 +1,32 @@
-[gd_scene load_steps=2 format=4]
+[gd_scene format=3 uid="uid://eq4pj2wccrs4"]
 
-[ext_resource type="Script" path="res://Script/save/ui/save_load_ui.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://ci713xdxu6e5f" path="res://Script/save/ui/save_load_ui.gd" id="1_script"]
 
-[node name="SaveLoadUI" type="PanelContainer"]
+[node name="SaveLoadUI" type="PanelContainer" unique_id=1936265699]
 custom_minimum_size = Vector2(400, 500)
 script = ExtResource("1_script")
 
-[node name="VBox" type="VBoxContainer" parent="."]
+[node name="VBox" type="VBoxContainer" parent="." unique_id=1728182589]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="VBox"]
+[node name="Title" type="Label" parent="VBox" unique_id=1435596265]
 layout_mode = 2
 text = "存档管理"
 horizontal_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="VBox"]
+[node name="ScrollContainer" type="ScrollContainer" parent="VBox" unique_id=1943920784]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="SlotContainer" type="VBoxContainer" parent="VBox/ScrollContainer"]
+[node name="SlotContainer" type="VBoxContainer" parent="VBox/ScrollContainer" unique_id=1888199930]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="CloseBtn" type="Button" parent="VBox"]
+[node name="CloseBtn" type="Button" parent="VBox" unique_id=1748722207]
 layout_mode = 2
 text = "返回"
 
-[node name="ConfirmDialog" type="ConfirmationDialog" parent="."]
+[node name="ConfirmDialog" type="ConfirmationDialog" parent="." unique_id=1854608607]
 title = "确认"
-dialog_text = ""
