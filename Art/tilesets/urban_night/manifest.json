@@ -1,0 +1,125 @@
+{
+  "theme": "urban_night",
+  "tile_size": 64,
+  "version": 3,
+  "source_masters": {
+    "asphalt": "res://Art/source/urban_night/ground/asphalt_wet_master_01.png",
+    "concrete": "res://Art/source/urban_night/ground/concrete_wet_master_01.png",
+    "brick_paving": "res://Art/source/urban_night/ground/brick_paving_master_01.png",
+    "abandoned_sedan": "res://Art/source/urban_night/props/abandoned_sedan_master_01.png",
+    "medical_locker": "res://Art/source/urban_night/props/medical_locker_master_01.png"
+  },
+  "atlases": {
+    "asphalt": {
+      "path": "res://Art/tilesets/urban_night/atlases/ground/asphalt_01.png",
+      "columns": 2,
+      "rows": 2,
+      "tiles": ["asphalt_wet_a", "asphalt_wet_b", "asphalt_wet_c", "asphalt_wet_d"]
+    },
+    "sidewalk": {
+      "path": "res://Art/tilesets/urban_night/atlases/ground/sidewalk_01.png",
+      "columns": 2,
+      "rows": 2,
+      "tiles": ["sidewalk_concrete_a", "sidewalk_concrete_b", "sidewalk_concrete_c", "sidewalk_concrete_d"]
+    },
+    "road_markings": {
+      "path": "res://Art/tilesets/urban_night/atlases/ground/road_markings_01.png",
+      "columns": 3,
+      "rows": 2,
+      "tiles": ["lane_dash_vertical", "lane_dash_horizontal", "curb_line_north", "crosswalk_vertical", "crosswalk_horizontal"]
+    },
+    "curbs": {
+      "path": "res://Art/tilesets/urban_night/atlases/ground/curbs_01.png",
+      "columns": 4,
+      "rows": 2,
+      "tiles": ["curb_north", "curb_south", "curb_west", "curb_east", "curb_ne_outer", "curb_sw_outer", "sidewalk_edge_north"]
+    },
+    "brick_paving": {
+      "path": "res://Art/tilesets/urban_night/atlases/ground/brick_paving_01.png",
+      "columns": 3,
+      "rows": 2,
+      "tiles": ["brick_wet_a", "brick_wet_b", "brick_wet_c", "brick_wet_d", "brick_wet_a_rot90"]
+    },
+    "pool_water": {
+      "path": "res://Art/tilesets/urban_night/atlases/ground/pool_water_01.png",
+      "columns": 2,
+      "rows": 2,
+      "tiles": ["pool_water_a", "pool_water_b", "pool_water_c", "pool_water_d"]
+    },
+    "pool_edges": {
+      "path": "res://Art/tilesets/urban_night/atlases/ground/pool_edges_01.png",
+      "columns": 4,
+      "rows": 2,
+      "tiles": ["pool_edge_north", "pool_edge_south", "pool_edge_west", "pool_edge_east", "pool_corner_nw", "pool_corner_ne", "pool_ladder_north"]
+    },
+    "ground_decals": {
+      "path": "res://Art/tilesets/urban_night/atlases/ground/decals_01.png",
+      "columns": 2,
+      "rows": 2,
+      "tiles": ["oil_stain_a", "rain_puddle_a", "manhole_a", "asphalt_crack_a"]
+    },
+    "exterior_walls": {
+      "path": "res://Art/tilesets/urban_night/atlases/structures/exterior_walls_02.png",
+      "columns": 4,
+      "rows": 4,
+      "tiles": [
+        "brick_wall_n_v2", "brick_wall_s_v2", "brick_wall_e_v2", "brick_wall_w_v2",
+        "brick_outer_corner_ne_v2", "brick_outer_corner_nw_v2", "brick_outer_corner_se_v2", "brick_outer_corner_sw_v2",
+        "brick_doorway_n_v2", "brick_doorway_s_v2", "brick_doorway_e_v2", "brick_doorway_w_v2",
+        "brick_window_n_v2", "brick_window_s_v2", "brick_window_e_v2", "brick_window_w_v2"
+      ]
+    },
+    "interior_walls": {
+      "path": "res://Art/tilesets/urban_night/atlases/structures/interior_walls_02.png",
+      "columns": 4,
+      "rows": 3,
+      "tiles": [
+        "plaster_wall_n_v2", "plaster_wall_s_v2", "plaster_wall_e_v2", "plaster_wall_w_v2",
+        "plaster_corner_ne_v2", "plaster_corner_nw_v2", "plaster_corner_se_v2", "plaster_corner_sw_v2",
+        "plaster_doorway_n_v2", "plaster_doorway_s_v2", "plaster_doorway_e_v2", "plaster_doorway_w_v2"
+      ]
+    },
+    "roof_occluders": {
+      "path": "res://Art/tilesets/urban_night/atlases/structures/roof_occluders_01.png",
+      "columns": 2,
+      "rows": 1,
+      "tiles": ["roof_slate_center_a", "roof_slate_edge_south_a"],
+      "layer": "RoofOccluder",
+      "collision": false
+    },
+    "doors_windows": {
+      "path": "res://Art/tilesets/urban_night/atlases/structures/doors_windows_03.png",
+      "columns": 4,
+      "rows": 3,
+      "tiles": [
+        "door_n_closed", "door_s_closed", "door_e_closed", "door_w_closed",
+        "door_n_open_left", "door_n_open_right", "door_s_open_left", "door_s_open_right",
+        "door_e_open_left", "door_e_open_right", "door_w_open_left", "door_w_open_right"
+      ]
+    },
+    "container_props": {
+      "path": "res://Art/tilesets/urban_night/atlases/props/containers_01.png",
+      "columns": 2,
+      "rows": 2,
+      "tiles": ["supply_crate_closed_a", "supply_crate_open_a", "vending_machine_a", "trash_bin_a"]
+    },
+    "major_props": {
+      "path": "res://Art/tilesets/urban_night/atlases/props/major_props_01.png",
+      "regions": [
+        {"name": "sedan_abandoned_a", "x": 0, "y": 0, "width": 128, "height": 192},
+        {"name": "medical_locker_closed_a", "x": 128, "y": 0, "width": 128, "height": 128}
+      ]
+    },
+    "furniture_props": {
+      "path": "res://Art/tilesets/urban_night/atlases/props/furniture_01.png",
+      "regions": [
+        {"name": "sofa_two_seat_a", "x": 0, "y": 0, "width": 128, "height": 64},
+        {"name": "metal_shelf_tall_a", "x": 128, "y": 0, "width": 64, "height": 128},
+        {"name": "refrigerator_a", "x": 192, "y": 0, "width": 64, "height": 64},
+        {"name": "kitchen_counter_a", "x": 0, "y": 64, "width": 128, "height": 64},
+        {"name": "bed_single_a", "x": 128, "y": 64, "width": 128, "height": 64}
+      ]
+    }
+  },
+  "next_groups": ["roof_edges_all_directions", "exterior_wall_damage_variants", "interior_wall_damage_variants", "loot_state_variants", "cover_metadata"]
+}
