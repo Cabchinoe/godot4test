@@ -2,12 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dwr38xg56gq64"
-valid=false
+uid="uid://cgkfqt5k8hupi"
+path="res://.godot/imported/vehicles_all_orientations_02.png-d835ba0e076569ac0a538a6fa055c372.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
-source_file="res://Art/source/urban_night/props/medical_locker_master_01.png"
+source_file="res://Art/tilesets/urban_night/atlases/props/vehicles_all_orientations_02.png"
+dest_files=["res://.godot/imported/vehicles_all_orientations_02.png-d835ba0e076569ac0a538a6fa055c372.ctex"]
 
 [params]
 

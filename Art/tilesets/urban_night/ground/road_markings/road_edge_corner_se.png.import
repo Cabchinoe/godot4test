@@ -2,12 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dwr38xg56gq64"
-valid=false
+uid="uid://ymxlhrvb0hf3"
+path="res://.godot/imported/road_edge_corner_se.png-452a02e7e6e36762804c5668407eb1bc.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
-source_file="res://Art/source/urban_night/props/medical_locker_master_01.png"
+source_file="res://Art/tilesets/urban_night/ground/road_markings/road_edge_corner_se.png"
+dest_files=["res://.godot/imported/road_edge_corner_se.png-452a02e7e6e36762804c5668407eb1bc.ctex"]
 
 [params]
 

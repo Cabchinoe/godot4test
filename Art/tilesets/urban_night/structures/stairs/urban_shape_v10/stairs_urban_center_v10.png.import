@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://w8jb8lkm4r2n"
-path="res://.godot/imported/road_markings_01.png-83db7f95cc26f0c5c1867bdc4722e14e.ctex"
+uid="uid://pq8lgv4i55bu"
+path="res://.godot/imported/stairs_urban_center_v10.png-12b43078e273ba24f276ec4af8b63c5e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Art/tilesets/urban_night/atlases/ground/road_markings_01.png"
-dest_files=["res://.godot/imported/road_markings_01.png-83db7f95cc26f0c5c1867bdc4722e14e.ctex"]
+source_file="res://Art/tilesets/urban_night/structures/stairs/urban_shape_v10/stairs_urban_center_v10.png"
+dest_files=["res://.godot/imported/stairs_urban_center_v10.png-12b43078e273ba24f276ec4af8b63c5e.ctex"]
 
 [params]
 

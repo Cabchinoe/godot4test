@@ -2,12 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dwr38xg56gq64"
-valid=false
+uid="uid://gyqtv3qqcb3u"
+path="res://.godot/imported/road_markings_02.png-4d7a2f75cc281c09140fdbdb525013b0.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
-source_file="res://Art/source/urban_night/props/medical_locker_master_01.png"
+source_file="res://Art/tilesets/urban_night/atlases/ground/road_markings_02.png"
+dest_files=["res://.godot/imported/road_markings_02.png-4d7a2f75cc281c09140fdbdb525013b0.ctex"]
 
 [params]
 

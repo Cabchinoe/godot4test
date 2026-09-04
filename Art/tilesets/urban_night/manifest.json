@@ -23,10 +23,15 @@
       "tiles": ["sidewalk_concrete_a", "sidewalk_concrete_b", "sidewalk_concrete_c", "sidewalk_concrete_d"]
     },
     "road_markings": {
-      "path": "res://Art/tilesets/urban_night/atlases/ground/road_markings_01.png",
-      "columns": 3,
-      "rows": 2,
-      "tiles": ["lane_dash_vertical", "lane_dash_horizontal", "curb_line_north", "crosswalk_vertical", "crosswalk_horizontal"]
+      "path": "res://Art/tilesets/urban_night/atlases/ground/road_markings_02.png",
+      "columns": 5,
+      "rows": 4,
+      "tiles": [
+        "lane_dash_vertical", "lane_dash_horizontal", "curb_line_north", "crosswalk_vertical", "crosswalk_horizontal",
+        "road_edge_north", "road_edge_south", "road_edge_east", "road_edge_west", "road_edge_corner_ne",
+        "road_edge_corner_nw", "road_edge_corner_se", "road_edge_corner_sw", "parking_edge_north", "parking_edge_south",
+        "parking_edge_east", "parking_edge_west"
+      ]
     },
     "curbs": {
       "path": "res://Art/tilesets/urban_night/atlases/ground/curbs_01.png",
@@ -119,6 +124,51 @@
         {"name": "kitchen_counter_a", "x": 0, "y": 64, "width": 128, "height": 64},
         {"name": "bed_single_a", "x": 128, "y": 64, "width": 128, "height": 64}
       ]
+    },
+    "vehicles_all_orientations": {
+      "path": "res://Art/tilesets/urban_night/atlases/props/vehicles_all_orientations_02.png",
+      "columns": 4,
+      "rows": 2,
+      "tiles": [
+        "sedan_blue_a_vertical_top", "delivery_van_green_a_vertical_top", "sedan_blue_a_horizontal_left", "sedan_blue_a_horizontal_right",
+        "sedan_blue_a_vertical_bottom", "delivery_van_green_a_vertical_bottom", "delivery_van_green_a_horizontal_left", "delivery_van_green_a_horizontal_right"
+      ],
+      "assembly": {
+        "sedan_blue_a_vertical": {
+          "tiles": ["sedan_blue_a_vertical_top", "sedan_blue_a_vertical_bottom"],
+          "atlas_cells": [[0, 0], [0, 1]],
+          "footprint": [1, 2]
+        },
+        "delivery_van_green_a_vertical": {
+          "tiles": ["delivery_van_green_a_vertical_top", "delivery_van_green_a_vertical_bottom"],
+          "atlas_cells": [[1, 0], [1, 1]],
+          "footprint": [1, 2]
+        },
+        "sedan_blue_a_horizontal": {
+          "tiles": ["sedan_blue_a_horizontal_left", "sedan_blue_a_horizontal_right"],
+          "atlas_cells": [[2, 0], [3, 0]],
+          "footprint": [2, 1]
+        },
+        "delivery_van_green_a_horizontal": {
+          "tiles": ["delivery_van_green_a_horizontal_left", "delivery_van_green_a_horizontal_right"],
+          "atlas_cells": [[2, 1], [3, 1]],
+          "footprint": [2, 1]
+        }
+      }
+    },
+    "stairs": {
+      "path": "res://Art/tilesets/urban_night/atlases/structures/stairs_urban_shape_10.png",
+      "columns": 3,
+      "rows": 3,
+      "tile_size": 64,
+      "tiles": [
+        "stairs_urban_nw_v10", "stairs_urban_n_v10", "stairs_urban_ne_v10",
+        "stairs_urban_w_v10", "stairs_urban_center_v10", "stairs_urban_e_v10",
+        "stairs_urban_sw_v10", "stairs_urban_s_v10", "stairs_urban_se_v10"
+      ],
+      "height_transition": true,
+      "collision": false,
+      "notes": "Exact nine-shape layout and perspective extracted from urban.png atlas coordinates [0,12] through [2,14]. Only the palette and material were refined to match sidewalk concrete."
     }
   },
   "next_groups": ["roof_edges_all_directions", "exterior_wall_damage_variants", "interior_wall_damage_variants", "loot_state_variants", "cover_metadata"]

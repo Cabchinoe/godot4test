@@ -2,12 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dwr38xg56gq64"
-valid=false
+uid="uid://bo3tul2jwynpf"
+path="res://.godot/imported/delivery_van_green_a_vertical_top.png-6810849ee02e3f62229e09c1bc453e48.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
-source_file="res://Art/source/urban_night/props/medical_locker_master_01.png"
+source_file="res://Art/tilesets/urban_night/props/vehicles/all_orientations_v2/delivery_van_green_a_vertical_top.png"
+dest_files=["res://.godot/imported/delivery_van_green_a_vertical_top.png-6810849ee02e3f62229e09c1bc453e48.ctex"]
 
 [params]
 

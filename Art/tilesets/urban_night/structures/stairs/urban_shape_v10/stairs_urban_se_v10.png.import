@@ -2,12 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dwr38xg56gq64"
-valid=false
+uid="uid://dwihegxfgb8bh"
+path="res://.godot/imported/stairs_urban_se_v10.png-9cf5176b2b2facdd1a2a18db454ff3de.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
-source_file="res://Art/source/urban_night/props/medical_locker_master_01.png"
+source_file="res://Art/tilesets/urban_night/structures/stairs/urban_shape_v10/stairs_urban_se_v10.png"
+dest_files=["res://.godot/imported/stairs_urban_se_v10.png-9cf5176b2b2facdd1a2a18db454ff3de.ctex"]
 
 [params]
 

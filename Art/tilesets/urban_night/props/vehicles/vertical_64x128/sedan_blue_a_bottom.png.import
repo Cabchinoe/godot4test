@@ -2,12 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dwr38xg56gq64"
-valid=false
+uid="uid://cynvul7x55ei3"
+path="res://.godot/imported/sedan_blue_a_bottom.png-dbe1b4361c7ff6bb1de182dc35962281.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
-source_file="res://Art/source/urban_night/props/medical_locker_master_01.png"
+source_file="res://Art/tilesets/urban_night/props/vehicles/vertical_64x128/sedan_blue_a_bottom.png"
+dest_files=["res://.godot/imported/sedan_blue_a_bottom.png-dbe1b4361c7ff6bb1de182dc35962281.ctex"]
 
 [params]
 

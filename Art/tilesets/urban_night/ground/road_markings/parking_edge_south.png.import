@@ -2,12 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dwr38xg56gq64"
-valid=false
+uid="uid://bbs0mguc0i32c"
+path="res://.godot/imported/parking_edge_south.png-64e526aff20ffebdf970d4e9b16de430.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
-source_file="res://Art/source/urban_night/props/medical_locker_master_01.png"
+source_file="res://Art/tilesets/urban_night/ground/road_markings/parking_edge_south.png"
+dest_files=["res://.godot/imported/parking_edge_south.png-64e526aff20ffebdf970d4e9b16de430.ctex"]
 
 [params]
 

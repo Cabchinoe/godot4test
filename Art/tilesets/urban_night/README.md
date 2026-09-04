@@ -15,6 +15,8 @@ This theme replaces the prototype's upscaled 16px urban ground with native 64px 
 - `structures/`: exterior walls, interior walls, and door/window layers.
 - `structures/roof_occluders/`: non-colliding roof pieces that fade when a unit enters the building.
 - `props/`: interactable containers and larger Sprite2D props.
+- `props/vehicles/all_orientations_v2/`: two-piece vehicles in both vertical and horizontal orientations.
+- `structures/stairs/urban_shape_v10/`: nine independent `64×64` stair forms using the exact silhouettes and viewing angle from `urban.png` atlas coordinates `[0,12]` through `[2,14]`; material is refined to match the sidewalk set.
 - `atlases/ground/`: Godot import targets, assembled from the individual tiles.
 - `atlases/structures/` and `atlases/props/`: matching import targets for structures and props.
 - `../../source/urban_night/ground/`: AI-generated source masters retained for future extraction.
@@ -25,7 +27,7 @@ Create a TileSet atlas source for each file in `atlases/ground/` with a `64×64`
 
 - `asphalt_01.png`: 2 columns × 2 rows.
 - `sidewalk_01.png`: 2 columns × 2 rows.
-- `road_markings_01.png`: 3 columns × 2 rows; the final bottom-right cell is intentionally empty.
+- `road_markings_02.png`: 5 columns × 4 rows. Includes lane dashes, crosswalks, four road edges, four rounded edge corners, and four parking-bay edges. The last three cells are intentionally empty.
 - `curbs_01.png`: 4 columns × 2 rows; the final bottom-right cell is intentionally empty.
 - `brick_paving_01.png`: 3 columns × 2 rows; the final bottom-right cell is intentionally empty.
 - `pool_water_01.png`: 2 columns × 2 rows.
@@ -36,6 +38,8 @@ Create a TileSet atlas source for each file in `atlases/ground/` with a `64×64`
 - `roof_occluders_01.png`: 2 columns × 1 row; use only on `RoofOccluder`, with collision disabled.
 - `doors_windows_03.png`: 4 columns × 3 rows. Row 1 is north/south/east/west closed doors; rows 2–3 are the matching left/right swing states. This is the current runtime door atlas; each swing arc runs from the closed leaf's free end to the opened leaf's free end around its hinge.
 - `containers_01.png`: 2 columns × 2 rows.
+- `vehicles_all_orientations_02.png`: 4 columns × 2 rows. Columns 1–2 contain vertical sedan/van pairs; row 1 columns 3–4 contain the horizontal sedan; row 2 columns 3–4 contain the horizontal delivery van. Each vehicle spans either `1×2` or `2×1` cells.
+- `stairs_urban_shape_10.png`: 3 columns × 3 rows. It contains the exact nine `urban.png` stair forms: northwest, north, northeast, west, center, east, southwest, south, and southeast. Mark traversal cells as height transitions in the TileSet.
 
 `major_props_01.png` contains non-uniform regions. Use it from `Sprite2D` or as manually defined TileSet atlas regions: `sedan_abandoned_a` is `128×192`; `medical_locker_closed_a` is `128×128`.
 
