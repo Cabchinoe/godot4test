@@ -133,7 +133,7 @@ func _on_context_menu_hide():
 
 func _change_state(new_state: int):
 	current_state = new_state
-
+	player_sprite.play("walk")
 	player_sprite.stop()
 	reachable_cells = []
 	attack_cells = []
@@ -159,7 +159,7 @@ func _change_state(new_state: int):
 			player_sprite.play("walk")
 			_show_context_menu()
 		State.ATTACK_STATE:
-			player_sprite.play("walk")
+			player_sprite.play("aim")
 			_enter_attack()
 
 func _process(delta: float):

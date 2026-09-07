@@ -29,12 +29,12 @@ Create a TileSet atlas source for each file in `atlases/ground/` with a `64×64`
 - `sidewalk_01.png`: 2 columns × 2 rows.
 - `road_markings_02.png`: 5 columns × 4 rows. Includes lane dashes, crosswalks, four road edges, four rounded edge corners, and four parking-bay edges. The last three cells are intentionally empty.
 - `curbs_01.png`: 4 columns × 2 rows; the final bottom-right cell is intentionally empty.
-- `brick_paving_01.png`: 3 columns × 2 rows; the final bottom-right cell is intentionally empty.
+- `brick_paving_01.png`: 4 columns × 2 rows; four standard and four 90°-rotated brick variants.
 - `pool_water_01.png`: 2 columns × 2 rows.
 - `pool_edges_01.png`: 4 columns × 2 rows; the final bottom-right cell is intentionally empty.
 - `decals_01.png`: 2 columns × 2 rows; use on a non-colliding decal layer.
 - `exterior_walls_02.png`: 4 columns × 4 rows; four straight edges, four outer corners, four doorways, and four window segments. This is the current exterior wall atlas.
-- `interior_walls_02.png`: 4 columns × 3 rows; four straight edges, four room corners, and four doorways. This is the current interior wall atlas.
+- `interior_walls_02.png`: 4 columns × 2 rows; four straight edges and four room corners. This is the current interior wall atlas.
 - `roof_occluders_01.png`: 2 columns × 1 row; use only on `RoofOccluder`, with collision disabled.
 - `doors_windows_03.png`: 4 columns × 3 rows. Row 1 is north/south/east/west closed doors; rows 2–3 are the matching left/right swing states. This is the current runtime door atlas; each swing arc runs from the closed leaf's free end to the opened leaf's free end around its hinge.
 - `containers_01.png`: 2 columns × 2 rows.

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c1s17wg5uclr5"
-path="res://.godot/imported/plaster_doorway_n_v2.png-251a316bd5619c310afe8843802ea49c.ctex"
+uid="uid://bwv87etigmuxu"
+path="res://.godot/imported/brick_wet_c_rot90.png-570215e06636d3fbadb9ab08be1970f4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Art/tilesets/urban_night/structures/interior_walls/v2/plaster_doorway_n_v2.png"
-dest_files=["res://.godot/imported/plaster_doorway_n_v2.png-251a316bd5619c310afe8843802ea49c.ctex"]
+source_file="res://Art/tilesets/urban_night/ground/brick_paving/brick_wet_c_rot90.png"
+dest_files=["res://.godot/imported/brick_wet_c_rot90.png-570215e06636d3fbadb9ab08be1970f4.ctex"]
 
 [params]
 

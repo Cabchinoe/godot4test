@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dj2jlc1ulqjs5"
-path="res://.godot/imported/plaster_doorway_e_v2.png-cac4570d71b79026ce62d4b492c41542.ctex"
+uid="uid://dam0jq2kpcm0b"
+path="res://.godot/imported/eagle_soldier_master_01.png-a3efe0693971b8bf7a609daf1f633b51.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Art/tilesets/urban_night/structures/interior_walls/v2/plaster_doorway_e_v2.png"
-dest_files=["res://.godot/imported/plaster_doorway_e_v2.png-cac4570d71b79026ce62d4b492c41542.ctex"]
+source_file="res://Art/source/urban_night/characters/eagle_soldier_master_01.png"
+dest_files=["res://.godot/imported/eagle_soldier_master_01.png-a3efe0693971b8bf7a609daf1f633b51.ctex"]
 
 [params]
 

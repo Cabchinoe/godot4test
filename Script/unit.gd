@@ -54,6 +54,7 @@ func _step_to_next():
 	if move_path.size() == 0:
 		if is_moving:
 			is_moving = false
+			_stop_walk_animation()
 			movement_finished.emit()
 		return
 	var next_node = move_path.pop_front()
@@ -70,6 +71,7 @@ func _step_to_next():
 	_update_z_index()
 	if move_path.size() == 0:
 		is_moving = false
+		_stop_walk_animation()
 		movement_finished.emit()
 
 func set_move_path(path: Array[Dictionary]):
@@ -79,6 +81,16 @@ func set_move_path(path: Array[Dictionary]):
 		move_path.pop_front()
 	if move_path.size() == 0:
 		is_moving = false
+		_stop_walk_animation()
 		movement_finished.emit()
 		return
 	is_moving = true
+	var sprite := get_node_or_null("Sprite2D") as AnimatedSprite2D
+	if sprite != null:
+		sprite.play("walk")
+
+func _stop_walk_animation() -> void:
+	var sprite := get_node_or_null("Sprite2D") as AnimatedSprite2D
+	if sprite != null and sprite.animation == &"walk":
+		sprite.stop()
+		sprite.frame = 0

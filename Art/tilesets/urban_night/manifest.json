@@ -41,9 +41,12 @@
     },
     "brick_paving": {
       "path": "res://Art/tilesets/urban_night/atlases/ground/brick_paving_01.png",
-      "columns": 3,
+      "columns": 4,
       "rows": 2,
-      "tiles": ["brick_wet_a", "brick_wet_b", "brick_wet_c", "brick_wet_d", "brick_wet_a_rot90"]
+      "tiles": [
+        "brick_wet_a", "brick_wet_b", "brick_wet_c", "brick_wet_d",
+        "brick_wet_a_rot90", "brick_wet_b_rot90", "brick_wet_c_rot90", "brick_wet_d_rot90"
+      ]
     },
     "pool_water": {
       "path": "res://Art/tilesets/urban_night/atlases/ground/pool_water_01.png",
@@ -77,11 +80,10 @@
     "interior_walls": {
       "path": "res://Art/tilesets/urban_night/atlases/structures/interior_walls_02.png",
       "columns": 4,
-      "rows": 3,
+      "rows": 2,
       "tiles": [
         "plaster_wall_n_v2", "plaster_wall_s_v2", "plaster_wall_e_v2", "plaster_wall_w_v2",
-        "plaster_corner_ne_v2", "plaster_corner_nw_v2", "plaster_corner_se_v2", "plaster_corner_sw_v2",
-        "plaster_doorway_n_v2", "plaster_doorway_s_v2", "plaster_doorway_e_v2", "plaster_doorway_w_v2"
+        "plaster_corner_ne_v2", "plaster_corner_nw_v2", "plaster_corner_se_v2", "plaster_corner_sw_v2"
       ]
     },
     "roof_occluders": {
