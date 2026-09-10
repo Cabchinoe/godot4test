@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://djmkdy0qua8w"]
 
 [ext_resource type="Script" uid="uid://ct4gwiyjh5rnl" path="res://Script/main_menu.gd" id="1_menu"]
-[ext_resource type="PackedScene" path="res://Script/save/ui/save_load_ui.tscn" id="save_load_ui"]
+[ext_resource type="Texture2D" uid="uid://on8vjnvf8fmt" path="res://Art/backgrounds/main_menu_pyroxene_dawn.jpg" id="background"]
+[ext_resource type="PackedScene" uid="uid://eq4pj2wccrs4" path="res://Script/save/ui/save_load_ui.tscn" id="save_load_ui"]
 
 [node name="MainMenu" type="Control" unique_id=1945193937]
 layout_mode = 3
@@ -12,16 +13,38 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 
+[node name="Background" type="TextureRect" parent="." unique_id=1497452330]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("background")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="ReadabilityOverlay" type="ColorRect" parent="." unique_id=1682937221]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.025, 0.06, 0.1, 0.35)
+
 [node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1097598151]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
+anchors_preset = -1
+anchor_left = 0.28
 anchor_top = 0.5
-anchor_right = 0.5
+anchor_right = 0.28
 anchor_bottom = 0.5
-offset_left = -100.0
+offset_left = -150.0
 offset_top = -60.0
-offset_right = 100.0
+offset_right = 150.0
 offset_bottom = 60.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -29,20 +52,26 @@ theme_override_constants/separation = 20
 
 [node name="Title" type="Label" parent="VBoxContainer" unique_id=2041963455]
 layout_mode = 2
-text = "三角篓行动
-逃离噶扎"
+theme_override_colors/font_color = Color(0.94, 0.98, 1, 1)
+theme_override_colors/font_shadow_color = Color(0.005, 0.02, 0.05, 0.9)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 36
+text = "辉石之痕
+黎明阵线"
 horizontal_alignment = 1
 
 [node name="StartButton" type="Button" parent="VBoxContainer" unique_id=1801564063]
 layout_mode = 2
 text = "开始新救赎"
 
-[node name="ContinueButton" type="Button" parent="VBoxContainer"]
+[node name="ContinueButton" type="Button" parent="VBoxContainer" unique_id=371103531]
 layout_mode = 2
 text = "继续游戏"
 
-[node name="SaveLoadUI" parent="." instance=ExtResource("save_load_ui")]
+[node name="SaveLoadUI" parent="." unique_id=967381190 instance=ExtResource("save_load_ui")]
 visible = false
+layout_mode = 0
 
 [connection signal="pressed" from="VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/ContinueButton" to="." method="_on_continue_button_pressed"]
