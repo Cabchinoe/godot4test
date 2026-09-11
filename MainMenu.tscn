@@ -1,10 +1,49 @@
 [gd_scene format=3 uid="uid://djmkdy0qua8w"]
 
 [ext_resource type="Script" uid="uid://ct4gwiyjh5rnl" path="res://Script/main_menu.gd" id="1_menu"]
-[ext_resource type="Texture2D" uid="uid://on8vjnvf8fmt" path="res://Art/backgrounds/main_menu_pyroxene_dawn.jpg" id="background"]
-[ext_resource type="PackedScene" uid="uid://eq4pj2wccrs4" path="res://Script/save/ui/save_load_ui.tscn" id="save_load_ui"]
+[ext_resource type="PackedScene" uid="uid://eq4pj2wccrs4" path="res://Script/save/ui/save_load_ui.tscn" id="2_save_load"]
 
-[node name="MainMenu" type="Control" unique_id=1945193937]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_divider"]
+content_margin_top = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.325, 0.541, 0.611, 0.6)
+border_width_bottom = 1
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+bg_color = Color(0.0313, 0.0627, 0.1098, 0.82)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.325, 0.541, 0.611, 0.7)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_hover"]
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+bg_color = Color(0.0392, 0.0823, 0.1372, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.505, 0.874, 0.964, 0.95)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+shadow_color = Color(0.505, 0.874, 0.964, 0.4)
+shadow_size = 12
+
+[node name="MainMenu" type="Control" unique_id=1712895812]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -13,7 +52,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 
-[node name="Background" type="TextureRect" parent="." unique_id=1497452330]
+[node name="Background" type="TextureRect" parent="." unique_id=1775663513]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -21,11 +60,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("background")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="ReadabilityOverlay" type="ColorRect" parent="." unique_id=1682937221]
+[node name="ReadabilityOverlay" type="ColorRect" parent="." unique_id=1534988656]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -33,46 +71,94 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.025, 0.06, 0.1, 0.35)
+color = Color(0.012, 0.039, 0.071, 0.42)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1097598151]
+[node name="MenuPanel" type="PanelContainer" parent="." unique_id=153482581]
 layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.28
+anchors_preset = 4
 anchor_top = 0.5
-anchor_right = 0.28
 anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = -60.0
-offset_right = 150.0
-offset_bottom = 60.0
-grow_horizontal = 2
+offset_left = 120.0
+offset_top = -195.5
+offset_right = 480.0
+offset_bottom = 195.5
 grow_vertical = 2
-theme_override_constants/separation = 20
+mouse_filter = 1
 
-[node name="Title" type="Label" parent="VBoxContainer" unique_id=2041963455]
+[node name="VBoxContainer" type="VBoxContainer" parent="MenuPanel" unique_id=9022938]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="TitleZh" type="Label" parent="MenuPanel/VBoxContainer" unique_id=1480203830]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.94, 0.98, 1, 1)
-theme_override_colors/font_shadow_color = Color(0.005, 0.02, 0.05, 0.9)
+theme_override_colors/font_shadow_color = Color(0, 0.02, 0.05, 0.95)
+theme_override_colors/font_outline_color = Color(0.01, 0.04, 0.08, 0.85)
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 3
-theme_override_font_sizes/font_size = 36
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 44
 text = "辉石之痕
 黎明阵线"
 horizontal_alignment = 1
+language = "zh_CN"
 
-[node name="StartButton" type="Button" parent="VBoxContainer" unique_id=1801564063]
+[node name="TitleEn" type="Label" parent="MenuPanel/VBoxContainer" unique_id=1488233043]
 layout_mode = 2
-text = "开始新救赎"
+theme_override_colors/font_color = Color(0.505, 0.874, 0.964, 0.92)
+theme_override_colors/font_shadow_color = Color(0, 0.02, 0.05, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 16
+text = "TRACE OF PYROXENE · DAWN FRONTLINE"
+horizontal_alignment = 1
 
-[node name="ContinueButton" type="Button" parent="VBoxContainer" unique_id=371103531]
+[node name="Divider" type="HSeparator" parent="MenuPanel/VBoxContainer" unique_id=1334094324]
 layout_mode = 2
-text = "继续游戏"
+theme_override_constants/separation = 6
+theme_override_styles/separator = SubResource("StyleBoxFlat_divider")
 
-[node name="SaveLoadUI" parent="." unique_id=967381190 instance=ExtResource("save_load_ui")]
+[node name="StartButton" type="Button" parent="MenuPanel/VBoxContainer" unique_id=1310854088]
+custom_minimum_size = Vector2(360, 60)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.96, 0.98, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.78, 0.94, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_styles/focus = SubResource("StyleBoxFlat_btn_normal")
+text = "▶  开始新游戏"
+
+[node name="ContinueButton" type="Button" parent="MenuPanel/VBoxContainer" unique_id=1619358920]
+custom_minimum_size = Vector2(360, 60)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.96, 0.98, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.78, 0.94, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_hover")
+theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
+theme_override_styles/focus = SubResource("StyleBoxFlat_btn_normal")
+text = "❖  继续游戏"
+
+[node name="VersionLabel" type="Label" parent="MenuPanel/VBoxContainer" unique_id=924320751]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.55, 0.65, 0.75)
+theme_override_font_sizes/font_size = 12
+text = "v0.1 · DAWN FRONTLINE PRE-ALPHA"
+horizontal_alignment = 1
+
+[node name="SaveLoadUI" parent="." unique_id=559317941 instance=ExtResource("2_save_load")]
 visible = false
 layout_mode = 0
 
-[connection signal="pressed" from="VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
-[connection signal="pressed" from="VBoxContainer/ContinueButton" to="." method="_on_continue_button_pressed"]
+[connection signal="pressed" from="MenuPanel/VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
+[connection signal="pressed" from="MenuPanel/VBoxContainer/ContinueButton" to="." method="_on_continue_button_pressed"]
 [connection signal="closed" from="SaveLoadUI" to="." method="_on_save_load_closed"]
