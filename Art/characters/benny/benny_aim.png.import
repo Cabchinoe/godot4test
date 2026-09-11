@@ -2,12 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dxttrix3bw67o"
-valid=false
+uid="uid://b8a3k7nap2q1t"
+path="res://.godot/imported/benny_aim.png-a2546184c8042173f28fc947765109b4.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
-source_file="res://Art/source/urban_night/characters/rabbit_soldier_aim_raw_01.png"
+source_file="res://Art/characters/benny/benny_aim.png"
+dest_files=["res://.godot/imported/benny_aim.png-a2546184c8042173f28fc947765109b4.ctex"]
 
 [params]
 

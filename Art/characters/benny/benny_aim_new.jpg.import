@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d7wv2tlth6wy"
-path="res://.godot/imported/player2_aim.png-815335424bf3374619620e0077447a70.ctex"
+uid="uid://b84gilx4qfa65"
+path="res://.godot/imported/benny_aim_new.jpg-040e3c22a1913aa546fab3fe69f2d26e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Unit/player2_aim.png"
-dest_files=["res://.godot/imported/player2_aim.png-815335424bf3374619620e0077447a70.ctex"]
+source_file="res://Art/characters/benny/benny_aim_new.jpg"
+dest_files=["res://.godot/imported/benny_aim_new.jpg-040e3c22a1913aa546fab3fe69f2d26e.ctex"]
 
 [params]
 

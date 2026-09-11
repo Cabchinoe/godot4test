@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cxmno764ib6wb"
-path="res://.godot/imported/rabbit_soldier_aim_master_01.png-3d372096ebecb930ef19d5270d1e0214.ctex"
+uid="uid://dxn5rqk5v8tln"
+path="res://.godot/imported/benny_walk_new.jpg-fbd5edcea75f4dae6a02ffe81e87538f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Art/source/urban_night/characters/rabbit_soldier_aim_master_01.png"
-dest_files=["res://.godot/imported/rabbit_soldier_aim_master_01.png-3d372096ebecb930ef19d5270d1e0214.ctex"]
+source_file="res://Art/characters/benny/benny_walk_new.jpg"
+dest_files=["res://.godot/imported/benny_walk_new.jpg-fbd5edcea75f4dae6a02ffe81e87538f.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://nxxf2hdqidf1"
-path="res://.godot/imported/rabbit_soldier_master_01.png-ba5169944644d80b6ff2909ccfffed0f.ctex"
+uid="uid://deo78ptbf0h3v"
+path="res://.godot/imported/benny_base_01.png-8b5de33631ec92c5c57bc4aada24e1e5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Art/source/urban_night/characters/rabbit_soldier_master_01.png"
-dest_files=["res://.godot/imported/rabbit_soldier_master_01.png-ba5169944644d80b6ff2909ccfffed0f.ctex"]
+source_file="res://Art/characters/benny/benny_base_01.png"
+dest_files=["res://.godot/imported/benny_base_01.png-8b5de33631ec92c5c57bc4aada24e1e5.ctex"]
 
 [params]
 

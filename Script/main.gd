@@ -1,7 +1,8 @@
 extends Node2D
 
+const PLAYER_SPRITE_FRAMES: SpriteFrames = preload("res://Art/characters/benny/benny_sprites.tres")
+
 @onready var player: Unit = $Player
-@onready var player_sprite: AnimatedSprite2D = $Player/Sprite2D
 @onready var ground_layer: TileMapLayer = $Ground10
 @onready var obstacle_layer: TileMapLayer = $Ground10/obstacle
 @onready var hud_layer_1: TileMapLayer = $Ground10/HUD
@@ -56,6 +57,8 @@ func _ready():
 	level_manager.add_level(2, ground_layer_2, obstacle_layer_2, hud_layer_2, -16)
 
 	player.init_unit("Player", "player", 5, level_manager, 1)
+	player.configure_appearance(PLAYER_SPRITE_FRAMES, &"idle", &"walk", &"aim")
+	player.movement_finished.connect(_on_player_movement_finished)
 	print("Player start grid: ", player.grid_pos, " level: ", player.current_level, " world: ", player.global_position)
 
 	turn_controller = TurnController.new(10)
@@ -80,6 +83,22 @@ func _ready():
 func _on_turn_started(_turn: int):
 	player.start_turn()
 	_update_hud()
+	_update_player_animation()
+
+func _on_player_movement_finished() -> void:
+	_update_player_animation()
+
+# 状态机 → 动画：取消选中停所有；选中：攻击→aim，AP>0→walk，否则→idle
+func _update_player_animation() -> void:
+	if current_state == State.IDLE:
+		player.stop_all()
+		return
+	if current_state == State.ATTACK_STATE:
+		player.play_aim()
+	elif player.action_points > 0:
+		player.play_walk()
+	else:
+		player.play_idle()
 
 func _on_game_over():
 	_change_state(State.IDLE)
@@ -133,8 +152,6 @@ func _on_context_menu_hide():
 
 func _change_state(new_state: int):
 	current_state = new_state
-	player_sprite.play("walk")
-	player_sprite.stop()
 	reachable_cells = []
 	attack_cells = []
 	attack_unit_cells = []
@@ -152,15 +169,14 @@ func _change_state(new_state: int):
 		State.IDLE:
 			pass
 		State.MOVE_STATE:
-			player_sprite.play("walk")
 			if player.action_points > 0:
 				_show_move_range()
 		State.MENU_STATE:
-			player_sprite.play("walk")
 			_show_context_menu()
 		State.ATTACK_STATE:
-			player_sprite.play("aim")
 			_enter_attack()
+
+	_update_player_animation()
 
 func _process(delta: float):
 	if turn_controller.is_game_over:

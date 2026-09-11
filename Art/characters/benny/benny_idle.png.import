@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://diioegs3nc8yq"
-path="res://.godot/imported/player2.png-ac7562c9572c830d9f12eefd2fe7c943.ctex"
+uid="uid://bvirsyaqi2hm5"
+path="res://.godot/imported/benny_idle.png-696ac2b58389e4784f86df5d947f7e2c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Unit/player2.png"
-dest_files=["res://.godot/imported/player2.png-ac7562c9572c830d9f12eefd2fe7c943.ctex"]
+source_file="res://Art/characters/benny/benny_idle.png"
+dest_files=["res://.godot/imported/benny_idle.png-696ac2b58389e4784f86df5d947f7e2c.ctex"]
 
 [params]
 

@@ -1,7 +1,8 @@
 extends Node2D
 
+const PLAYER_SPRITE_FRAMES: SpriteFrames = preload("res://Art/characters/benny/benny_sprites.tres")
+
 @onready var player: Unit = $Player
-@onready var player_sprite: AnimatedSprite2D = $Player/Sprite2D
 @onready var ground_layer: TileMapLayer = $Ground10
 @onready var obstacle_layer: TileMapLayer = $Ground10/obstacle
 @onready var hud_layer_1: TileMapLayer = $Ground10/HUD
@@ -39,6 +40,8 @@ func _ready():
 	level_manager.add_level(2, ground_layer_2, obstacle_layer_2, hud_layer_2, -16)
 
 	player.init_unit("Player", "player", BASE_AP, level_manager, 1)
+	player.configure_appearance(PLAYER_SPRITE_FRAMES, &"idle", &"walk", &"aim")
+	player.movement_finished.connect(_on_player_movement_finished)
 
 	var player_provider = PlayerSaveProvider.new(player)
 	SaveManager.register_provider(player_provider)
@@ -66,10 +69,24 @@ func _on_battle_pressed():
 func _on_menu_pressed():
 	get_tree().change_scene_to_file("res://MainMenu.tscn")
 
+func _on_player_movement_finished() -> void:
+	_update_player_animation()
+
+# 状态机 → 动画：取消选中停所有；选中：AP>0→walk，否则→idle
+func _update_player_animation() -> void:
+	if not player_selected:
+		player.stop_all()
+		return
+	if player.action_points > 0:
+		player.play_walk()
+	else:
+		player.play_idle()
+
 func _clear_selection():
 	player_selected = false
-	player_sprite.stop()
+	player.stop_all()
 	pending_recalc_range = false
+	_update_player_animation()
 	_clear_all_highlights()
 	hover_sprite.visible = false
 	hover_sprite.clear_points()
@@ -161,9 +178,9 @@ func _handle_left_click():
 	else:
 		if _is_same_node(click_node, player_node):
 			player_selected = true
-			player_sprite.play("walk")
 			_show_move_range()
 			top_bar.visible = false
+			_update_player_animation()
 		else:
 			_clear_selection()
 

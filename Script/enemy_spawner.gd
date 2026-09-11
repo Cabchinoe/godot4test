@@ -22,13 +22,12 @@ func spawn(id: String, grid: Vector2i, level: int) -> Unit:
 
 	var sprite := AnimatedSprite2D.new()
 	sprite.name = "Sprite2D"
-	sprite.sprite_frames = sprite_frames
-	sprite.animation = "walk"
 	sprite.offset = Vector2(32, 32)
 	enemy.add_child(sprite)
 
 	enemies_container.add_child(enemy)
 	enemy.init_unit(data["name"], "enemy", int(data["ap_max"]), level_manager, level)
+	enemy.configure_appearance(sprite_frames, &"idle", &"walk", &"aim")
 	enemy.grid_pos = grid
 	_align_to_grid(enemy)
 	return enemy
