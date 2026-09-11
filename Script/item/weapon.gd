@@ -14,5 +14,11 @@ func get_subtype() -> String:
 func get_subtype_name() -> String:
 	return VALID_SUBTYPES.get(get_subtype(), "未知")
 
-func get_ammo_type() -> String:
-	return item_data.get("ammo_type", "")
+func get_attack_range() -> int:
+	return int(item_data.get("range", 1))
+
+func get_attack_cost() -> int:
+	return int(item_data.get("attack_cost", 1))
+
+func get_attack_power() -> int:
+	return int(item_data.get("attack_power", 0))

@@ -12,6 +12,8 @@
 [ext_resource type="Texture2D" uid="uid://bi7qu8w83sg5r" path="res://Art/tilesets/urban_night/atlases/structures/stairs_urban_shape_10.png" id="13_cegan"]
 [ext_resource type="Script" uid="uid://bkpl2eys4kgy3" path="res://Script/main.gd" id="script_main"]
 [ext_resource type="Script" uid="uid://l743efe0mkta" path="res://Script/unit.gd" id="script_unit"]
+[ext_resource type="Script" path="res://Script/benny.gd" id="script_benny"]
+[ext_resource type="Resource" path="res://conf/characters/benny.tres" id="character_benny"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_82xsv"]
 texture = ExtResource("7_ycdy4")
@@ -2015,7 +2017,8 @@ width = 12.0
 default_color = Color(1, 0.06999999, 0.10099995, 0.3137255)
 
 [node name="Player" type="Node2D" parent="." unique_id=1783472142]
-script = ExtResource("script_unit")
+script = ExtResource("script_benny")
+character_definition = ExtResource("character_benny")
 
 [node name="Sprite2D" type="AnimatedSprite2D" parent="Player" unique_id=1893270063]
 offset = Vector2(32, 40)

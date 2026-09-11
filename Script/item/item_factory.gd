@@ -1,7 +1,7 @@
 class_name ItemFactory
 
 const EQUIP_TYPES := [
-	"WEAPON", "AMMO", "HELMET", "ARMOR", "CHESTRIG", "BACKPACK"
+	"WEAPON", "HELMET", "ARMOR", "BACKPACK"
 ]
 
 static func create(id: String, quantity: int = 1):

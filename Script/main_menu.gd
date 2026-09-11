@@ -3,6 +3,8 @@ extends Control
 @onready var save_load_ui = $SaveLoadUI
 
 func _on_start_button_pressed() -> void:
+	if not SaveManager.has_current_data():
+		SaveManager.create_new_game()
 	get_tree().change_scene_to_file("res://CommandCenter.tscn")
 
 func _on_continue_button_pressed() -> void:

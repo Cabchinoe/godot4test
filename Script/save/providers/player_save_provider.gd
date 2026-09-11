@@ -1,21 +1,22 @@
 class_name PlayerSaveProvider
 extends SaveProvider
 
-var _unit: Unit
+var _player: Player
 
-func _init(unit: Unit) -> void:
-	_unit = unit
+func _init(player: Player) -> void:
+	_player = player
 
 func write_to(data: SaveData) -> void:
 	if data.player == null:
 		data.player = PlayerSaveData.new()
-	data.player.level = _unit.level if "level" in _unit else 1
+	_player.write_save_data(data.player)
 
 func read_from(data: SaveData) -> void:
 	if data.player == null:
+		data.player = PlayerSaveData.new()
+		_player.write_save_data(data.player)
 		return
-	if "level" in _unit:
-		_unit.level = data.player.level
+	_player.apply_save_data(data.player)
 
 func get_provider_name() -> String:
 	return "PlayerSaveProvider"

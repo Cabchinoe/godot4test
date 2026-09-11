@@ -1,8 +1,6 @@
 extends Node2D
 
-const PLAYER_SPRITE_FRAMES: SpriteFrames = preload("res://Art/characters/benny/benny_sprites.tres")
-
-@onready var player: Unit = $Player
+@onready var player: Benny = $Player
 @onready var ground_layer: TileMapLayer = $Ground10
 @onready var obstacle_layer: TileMapLayer = $Ground10/obstacle
 @onready var hud_layer_1: TileMapLayer = $Ground10/HUD
@@ -20,9 +18,8 @@ const PLAYER_SPRITE_FRAMES: SpriteFrames = preload("res://Art/characters/benny/b
 @onready var save_load_ui = $UILayer/UIRoot/SaveLoadUI
 
 const DRAG_THRESHOLD: float = 5.0
-const BASE_AP: int = 50
-
 var level_manager: LevelManager
+var player_save_provider: PlayerSaveProvider
 var reachable_cells: Array[Dictionary] = []
 var player_selected: bool = false
 var last_hover_node: Dictionary = {}
@@ -39,18 +36,22 @@ func _ready():
 	level_manager.add_level(1, ground_layer, obstacle_layer, hud_layer_1, 0)
 	level_manager.add_level(2, ground_layer_2, obstacle_layer_2, hud_layer_2, -16)
 
-	player.init_unit("Player", "player", BASE_AP, level_manager, 1)
-	player.configure_appearance(PLAYER_SPRITE_FRAMES, &"idle", &"walk", &"aim")
+	player.initialize_player(level_manager)
 	player.movement_finished.connect(_on_player_movement_finished)
 
-	var player_provider = PlayerSaveProvider.new(player)
-	SaveManager.register_provider(player_provider)
+	player_save_provider = PlayerSaveProvider.new(player)
+	SaveManager.register_provider(player_save_provider)
+	SaveManager.reload_current()
 
 	save_button.pressed.connect(_on_save_pressed)
 	load_button.pressed.connect(_on_load_pressed)
 	battle_button.pressed.connect(_on_battle_pressed)
 	menu_button.pressed.connect(_on_menu_pressed)
 	save_load_ui.closed.connect(_on_save_load_closed)
+
+func _exit_tree() -> void:
+	if player_save_provider:
+		SaveManager.unregister_provider(player_save_provider)
 
 func _on_save_pressed():
 	save_load_ui.visible = true
@@ -106,7 +107,7 @@ func _process(delta: float):
 
 	if pending_recalc_range and player_selected:
 		pending_recalc_range = false
-		player.action_points = BASE_AP
+		player.action_points = player.ap_max
 		_show_move_range()
 
 	var mouse_world = get_global_mouse_position()

@@ -466,5 +466,50 @@
 		"stackable": false,
 		"max_stack": 1,
 		"quality": "A"
+	},
+	{
+		"id": "weapon_benny_defender_9",
+		"name": "防卫者-9",
+		"type": "WEAPON",
+		"subtype": "SMG",
+		"description": "贝妮初始配备的紧凑冲锋枪。",
+		"price": 0,
+		"stackable": false,
+		"max_stack": 1,
+		"quality": "C",
+		"range": 5,
+		"attack_power": 35,
+		"attack_cost": 1,
+		"attachment_slots": ["SCOPE", "BARREL", "STOCK"]
+	},
+	{
+		"id": "weapon_benny_hare_hopper",
+		"name": "野兔跳跃者",
+		"type": "WEAPON",
+		"subtype": "SMG",
+		"description": "贝妮专属的战术冲锋枪。",
+		"price": 0,
+		"stackable": false,
+		"max_stack": 1,
+		"quality": "B",
+		"range": 6,
+		"attack_power": 44,
+		"attack_cost": 1,
+		"attachment_slots": ["SCOPE", "BARREL", "STOCK"]
+	},
+	{
+		"id": "weapon_benny_dawn_pulse",
+		"name": "黎明初霁",
+		"type": "WEAPON",
+		"subtype": "SMG",
+		"description": "贝妮的高频脉冲冲锋枪。",
+		"price": 0,
+		"stackable": false,
+		"max_stack": 1,
+		"quality": "A",
+		"range": 6,
+		"attack_power": 52,
+		"attack_cost": 1,
+		"attachment_slots": ["SCOPE", "BARREL", "STOCK", "RESONANCE_CORE"]
 	}
 ]

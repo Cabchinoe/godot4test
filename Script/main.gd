@@ -1,8 +1,6 @@
 extends Node2D
 
-const PLAYER_SPRITE_FRAMES: SpriteFrames = preload("res://Art/characters/benny/benny_sprites.tres")
-
-@onready var player: Unit = $Player
+@onready var player: Benny = $Player
 @onready var ground_layer: TileMapLayer = $Ground10
 @onready var obstacle_layer: TileMapLayer = $Ground10/obstacle
 @onready var hud_layer_1: TileMapLayer = $Ground10/HUD
@@ -20,7 +18,6 @@ const PLAYER_SPRITE_FRAMES: SpriteFrames = preload("res://Art/characters/benny/b
 @onready var enemies_container: Node2D = $Enemies
 
 const DRAG_THRESHOLD: float = 5.0
-const ATTACK_RANGE: int = 5
 const MOVE_RANGE_SOURCE_ID: int = 0
 const ATTACK_RANGE_SOURCE_ID: int = 1
 const ATTACK_GRAY_ATLAS := Vector2i(0, 0)
@@ -33,6 +30,7 @@ enum State { IDLE, MOVE_STATE, MENU_STATE, ATTACK_STATE }
 var current_state: int = State.IDLE
 var enemy_spawner: EnemySpawner
 var enemy_ai: EnemyAI
+var player_save_provider: PlayerSaveProvider
 var reachable_cells: Array[Dictionary] = []
 var attack_cells: Array[Dictionary] = []
 var attack_unit_cells: Array = []
@@ -56,9 +54,11 @@ func _ready():
 	level_manager.add_level(1, ground_layer, obstacle_layer, hud_layer_1, 0)
 	level_manager.add_level(2, ground_layer_2, obstacle_layer_2, hud_layer_2, -16)
 
-	player.init_unit("Player", "player", 5, level_manager, 1)
-	player.configure_appearance(PLAYER_SPRITE_FRAMES, &"idle", &"walk", &"aim")
+	player.initialize_player(level_manager)
 	player.movement_finished.connect(_on_player_movement_finished)
+	player_save_provider = PlayerSaveProvider.new(player)
+	SaveManager.register_provider(player_save_provider)
+	SaveManager.reload_current()
 	print("Player start grid: ", player.grid_pos, " level: ", player.current_level, " world: ", player.global_position)
 
 	turn_controller = TurnController.new(10)
@@ -79,6 +79,10 @@ func _ready():
 		{"id": "infantry", "grid": Vector2i(7, 5), "level": 1},
 	])
 	enemy_ai = EnemyAI.new()
+
+func _exit_tree() -> void:
+	if player_save_provider:
+		SaveManager.unregister_provider(player_save_provider)
 
 func _on_turn_started(_turn: int):
 	player.start_turn()
@@ -281,11 +285,13 @@ func _handle_left_click():
 
 	if current_state == State.ATTACK_STATE:
 		var attack_click_node = _get_closest_attack_node(mouse_world)
-		if _is_in_attack_cells(attack_click_node):
+		if _is_in_attack_cells(attack_click_node) and player.spend_ap(player.get_attack_cost()):
 			var path = bullet_range.get_bullet_path(player.grid_pos, attack_click_node["grid"])
 			print("[Attack] origin=", player.grid_pos, " lv=", player.current_level, " target=", attack_click_node)
 			for step in path:
 				print("  step: ", step)
+			_update_hud()
+			_change_state(State.IDLE)
 		return
 
 	var click_node = _get_closest_walkable_node(mouse_world)
@@ -355,7 +361,7 @@ func _show_move_range():
 
 func _enter_attack():
 	attack_unit_cells = _collect_targetable_cells()
-	attack_cells = bullet_range.get_reachable_cells(player.grid_pos, player.current_level, ATTACK_RANGE, attack_unit_cells)
+	attack_cells = bullet_range.get_reachable_cells(player.grid_pos, player.current_level, player.get_attack_range(), attack_unit_cells)
 	print("[Attack] enter mode, cells=", attack_cells.size())
 	for cell in attack_cells:
 		var hud = level_manager.get_layer(cell["level"], "hud")

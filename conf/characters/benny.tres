@@ -1,0 +1,380 @@
+[gd_resource type="Resource" script_class="CharacterDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Script/character_definition.gd" id="1_definition"]
+[ext_resource type="SpriteFrames" path="res://Art/characters/benny/benny_sprites.tres" id="2_sprites"]
+
+[resource]
+script = ExtResource("1_definition")
+character_id = &"benny"
+display_name = "Benny"
+rarity = 4
+sprite_frames = ExtResource("2_sprites")
+animation_idle = &"idle"
+animation_walk = &"walk"
+animation_aim = &"aim"
+allowed_weapon_ids = PackedStringArray("weapon_benny_defender_9", "weapon_benny_hare_hopper", "weapon_benny_dawn_pulse")
+default_loadout = {
+"backpack": "backpack_basic_01",
+"weapon": "weapon_benny_defender_9"
+}
+level_stats = [{
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack"],
+"level": 1,
+"max_hp": 90,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack"],
+"level": 2,
+"max_hp": 90,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack"],
+"level": 3,
+"max_hp": 90,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack"],
+"level": 4,
+"max_hp": 90,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack"],
+"level": 5,
+"max_hp": 90,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack"],
+"level": 6,
+"max_hp": 90,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack"],
+"level": 7,
+"max_hp": 90,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack"],
+"level": 8,
+"max_hp": 90,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack"],
+"level": 9,
+"max_hp": 90,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 10,
+"max_hp": 106,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 11,
+"max_hp": 106,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 12,
+"max_hp": 106,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 13,
+"max_hp": 106,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 14,
+"max_hp": 106,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 15,
+"max_hp": 106,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 16,
+"max_hp": 106,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 17,
+"max_hp": 106,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 18,
+"max_hp": 106,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 5,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 19,
+"max_hp": 106,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 20,
+"max_hp": 123,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 21,
+"max_hp": 123,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 22,
+"max_hp": 123,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 23,
+"max_hp": 123,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 24,
+"max_hp": 123,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 25,
+"max_hp": 123,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 26,
+"max_hp": 123,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 27,
+"max_hp": 123,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 28,
+"max_hp": 123,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 29,
+"max_hp": 123,
+"pyroxene_resistance": 5
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 30,
+"max_hp": 141,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 31,
+"max_hp": 141,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 32,
+"max_hp": 141,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 33,
+"max_hp": 141,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 34,
+"max_hp": 141,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 35,
+"max_hp": 141,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 36,
+"max_hp": 141,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 37,
+"max_hp": 141,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 38,
+"max_hp": 141,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 6,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 39,
+"max_hp": 141,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 40,
+"max_hp": 160,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 41,
+"max_hp": 160,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 42,
+"max_hp": 160,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 43,
+"max_hp": 160,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 44,
+"max_hp": 160,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 45,
+"max_hp": 160,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 46,
+"max_hp": 160,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 47,
+"max_hp": 160,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 48,
+"max_hp": 160,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 49,
+"max_hp": 160,
+"pyroxene_resistance": 7
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 50,
+"max_hp": 180,
+"pyroxene_resistance": 10
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 51,
+"max_hp": 180,
+"pyroxene_resistance": 10
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 52,
+"max_hp": 180,
+"pyroxene_resistance": 10
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 53,
+"max_hp": 180,
+"pyroxene_resistance": 10
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 54,
+"max_hp": 180,
+"pyroxene_resistance": 10
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 55,
+"max_hp": 180,
+"pyroxene_resistance": 10
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 56,
+"max_hp": 180,
+"pyroxene_resistance": 10
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 57,
+"max_hp": 180,
+"pyroxene_resistance": 10
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 58,
+"max_hp": 180,
+"pyroxene_resistance": 10
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 59,
+"max_hp": 180,
+"pyroxene_resistance": 10
+}, {
+"base_ap": 7,
+"equipment_slots": ["weapon", "backpack", "armor", "helmet"],
+"level": 60,
+"max_hp": 200,
+"pyroxene_resistance": 10
+}]

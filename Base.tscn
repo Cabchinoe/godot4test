@@ -12,6 +12,8 @@
 [ext_resource type="PackedScene" uid="uid://eq4pj2wccrs4" path="res://Script/save/ui/save_load_ui.tscn" id="save_load_ui_scene"]
 [ext_resource type="Script" uid="uid://bkpgx5twn614x" path="res://Script/base.gd" id="script_base"]
 [ext_resource type="Script" uid="uid://l743efe0mkta" path="res://Script/unit.gd" id="script_unit"]
+[ext_resource type="Script" path="res://Script/benny.gd" id="script_benny"]
+[ext_resource type="Resource" path="res://conf/characters/benny.tres" id="character_benny"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0k0ig"]
 texture = ExtResource("2_2racw")
@@ -1991,7 +1993,8 @@ width = 12.0
 default_color = Color(0.392157, 1, 0.392157, 0.313725)
 
 [node name="Player" type="Node2D" parent="." unique_id=1783472142]
-script = ExtResource("script_unit")
+script = ExtResource("script_benny")
+character_definition = ExtResource("character_benny")
 
 [node name="Sprite2D" type="AnimatedSprite2D" parent="Player" unique_id=1893270063]
 offset = Vector2(32, 40)

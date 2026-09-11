@@ -2,10 +2,8 @@ extends Node
 
 const VALID_TYPES := {
 	"WEAPON": "武器",
-	"AMMO": "弹药",
 	"HELMET": "头盔",
 	"ARMOR": "护甲",
-	"CHESTRIG": "胸挂",
 	"BACKPACK": "背包",
 	"MATERIAL": "材料",
 	"COLLECTIBLE": "收藏品",
@@ -49,6 +47,8 @@ func _load_type_file(path: String) -> void:
 		return
 	for entry in data:
 		if _validate_entry(entry):
+			if entry["type"] == "WEAPON":
+				entry.erase("ammo_type")
 			_items[entry["id"]] = entry
 
 func _validate_icons() -> void:
