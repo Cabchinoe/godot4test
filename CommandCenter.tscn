@@ -2,16 +2,86 @@
 
 [ext_resource type="Script" path="res://Script/command_center.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://Art/ui/command_center/outpost_command_center_background.jpg" id="2_background"]
-[ext_resource type="Texture2D" path="res://Art/ui/command_center/buttons/battle_normal.png" id="3_battle_normal"]
-[ext_resource type="Texture2D" path="res://Art/ui/command_center/buttons/battle_hover.png" id="4_battle_hover"]
-[ext_resource type="Texture2D" path="res://Art/ui/command_center/buttons/greenhouse_normal.png" id="5_greenhouse_normal"]
-[ext_resource type="Texture2D" path="res://Art/ui/command_center/buttons/greenhouse_hover.png" id="6_greenhouse_hover"]
-[ext_resource type="Texture2D" path="res://Art/ui/command_center/buttons/special_ops_normal.png" id="7_special_ops_normal"]
-[ext_resource type="Texture2D" path="res://Art/ui/command_center/buttons/special_ops_hover.png" id="8_special_ops_hover"]
-[ext_resource type="Texture2D" path="res://Art/ui/command_center/buttons/warehouse_normal.png" id="9_warehouse_normal"]
-[ext_resource type="Texture2D" path="res://Art/ui/command_center/buttons/warehouse_hover.png" id="10_warehouse_hover"]
-[ext_resource type="Texture2D" path="res://Art/ui/command_center/buttons/factory_normal.png" id="11_factory_normal"]
-[ext_resource type="Texture2D" path="res://Art/ui/command_center/buttons/factory_hover.png" id="12_factory_hover"]
+[ext_resource type="Texture2D" path="res://Art/ui/command_center/buttons/semantic/battle_button.png" id="3_battle_semantic"]
+[ext_resource type="Texture2D" path="res://Art/ui/command_center/buttons/semantic/greenhouse_button.png" id="4_greenhouse_semantic"]
+[ext_resource type="Texture2D" path="res://Art/ui/command_center/buttons/semantic/special_ops_button.png" id="5_special_ops_semantic"]
+[ext_resource type="Texture2D" path="res://Art/ui/command_center/buttons/semantic/warehouse_button.png" id="6_warehouse_semantic"]
+[ext_resource type="Texture2D" path="res://Art/ui/command_center/buttons/semantic/factory_button.png" id="7_factory_semantic"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBattle"]
+bg_color = Color(0.018, 0.065, 0.105, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.18, 0.75, 0.94, 0.72)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0, 0.015, 0.035, 0.8)
+shadow_size = 10
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleGreenhouse"]
+bg_color = Color(0.026, 0.083, 0.075, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.53, 0.9, 0.37, 0.72)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0, 0.02, 0.025, 0.8)
+shadow_size = 10
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleSpecialOps"]
+bg_color = Color(0.03, 0.07, 0.105, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.58, 0.82, 0.95, 0.72)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0, 0.015, 0.035, 0.8)
+shadow_size = 10
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleWarehouse"]
+bg_color = Color(0.08, 0.072, 0.025, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.93, 0.8, 0.28, 0.72)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0.03, 0.02, 0, 0.8)
+shadow_size = 10
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleFactory"]
+bg_color = Color(0.1, 0.052, 0.02, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.56, 0.2, 0.76)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0.035, 0.01, 0, 0.8)
+shadow_size = 10
+shadow_offset = Vector2(0, 4)
 
 [node name="CommandCenter" type="Control"]
 layout_mode = 3
@@ -85,6 +155,7 @@ theme_override_colors/font_outline_color = Color(0.01, 0.035, 0.06, 0.95)
 theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 20
 horizontal_alignment = 2
+mouse_filter = 2
 text = "信用点 2,480   辉石碎片 18"
 
 [node name="LocalTimeLabel" type="Label" parent="."]
@@ -99,6 +170,80 @@ grow_vertical = 2
 theme_override_colors/font_color = Color(0.64, 0.76, 0.84, 1)
 theme_override_font_sizes/font_size = 16
 horizontal_alignment = 2
+mouse_filter = 2
+
+[node name="BattleCard" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.03
+anchor_top = 0.18
+anchor_right = 0.319
+anchor_bottom = 0.334
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBattle")
+
+[node name="Backdrop" type="TextureRect" parent="BattleCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_battle_semantic")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Title" type="Label" parent="BattleCard"]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.075
+anchor_top = 0.22
+anchor_right = 0.57
+anchor_bottom = 0.62
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.94, 0.985, 1, 1)
+theme_override_colors/font_outline_color = Color(0.01, 0.06, 0.09, 0.95)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 30
+text = "战场"
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Accent" type="ColorRect" parent="BattleCard"]
+layout_mode = 1
+anchors_preset = 1
+anchor_right = 0.014
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.2, 0.82, 1, 0.95)
+mouse_filter = 2
+
+[node name="TopRail" type="ColorRect" parent="BattleCard"]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.04
+anchor_top = 0.045
+anchor_right = 0.96
+anchor_bottom = 0.06
+grow_horizontal = 2
+color = Color(0.28, 0.8, 1, 0.52)
+mouse_filter = 2
+
+[node name="Highlight" type="ColorRect" parent="BattleCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.11, 0.68, 0.95, 0.22)
+modulate = Color(1, 1, 1, 0)
 
 [node name="BattleButton" type="TextureButton" parent="."]
 layout_mode = 1
@@ -110,10 +255,80 @@ anchor_bottom = 0.334
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-ignore_texture_size = true
-texture_normal = ExtResource("3_battle_normal")
-texture_hover = ExtResource("4_battle_hover")
-stretch_mode = 0
+tooltip_text = "进入战场"
+
+[node name="GreenhouseCard" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.66
+anchor_top = 0.18
+anchor_right = 0.949
+anchor_bottom = 0.334
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleGreenhouse")
+
+[node name="Backdrop" type="TextureRect" parent="GreenhouseCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_greenhouse_semantic")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Title" type="Label" parent="GreenhouseCard"]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.075
+anchor_top = 0.22
+anchor_right = 0.57
+anchor_bottom = 0.62
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.94, 1, 0.9, 1)
+theme_override_colors/font_outline_color = Color(0.015, 0.075, 0.05, 0.95)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 30
+text = "温室"
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Accent" type="ColorRect" parent="GreenhouseCard"]
+layout_mode = 1
+anchors_preset = 1
+anchor_right = 0.014
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.62, 0.93, 0.37, 0.95)
+mouse_filter = 2
+
+[node name="TopRail" type="ColorRect" parent="GreenhouseCard"]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.04
+anchor_top = 0.045
+anchor_right = 0.96
+anchor_bottom = 0.06
+grow_horizontal = 2
+color = Color(0.64, 0.95, 0.4, 0.52)
+mouse_filter = 2
+
+[node name="Highlight" type="ColorRect" parent="GreenhouseCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.42, 0.88, 0.28, 0.2)
+modulate = Color(1, 1, 1, 0)
 
 [node name="GreenhouseButton" type="TextureButton" parent="."]
 layout_mode = 1
@@ -125,10 +340,80 @@ anchor_bottom = 0.334
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-ignore_texture_size = true
-texture_normal = ExtResource("5_greenhouse_normal")
-texture_hover = ExtResource("6_greenhouse_hover")
-stretch_mode = 0
+tooltip_text = "进入温室"
+
+[node name="SpecialOpsCard" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.355
+anchor_top = 0.44
+anchor_right = 0.645
+anchor_bottom = 0.594
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleSpecialOps")
+
+[node name="Backdrop" type="TextureRect" parent="SpecialOpsCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("5_special_ops_semantic")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Title" type="Label" parent="SpecialOpsCard"]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.075
+anchor_top = 0.22
+anchor_right = 0.57
+anchor_bottom = 0.62
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.94, 0.98, 1, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.05, 0.09, 0.95)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 30
+text = "特勤处"
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Accent" type="ColorRect" parent="SpecialOpsCard"]
+layout_mode = 1
+anchors_preset = 1
+anchor_right = 0.014
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.66, 0.88, 1, 0.95)
+mouse_filter = 2
+
+[node name="TopRail" type="ColorRect" parent="SpecialOpsCard"]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.04
+anchor_top = 0.045
+anchor_right = 0.96
+anchor_bottom = 0.06
+grow_horizontal = 2
+color = Color(0.68, 0.87, 1, 0.5)
+mouse_filter = 2
+
+[node name="Highlight" type="ColorRect" parent="SpecialOpsCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.44, 0.73, 1, 0.2)
+modulate = Color(1, 1, 1, 0)
 
 [node name="SpecialOpsButton" type="TextureButton" parent="."]
 layout_mode = 1
@@ -140,10 +425,80 @@ anchor_bottom = 0.594
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-ignore_texture_size = true
-texture_normal = ExtResource("7_special_ops_normal")
-texture_hover = ExtResource("8_special_ops_hover")
-stretch_mode = 0
+tooltip_text = "进入特勤处"
+
+[node name="WarehouseCard" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.03
+anchor_top = 0.75
+anchor_right = 0.319
+anchor_bottom = 0.904
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleWarehouse")
+
+[node name="Backdrop" type="TextureRect" parent="WarehouseCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("6_warehouse_semantic")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Title" type="Label" parent="WarehouseCard"]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.075
+anchor_top = 0.22
+anchor_right = 0.57
+anchor_bottom = 0.62
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.96, 0.78, 1)
+theme_override_colors/font_outline_color = Color(0.09, 0.055, 0.01, 0.95)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 30
+text = "仓库"
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Accent" type="ColorRect" parent="WarehouseCard"]
+layout_mode = 1
+anchors_preset = 1
+anchor_right = 0.014
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.95, 0.82, 0.29, 0.95)
+mouse_filter = 2
+
+[node name="TopRail" type="ColorRect" parent="WarehouseCard"]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.04
+anchor_top = 0.045
+anchor_right = 0.96
+anchor_bottom = 0.06
+grow_horizontal = 2
+color = Color(1, 0.82, 0.3, 0.5)
+mouse_filter = 2
+
+[node name="Highlight" type="ColorRect" parent="WarehouseCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.94, 0.68, 0.12, 0.2)
+modulate = Color(1, 1, 1, 0)
 
 [node name="WarehouseButton" type="TextureButton" parent="."]
 layout_mode = 1
@@ -155,10 +510,80 @@ anchor_bottom = 0.904
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-ignore_texture_size = true
-texture_normal = ExtResource("9_warehouse_normal")
-texture_hover = ExtResource("10_warehouse_hover")
-stretch_mode = 0
+tooltip_text = "进入仓库"
+
+[node name="FactoryCard" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.66
+anchor_top = 0.75
+anchor_right = 0.949
+anchor_bottom = 0.904
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleFactory")
+
+[node name="Backdrop" type="TextureRect" parent="FactoryCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("7_factory_semantic")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Title" type="Label" parent="FactoryCard"]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.075
+anchor_top = 0.22
+anchor_right = 0.57
+anchor_bottom = 0.62
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.76, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.035, 0.005, 0.95)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 30
+text = "工厂"
+vertical_alignment = 1
+mouse_filter = 2
+
+[node name="Accent" type="ColorRect" parent="FactoryCard"]
+layout_mode = 1
+anchors_preset = 1
+anchor_right = 0.014
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 0.58, 0.19, 0.95)
+mouse_filter = 2
+
+[node name="TopRail" type="ColorRect" parent="FactoryCard"]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.04
+anchor_top = 0.045
+anchor_right = 0.96
+anchor_bottom = 0.06
+grow_horizontal = 2
+color = Color(1, 0.57, 0.2, 0.52)
+mouse_filter = 2
+
+[node name="Highlight" type="ColorRect" parent="FactoryCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0.43, 0.08, 0.2)
+modulate = Color(1, 1, 1, 0)
 
 [node name="FactoryButton" type="TextureButton" parent="."]
 layout_mode = 1
@@ -170,9 +595,6 @@ anchor_bottom = 0.904
 grow_horizontal = 2
 grow_vertical = 2
 mouse_default_cursor_shape = 2
-ignore_texture_size = true
-texture_normal = ExtResource("11_factory_normal")
-texture_hover = ExtResource("12_factory_hover")
-stretch_mode = 0
+tooltip_text = "进入工厂"
 
 [connection signal="pressed" from="BattleButton" to="." method="_on_battle_button_pressed"]
