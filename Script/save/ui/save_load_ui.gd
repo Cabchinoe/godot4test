@@ -13,7 +13,6 @@ var _pending_slot_id: int = 0
 var read_only: bool = false
 
 func _ready() -> void:
-	close_btn.pressed.connect(_on_close_pressed)
 	confirm_dialog.confirmed.connect(_on_confirm_confirmed)
 	refresh_slots()
 
