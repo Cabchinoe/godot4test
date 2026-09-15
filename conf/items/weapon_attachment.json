@@ -1,1 +1,38 @@
-[]
+[
+	{
+		"id": "attachment_reflex_sight_01",
+		"name": "反射瞄具",
+		"type": "WEAPON_ATTACHMENT",
+		"slot": "SCOPE",
+		"description": "为贝妮的冲锋枪提供更稳定的中距离瞄准基准。",
+		"compatible_weapon_ids": ["weapon_benny_defender_9", "weapon_benny_hare_hopper", "weapon_benny_dawn_pulse"],
+		"stat_modifiers": {"attack_range": 1}
+	},
+	{
+		"id": "attachment_compensator_01",
+		"name": "线性补偿器",
+		"type": "WEAPON_ATTACHMENT",
+		"slot": "BARREL",
+		"description": "降低连续射击时的枪口偏移，适合巷战中的压制射击。",
+		"compatible_weapon_ids": ["weapon_benny_defender_9", "weapon_benny_hare_hopper", "weapon_benny_dawn_pulse"],
+		"stat_modifiers": {"attack_power": 3}
+	},
+	{
+		"id": "attachment_light_stock_01",
+		"name": "轻型伸缩枪托",
+		"type": "WEAPON_ATTACHMENT",
+		"slot": "STOCK",
+		"description": "减轻携行负担并改善移动射击的操控稳定性。",
+		"compatible_weapon_ids": ["weapon_benny_defender_9", "weapon_benny_hare_hopper", "weapon_benny_dawn_pulse"],
+		"stat_modifiers": {"move_fire_accuracy": 10}
+	},
+	{
+		"id": "attachment_benny_resonance_core_01",
+		"name": "晨辉共鸣核心",
+		"type": "WEAPON_ATTACHMENT",
+		"slot": "RESONANCE_CORE",
+		"description": "仅供贝妮的黎明初霁使用的辉石共鸣核心，强化高频脉冲输出。",
+		"compatible_weapon_ids": ["weapon_benny_dawn_pulse"],
+		"stat_modifiers": {"attack_power": 8, "pyroxene_resistance": 5}
+	}
+]

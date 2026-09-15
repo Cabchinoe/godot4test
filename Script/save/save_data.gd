@@ -1,7 +1,7 @@
 class_name SaveData
 extends Resource
 
-const CURRENT_VERSION: int = 3
+const CURRENT_VERSION: int = 4
 
 @export var version: int = CURRENT_VERSION
 @export var slot_id: int = 0

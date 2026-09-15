@@ -62,6 +62,8 @@ func reload_current() -> SaveData:
 
 func create_new_game() -> SaveData:
 	current_data = SaveData.new()
+	current_data.player = PlayerSaveData.new()
+	current_data.inventory = InventorySaveData.new()
 	current_slot_id = -1
 	return current_data
 
@@ -123,6 +125,14 @@ func _migrate(data: SaveData) -> SaveData:
 			data.player.level = data.player.operator_level
 			data.player.version = PlayerSaveData.CURRENT_VERSION
 		data.version = 3
+	if data.version < 4:
+		if data.player == null:
+			data.player = PlayerSaveData.new()
+		else:
+			data.player.version = PlayerSaveData.CURRENT_VERSION
+		if data.inventory == null:
+			data.inventory = InventorySaveData.new()
+		data.version = 4
 	return data
 
 func _build_summary(data: SaveData) -> Dictionary:

@@ -9,6 +9,7 @@ character_id = &"benny"
 display_name = "Benny"
 rarity = 4
 sprite_frames = ExtResource("2_sprites")
+allowed_weapon_ids = PackedStringArray("weapon_benny_defender_9", "weapon_benny_hare_hopper", "weapon_benny_dawn_pulse")
 default_loadout = {
 "backpack": "backpack_basic_01",
 "weapon": "weapon_benny_defender_9"

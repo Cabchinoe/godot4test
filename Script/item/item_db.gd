@@ -11,16 +11,6 @@ const VALID_TYPES := {
 	"WEAPON_ATTACHMENT": "武器配件",
 }
 
-const QUALITY_COLORS := {
-	"S": Color(0.72, 0.28, 0.28),
-	"A": Color(0.72, 0.58, 0.22),
-	"B": Color(0.52, 0.28, 0.62),
-	"C": Color(0.28, 0.42, 0.68),
-	"D": Color(0.28, 0.58, 0.32),
-}
-
-const DEFAULT_COLOR := Color(0.5, 0.5, 0.5)
-
 var _items: Dictionary = {}
 
 func load_from_dir(dir_path: String) -> void:
@@ -47,8 +37,6 @@ func _load_type_file(path: String) -> void:
 		return
 	for entry in data:
 		if _validate_entry(entry):
-			if entry["type"] == "WEAPON":
-				entry.erase("ammo_type")
 			_items[entry["id"]] = entry
 
 func _validate_icons() -> void:
@@ -82,9 +70,6 @@ func get_items_by_type(type: String) -> Array:
 		if item["type"] == type:
 			result.append(item)
 	return result
-
-func get_quality_color(quality: String) -> Color:
-	return QUALITY_COLORS.get(quality, DEFAULT_COLOR)
 
 func get_all_items() -> Array:
 	return _items.values()

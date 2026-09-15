@@ -1,6 +1,7 @@
 extends Control
 
 @onready var local_time_label: Label = $LocalTimeLabel
+@onready var currency_label: Label = $CurrencyLabel
 
 var _last_time_text := ""
 var _feedback_tweens: Dictionary = {}
@@ -8,6 +9,7 @@ var _feedback_tweens: Dictionary = {}
 
 func _ready() -> void:
 	_update_local_time()
+	_refresh_currency()
 	_setup_button_feedback($BattleButton, $BattleCard, $BattleCard/Highlight)
 	_setup_button_feedback($GreenhouseButton, $GreenhouseCard, $GreenhouseCard/Highlight)
 	_setup_button_feedback($SpecialOpsButton, $SpecialOpsCard, $SpecialOpsCard/Highlight)
@@ -22,6 +24,10 @@ func _process(_delta: float) -> void:
 func _on_battle_button_pressed() -> void:
 	SaveManager.reload_current()
 	get_tree().change_scene_to_file("res://main.tscn")
+
+
+func _on_trade_button_pressed() -> void:
+	get_tree().change_scene_to_file("res://TradingPost.tscn")
 
 
 func _setup_button_feedback(button: TextureButton, card: Panel, highlight: ColorRect) -> void:
@@ -72,3 +78,20 @@ func _update_local_time() -> void:
 		return
 	_last_time_text = time_text
 	local_time_label.text = time_text
+
+
+func _refresh_currency() -> void:
+	var credits := 2480
+	if SaveManager.current_data and SaveManager.current_data.player:
+		credits = SaveManager.current_data.player.credits
+	currency_label.text = "信用点 %s   辉石碎片 18" % _format_number(credits)
+
+
+func _format_number(value: int) -> String:
+	var text_value := str(maxi(value, 0))
+	var formatted := ""
+	for index in text_value.length():
+		if index > 0 and (text_value.length() - index) % 3 == 0:
+			formatted += ","
+		formatted += text_value.substr(index, 1)
+	return formatted
