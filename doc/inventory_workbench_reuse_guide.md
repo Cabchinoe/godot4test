@@ -157,3 +157,80 @@ policy.configure({
 ## 下一阶段
 
 下一阶段应从 `WarehouseService` 中抽出 `ItemContainer` 接口：`can_accept`、`insert`、`remove`、`swap`、`capacity`。届时仓库、背包、工厂棋盘、温室槽位和战场地面容器可完全参数化，而 `WarehouseScreen` 仅保留布局与展示职责。
+
+### 新会话开发路线图
+
+按以下顺序实施，避免先做场景 UI 后再重写数据层：
+
+#### 阶段 1：容器抽象（优先）
+
+1. 新增 `ItemLocation` 值对象，统一描述 `container_id`、`owner_id`、`position`、`slot_id`。
+2. 新增 `ItemContainer` 接口或基类，最少包含：
+   - `get_item(position)`
+   - `get_capacity()` / `get_columns()`
+   - `can_accept(item_uid, position)`
+   - `insert(item_uid, position)`
+   - `remove(position)`
+   - `swap(source_position, target_position)`
+3. 实现第一批容器适配器：`WarehouseContainer`、`BackpackContainer`、`EquipmentContainer`、`WeaponAttachmentContainer`。
+4. 将 `WarehouseService` 中现有的仓库/背包/装备/配件移动函数改为组合容器操作，不改变现有 UI 行为。
+
+**验收条件**：同一条“仓库武器替换装备武器”流程不再需要按来源写多套分支；只由来源容器、目标容器和规则决定。
+
+#### 阶段 2：通用转移执行器
+
+1. 新增 `ItemTransferExecutor`，输入为 `source_location`、`target_location`、`TransferPolicy`。
+2. 执行器负责统一处理：有效性校验、容量预检、替换回填、交换、失败回滚、revision 更新。
+3. `TransferPolicy` 从当前的“双击规则”扩展为：
+   - 允许的来源/目标容器组合；
+   - 同类型物品是否允许交换；
+   - 替换物回填策略（来源位置 / 仓库空位 / 禁止替换）；
+   - 双击目标优先级；
+   - 场景专属过滤条件。
+
+**验收条件**：`WarehouseScreen` 的拖放回调只负责构造位置和调用执行器，不直接调用多种 `WarehouseService.move_*` 方法。
+
+#### 阶段 3：通用工作台 UI 模板
+
+1. 新建 `InventoryWorkbench` 场景或基类，接收：
+   - 容器列表；
+   - `TransferPolicy`；
+   - 面板布局参数；
+   - 信息面板字段策略。
+2. 将当前的仓库网格、背包网格、装备栏和配件槽包装成可注册的容器视图。
+3. 让温室、工厂、特勤处只配置容器及规则，不复制拖拽状态机、悬停高亮、双击逻辑和持久化流程。
+
+**验收条件**：新增一个 4×4 的测试容器只需要创建 `ContainerSpec + TransferPolicy`，不需要复制 `InventorySlot` 或 `WarehouseScreen` 的事件代码。
+
+#### 阶段 4：接入后续场景
+
+| 场景 | 首批容器 | 特有规则 |
+| --- | --- | --- |
+| 战场 | 背包、战术栏、地面战利品 | 仅允许可携带物；回合内使用与撤离结算 |
+| 温室 | 种子槽、作物槽、收获缓存 | 仅接受种子/肥料；成熟后回仓 |
+| 工厂 | 二合棋盘、输入、输出 | 同谱系同等级合成；输出格不可交换 |
+| 特勤处 | 任务物资、干员装备、奖励缓存 | 任务限制、队伍配置、结算批量入仓 |
+
+### 当前实现的风险点
+
+1. **`position = -1` 语义过载**：装备、背包、配件都使用该值，必须依赖 `operator_loadouts` 区分位置；在新增容器前应先引入 `ItemLocation`。
+2. **索引失效遗漏风险**：目前部分装备/配件映射通过字典写入；新增写路径必须调用 `_touch(inventory)`，否则 `InventoryIndex` 可能读取旧位置。
+3. **`WarehouseService` 仍包含场景语义**：`OPERATOR_ID = "benny"`、固定 10×10、测试物资注入均不应进入未来通用服务。
+4. **测试物资迁移逻辑**：`starter_content_version` 用于当前开发测试；正式版本需移到开发工具、测试存档或显式 debug 开关，不能继续自动污染老存档。
+5. **运行时 revision 被持久化**：目前为实现简单而导出到存档资源；后续可改为非持久的会话缓存版本，或在读取时重置为 0。
+6. **UI 仍有整体刷新**：装备、配件和背包变化会重建部分面板；通用工作台完成前不要继续向 `WarehouseScreen` 堆叠大型功能。
+7. **物品归属校验不足**：当前武器兼容性主要按配件配置校验；多干员版本需要为装备增加 `allowed_operator_ids` 或由角色定义提供校验器。
+8. **事务缺少统一回滚**：现有高频路径已做来源位置回填，但新容器加入时必须由 `ItemTransferExecutor` 统一提交或回滚，不能只依赖 UI 顺序调用。
+
+### 下一阶段测试矩阵
+
+在开始战场/温室/工厂前，至少补齐以下自动或手工回归：
+
+| 测试 | 断言 |
+| --- | --- |
+| 索引刷新 | 每种服务层移动后，`uid` 与格位索引立刻一致 |
+| 容量边界 | 仓库/背包满时，移动和替换不改变任何来源数据 |
+| 替换回填 | 仓库、背包、配件槽三种来源都回填到正确来源位置 |
+| 存档重载 | 仓库、装备、配件、背包坐标重载后完全一致 |
+| 规则差异 | 同一物品在仓库/战场/工厂的双击结果由不同策略正确决定 |
+| UI 刷新 | 只刷新受影响容器；拖拽移动不重建整个工作台 |
