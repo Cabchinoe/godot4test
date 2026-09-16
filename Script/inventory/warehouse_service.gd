@@ -4,6 +4,9 @@ extends RefCounted
 const OPERATOR_ID := "benny"
 const EQUIPMENT_SLOTS := ["weapon", "helmet", "armor", "backpack"]
 const TYPE_ORDER := ["WEAPON", "HELMET", "ARMOR", "BACKPACK", "WEAPON_ATTACHMENT", "CONSUMABLE", "MATERIAL", "COLLECTIBLE"]
+const INVENTORY_INDEX_SCRIPT := preload("res://Script/inventory/inventory_index.gd")
+
+static var _indexes: Dictionary = {}
 
 
 static func ensure_data(save_data: SaveData) -> InventorySaveData:
@@ -33,22 +36,27 @@ static func get_grid_capacity(inventory: InventorySaveData) -> int:
 
 
 static func get_item_by_uid(inventory: InventorySaveData, uid: String) -> Dictionary:
-	for item in inventory.warehouse_items:
-		if str(item.get("uid", "")) == uid:
-			return item
-	return {}
+	return _get_index(inventory).items_by_uid.get(uid, {})
 
 
 static func get_item_at_position(inventory: InventorySaveData, position: int) -> Dictionary:
-	for item in inventory.warehouse_items:
-		if int(item.get("position", -1)) == position:
-			return item
-	return {}
+	var item_uid := str(_get_index(inventory).warehouse_items_by_position.get(position, ""))
+	return get_item_by_uid(inventory, item_uid)
+
+
+static func get_warehouse_position_index(inventory: InventorySaveData) -> Dictionary:
+	return _get_index(inventory).warehouse_items_by_position.duplicate(true)
+
+
+static func get_item_array_index(inventory: InventorySaveData, item_uid: String) -> int:
+	var cache: Variant = _get_index(inventory)
+	return int(cache.item_indices_by_uid.get(item_uid, -1))
 
 
 static func get_loadout(inventory: InventorySaveData, operator_id: String = OPERATOR_ID) -> Dictionary:
 	if not inventory.operator_loadouts.has(operator_id):
 		inventory.operator_loadouts[operator_id] = {"equipment": {}, "attachments": {}}
+		_touch(inventory)
 	return inventory.operator_loadouts[operator_id]
 
 
@@ -64,6 +72,9 @@ static func get_weapon_attachments(inventory: InventorySaveData, weapon_uid: Str
 
 
 static func get_backpack_items(inventory: InventorySaveData, backpack_uid: String, operator_id: String = OPERATOR_ID) -> Dictionary:
+	var index: Variant = _get_index(inventory)
+	if index.backpack_items_by_position.has(backpack_uid):
+		return index.backpack_items_by_position[backpack_uid].duplicate(true)
 	var loadout := get_loadout(inventory, operator_id)
 	var backpack_items: Dictionary = loadout.get("backpack_items", {})
 	return backpack_items.get(backpack_uid, {})
@@ -423,6 +434,7 @@ static func move_attachment(inventory: InventorySaveData, source_weapon_uid: Str
 		attachments[target_weapon_uid] = target_equipped
 	loadout["attachments"] = attachments
 	inventory.operator_loadouts[OPERATOR_ID] = loadout
+	_touch(inventory)
 	return true
 
 
@@ -557,6 +569,7 @@ static func _normalize_positions(inventory: InventorySaveData) -> void:
 			position = next_position
 		used_positions[position] = true
 		inventory.warehouse_items[index] = item
+	_touch(inventory)
 
 
 static func _add_item_instance(inventory: InventorySaveData, item_id: String) -> Dictionary:
@@ -564,6 +577,7 @@ static func _add_item_instance(inventory: InventorySaveData, item_id: String) ->
 		return {}
 	var item := {"uid": _make_uid(), "id": item_id, "position": _find_open_position(inventory)}
 	inventory.warehouse_items.append(item)
+	_touch(inventory)
 	return item
 
 
@@ -575,11 +589,7 @@ static func _find_or_add_item(inventory: InventorySaveData, item_id: String) -> 
 
 
 static func _find_open_position(inventory: InventorySaveData) -> int:
-	var occupied := {}
-	for item in inventory.warehouse_items:
-		var position := int(item.get("position", -1))
-		if position >= 0:
-			occupied[position] = true
+	var occupied: Dictionary = get_warehouse_position_index(inventory)
 	for position in get_grid_capacity(inventory):
 		if not occupied.has(position):
 			return position
@@ -595,12 +605,13 @@ static func _put_item_in_first_open_position(inventory: InventorySaveData, item_
 
 
 static func _set_item_position(inventory: InventorySaveData, item_uid: String, position: int) -> void:
-	for index in inventory.warehouse_items.size():
-		var item: Dictionary = inventory.warehouse_items[index]
-		if str(item.get("uid", "")) == item_uid:
-			item["position"] = position
-			inventory.warehouse_items[index] = item
-			return
+	var index: int = get_item_array_index(inventory, item_uid)
+	if index < 0:
+		return
+	var item: Dictionary = inventory.warehouse_items[index]
+	item["position"] = position
+	inventory.warehouse_items[index] = item
+	_touch(inventory)
 
 
 static func _set_backpack_items(inventory: InventorySaveData, backpack_uid: String, backpack_items: Dictionary) -> void:
@@ -609,6 +620,7 @@ static func _set_backpack_items(inventory: InventorySaveData, backpack_uid: Stri
 	all_backpack_items[backpack_uid] = backpack_items
 	loadout["backpack_items"] = all_backpack_items
 	inventory.operator_loadouts[OPERATOR_ID] = loadout
+	_touch(inventory)
 
 
 static func _clear_backpack_items(inventory: InventorySaveData, backpack_uid: String) -> void:
@@ -617,6 +629,7 @@ static func _clear_backpack_items(inventory: InventorySaveData, backpack_uid: St
 	all_backpack_items.erase(backpack_uid)
 	loadout["backpack_items"] = all_backpack_items
 	inventory.operator_loadouts[OPERATOR_ID] = loadout
+	_touch(inventory)
 
 
 static func _sync_player_equipment(inventory: InventorySaveData, player_data: PlayerSaveData) -> void:
@@ -643,3 +656,17 @@ static func _type_to_equipment_slot(item_type: String) -> String:
 
 static func _make_uid() -> String:
 	return "%s_%s" % [str(Time.get_ticks_usec()), str(randi())]
+
+
+static func _get_index(inventory: InventorySaveData):
+	var key := inventory.get_instance_id()
+	var index: Variant = _indexes.get(key)
+	if index == null:
+		index = INVENTORY_INDEX_SCRIPT.new()
+		_indexes[key] = index
+	index.ensure(inventory)
+	return index
+
+
+static func _touch(inventory: InventorySaveData) -> void:
+	inventory.runtime_revision += 1

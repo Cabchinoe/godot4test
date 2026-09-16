@@ -7,3 +7,4 @@ extends Resource
 @export var operator_loadouts: Dictionary = {}
 @export var initial_content_created: bool = false
 @export var starter_content_version: int = 0
+@export var runtime_revision: int = 0

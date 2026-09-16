@@ -2,10 +2,12 @@ class_name TransferPolicy
 extends RefCounted
 
 var double_click_rules: Dictionary = {}
+var container_settings: Dictionary = {}
 
 
-func configure(rules: Dictionary) -> void:
+func configure(rules: Dictionary, settings: Dictionary = {}) -> void:
 	double_click_rules = rules.duplicate(true)
+	container_settings = settings.duplicate(true)
 
 
 func get_double_click_targets(source_container: String, item_type: String) -> Array[Dictionary]:
@@ -16,3 +18,8 @@ func get_double_click_targets(source_container: String, item_type: String) -> Ar
 		if target is Dictionary:
 			result.append(target.duplicate(true))
 	return result
+
+
+func get_container_setting(container_id: String, key: String, default_value: Variant = null) -> Variant:
+	var settings: Dictionary = container_settings.get(container_id, {})
+	return settings.get(key, default_value)

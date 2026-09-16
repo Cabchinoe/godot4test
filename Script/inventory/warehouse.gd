@@ -58,6 +58,10 @@ func _ready() -> void:
 		},
 		"backpack": {"*": [{"target": "warehouse"}]},
 		"equipment": {"*": [{"target": "warehouse"}]},
+	}, {
+		"warehouse": {"columns": 10, "capacity": 100, "allows_swap": true},
+		"backpack": {"columns_key": "battle_grid_width", "rows_key": "battle_grid_height", "allows_swap": true},
+		"equipment": {"allows_swap": false},
 	})
 	_build_layout()
 	_refresh_all()
@@ -273,7 +277,7 @@ func _render_operator_panel() -> void:
 
 
 func _render_grid() -> void:
-	_grid.columns = WarehouseService.get_grid_columns(inventory)
+	_grid.columns = int(_transfer_policy.get_container_setting("warehouse", "columns", WarehouseService.get_grid_columns(inventory)))
 	var capacity := WarehouseService.get_grid_capacity(inventory)
 	while _grid_slot_nodes.size() < capacity:
 		var new_slot := InventorySlot.new()
@@ -1086,10 +1090,10 @@ func _get_item_data_by_id(item_id: String) -> Dictionary:
 
 func _build_position_index() -> Dictionary:
 	var position_index := {}
-	for item in inventory.warehouse_items:
-		var position := int(item.get("position", -1))
-		if position >= 0:
-			position_index[position] = item
+	var warehouse_positions := WarehouseService.get_warehouse_position_index(inventory)
+	for position in warehouse_positions:
+		var item_uid := str(warehouse_positions[position])
+		position_index[position] = WarehouseService.get_item_by_uid(inventory, item_uid)
 	return position_index
 
 
