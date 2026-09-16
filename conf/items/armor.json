@@ -1,1 +1,22 @@
-[]
+[
+	{
+		"id": "armor_light_component_05",
+		"name": "轻型护甲组件",
+		"type": "ARMOR",
+		"icon": "res://Items/icons/armor/armor_light_component_05.png",
+		"description": "轻量化模块护甲，提供基础躯干防护。",
+		"price": 260,
+		"merge_level": 5,
+		"defense": 20
+	},
+	{
+		"id": "armor_modular_06",
+		"name": "模块化护甲",
+		"type": "ARMOR",
+		"icon": "res://Items/icons/armor/armor_modular_06.png",
+		"description": "可快速维护的高强度模块化护甲。",
+		"price": 650,
+		"merge_level": 6,
+		"defense": 40
+	}
+]

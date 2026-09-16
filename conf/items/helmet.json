@@ -1,1 +1,23 @@
-[]
+[
+	{
+		"id": "helmet_salvaged_shell_01",
+		"name": "回收盔壳",
+		"type": "HELMET",
+		"icon": "res://Items/icons/helmet/helmet_salvaged_shell_01.png",
+		"description": "破旧的废弃盔壳，不能再次服役。",
+		"price": 120,
+		"merge_level": 1,
+		"defense": 0,
+		"can_equip": false
+	},
+	{
+		"id": "helmet_reinforced_shell_04",
+		"name": "强化盔壳",
+		"type": "HELMET",
+		"icon": "res://Items/icons/helmet/helmet_reinforced_shell_04.png",
+		"description": "抗小口径直射的加固盔壳，受击后会进入破损状态。",
+		"price": 460,
+		"merge_level": 4,
+		"defense": 8
+	}
+]

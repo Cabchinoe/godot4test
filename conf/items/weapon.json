@@ -3,36 +3,42 @@
 		"id": "weapon_benny_defender_9",
 		"name": "防卫者-9",
 		"type": "WEAPON",
+		"icon": "res://Items/icons/weapon/weapon_benny_defender_9.png",
 		"subtype": "SMG",
 		"description": "贝妮的初始紧凑冲锋枪，适合近中距离持续压制。",
 		"price": 0,
 		"range": 5,
 		"attack_power": 35,
 		"attack_cost": 1,
-		"attachment_slots": ["SCOPE", "BARREL", "STOCK"]
+		"attachment_slots": ["SCOPE", "BARREL", "STOCK"],
+		"merge_level": 1
 	},
 	{
 		"id": "weapon_benny_hare_hopper",
 		"name": "野兔跳跃者",
 		"type": "WEAPON",
+		"icon": "res://Items/icons/weapon/weapon_benny_hare_hopper.png",
 		"subtype": "SMG",
 		"description": "贝妮的战术冲锋枪，经过机匣与导轨强化，适合机动突入。",
 		"price": 0,
 		"range": 6,
 		"attack_power": 44,
 		"attack_cost": 1,
-		"attachment_slots": ["SCOPE", "BARREL", "STOCK"]
+		"attachment_slots": ["SCOPE", "BARREL", "STOCK"],
+		"merge_level": 2
 	},
 	{
 		"id": "weapon_benny_dawn_pulse",
 		"name": "黎明初霁",
 		"type": "WEAPON",
+		"icon": "res://Items/icons/weapon/weapon_benny_dawn_pulse.png",
 		"subtype": "SMG",
 		"description": "贝妮的高频脉冲冲锋枪，预留专属辉石共鸣核心接口。",
 		"price": 0,
 		"range": 6,
 		"attack_power": 52,
 		"attack_cost": 1,
-		"attachment_slots": ["SCOPE", "BARREL", "STOCK", "RESONANCE_CORE"]
+		"attachment_slots": ["SCOPE", "BARREL", "STOCK", "RESONANCE_CORE"],
+		"merge_level": 3
 	}
 ]

@@ -5,6 +5,9 @@
 		"type": "BACKPACK",
 		"icon": "res://Items/icons/backpack/backpack_basic_01.png",
 		"description": "基础行军背包",
-		"price": 180
+		"price": 180,
+		"merge_level": 1,
+		"battle_grid_width": 4,
+		"battle_grid_height": 4
 	}
 ]

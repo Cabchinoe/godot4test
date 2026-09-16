@@ -30,6 +30,10 @@ func _on_trade_button_pressed() -> void:
 	get_tree().change_scene_to_file("res://TradingPost.tscn")
 
 
+func _on_warehouse_button_pressed() -> void:
+	get_tree().change_scene_to_file("res://Warehouse.tscn")
+
+
 func _setup_button_feedback(button: TextureButton, card: Panel, highlight: ColorRect) -> void:
 	button.pivot_offset = button.size / 2.0
 	card.pivot_offset = card.size / 2.0

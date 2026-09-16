@@ -36,6 +36,18 @@ func save_current() -> bool:
 		provider.write_to(current_data)
 	return _write_data(current_slot_id, current_data) == OK
 
+
+func save_current_or_create() -> bool:
+	if current_data == null:
+		return false
+	if current_slot_id >= 0:
+		return save_current()
+	for slot_id in SLOT_COUNT:
+		if not slot_exists(slot_id):
+			save(slot_id)
+			return true
+	return false
+
 func load(slot_id: int, force_reload: bool = false) -> SaveData:
 	return _load_slot(slot_id, force_reload)
 
@@ -133,6 +145,10 @@ func _migrate(data: SaveData) -> SaveData:
 		if data.inventory == null:
 			data.inventory = InventorySaveData.new()
 		data.version = 4
+	if data.version < 5:
+		if data.inventory == null:
+			data.inventory = InventorySaveData.new()
+		data.version = 5
 	return data
 
 func _build_summary(data: SaveData) -> Dictionary:

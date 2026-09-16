@@ -652,3 +652,4 @@ mouse_default_cursor_shape = 2
 
 [connection signal="pressed" from="TradeButton" to="." method="_on_trade_button_pressed"]
 [connection signal="pressed" from="BattleButton" to="." method="_on_battle_button_pressed"]
+[connection signal="pressed" from="WarehouseButton" to="." method="_on_warehouse_button_pressed"]

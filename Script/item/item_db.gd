@@ -4,7 +4,7 @@ const VALID_TYPES := {
 	"WEAPON": "武器",
 	"HELMET": "头盔",
 	"ARMOR": "护甲",
-	"BACKPACK": "背包",
+		"BACKPACK": "背包",
 	"MATERIAL": "材料",
 	"COLLECTIBLE": "收藏品",
 	"CONSUMABLE": "消耗品",

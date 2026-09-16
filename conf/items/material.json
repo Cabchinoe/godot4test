@@ -5,27 +5,34 @@
 		"type": "MATERIAL",
 		"icon": "res://Items/icons/material/material_metal_01.png",
 		"description": "可用于制造的金属碎片",
-		"price": 10
+		"price": 10,
+		"merge_level": 1
 	},
 	{
 		"id": "material_textile_thread_01",
 		"name": "纺织线",
 		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_textile_thread_01.png",
 		"description": "清洗、捻制后的基础纺织线，可在工厂二合为粗织布。",
-		"price": 18
+		"price": 18,
+		"merge_level": 1
 	},
 	{
 		"id": "material_filter_cotton_01",
 		"name": "净水滤棉",
 		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_filter_cotton_01.png",
 		"description": "用于制作基础净水耗材的无菌滤棉。",
-		"price": 14
+		"price": 14,
+		"merge_level": 1
 	},
 	{
 		"id": "material_seed_pack_01",
 		"name": "基础种子包",
 		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_seed_pack_01.png",
 		"description": "混装的耐污染作物种子，可在温室开垦初始作物。",
-		"price": 35
+		"price": 35,
+		"merge_level": 1
 	}
 ]
