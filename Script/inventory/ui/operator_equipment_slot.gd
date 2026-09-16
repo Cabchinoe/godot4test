@@ -90,7 +90,7 @@ func can_accept_data(data: Variant) -> bool:
 		if source_kind == "backpack_item":
 			return item_type == "WEAPON" or (item_type == "WEAPON_ATTACHMENT" and not item_uid.is_empty())
 		return source_kind == "weapon_attachment" and not item_uid.is_empty()
-	return source_kind in ["inventory_item", "backpack_item"] and item_uid.is_empty() and item_type == {"helmet": "HELMET", "armor": "ARMOR", "backpack": "BACKPACK"}.get(slot_name, "")
+	return source_kind in ["inventory_item", "backpack_item"] and item_type == {"helmet": "HELMET", "armor": "ARMOR", "backpack": "BACKPACK"}.get(slot_name, "")
 
 
 func _refresh_style() -> void:

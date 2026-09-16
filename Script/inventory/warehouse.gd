@@ -31,6 +31,7 @@ var _filter_type := ""
 var _equipment_slot_nodes: Array = []
 var _attachment_slot_nodes: Array = []
 var _backpack_slot_nodes: Array = []
+var _backpack_grid: InventoryGrid
 var _grid_slot_nodes: Array = []
 var _active_drag_data: Dictionary = {}
 var _position_index: Dictionary = {}
@@ -74,16 +75,17 @@ func _process(_delta: float) -> void:
 	if mouse_position == _last_drag_mouse_position:
 		return
 	_last_drag_mouse_position = mouse_position
-	_update_grid_drag_target(mouse_position)
+	_update_drag_targets(mouse_position)
 
 
 func _input(event: InputEvent) -> void:
 	if not event is InputEventMouseButton or event.button_index != MOUSE_BUTTON_LEFT or event.pressed or _active_drag_data.is_empty():
 		return
 	var data := _active_drag_data.duplicate(true)
-	var target_position := _last_drag_target_position
-	var is_in_storage := _storage_panel.get_global_rect().has_point(get_viewport().get_mouse_position())
-	call_deferred("_apply_grid_drop_fallback", data, target_position, is_in_storage)
+	var mouse_position := get_viewport().get_mouse_position()
+	var is_in_storage := _storage_panel.get_global_rect().has_point(mouse_position)
+	var is_in_backpack := _backpack_panel.get_global_rect().has_point(mouse_position)
+	call_deferred("_apply_drag_drop_fallback", data, _last_drag_target_position, _last_backpack_drag_target, is_in_storage, is_in_backpack, _selected_backpack_uid)
 
 
 func _exit_tree() -> void:
@@ -357,6 +359,7 @@ func _render_attachment_panel() -> void:
 func _render_backpack_panel() -> void:
 	_clear_children(_backpack_content)
 	_backpack_slot_nodes.clear()
+	_backpack_grid = null
 	_selected_backpack_uid = WarehouseService.get_equipped_uid(inventory, "backpack", OPERATOR_ID)
 	var backpack_uid := _selected_backpack_uid
 	var grid_size := WarehouseService.get_backpack_grid_size(inventory, backpack_uid)
@@ -368,11 +371,12 @@ func _render_backpack_panel() -> void:
 	_backpack_panel.visible = true
 	_backpack_content.add_child(_create_label("战场背包", 19, Color(0.86, 0.96, 1.0, 1.0)))
 	_backpack_content.add_child(_create_label("携行空间：%d × %d" % [grid_size.x, grid_size.y], 14, Color(0.43, 0.83, 0.98, 1.0)))
-	var backpack_grid := INVENTORY_GRID_SCRIPT.new()
-	backpack_grid.columns = grid_size.x
-	backpack_grid.add_theme_constant_override("h_separation", 5)
-	backpack_grid.add_theme_constant_override("v_separation", 5)
-	_backpack_content.add_child(backpack_grid)
+	_backpack_grid = INVENTORY_GRID_SCRIPT.new()
+	_backpack_grid.columns = grid_size.x
+	_backpack_grid.add_theme_constant_override("h_separation", 5)
+	_backpack_grid.add_theme_constant_override("v_separation", 5)
+	_backpack_grid.gap_dropped.connect(_on_backpack_grid_gap_dropped.bind(backpack_uid))
+	_backpack_content.add_child(_backpack_grid)
 	var backpack_items := WarehouseService.get_backpack_items(inventory, backpack_uid)
 	for position in grid_size.x * grid_size.y:
 		var item_uid := str(backpack_items.get(position, ""))
@@ -387,7 +391,7 @@ func _render_backpack_panel() -> void:
 		slot.drop_hovered.connect(_on_backpack_drop_hovered)
 		slot.drop_unhovered.connect(_on_backpack_drop_unhovered)
 		_backpack_slot_nodes.append(slot)
-		backpack_grid.add_child(slot)
+		_backpack_grid.add_child(slot)
 
 
 func _update_header() -> void:
@@ -467,6 +471,7 @@ func _on_backpack_item_double_clicked(item_uid: String, backpack_uid: String) ->
 
 
 func _on_backpack_item_dropped(data: Dictionary, _target_uid: String, target_position: int, backpack_uid: String) -> void:
+	_drag_drop_received = true
 	var source_kind := str(data.get("kind", ""))
 	if source_kind == "inventory_item":
 		var source_uid := str(data.get("uid", ""))
@@ -506,7 +511,7 @@ func _on_backpack_item_dropped(data: Dictionary, _target_uid: String, target_pos
 			_status_label.text = "无法替换：目标接口不兼容或仓库没有空位。"
 			return
 		if source_backpack_uid == backpack_uid and WarehouseService.move_backpack_item(inventory, backpack_uid, source_position, target_position):
-			_refresh_all()
+			_refresh_backpack_slots(backpack_uid, [source_position, target_position])
 		return
 	if source_kind == "weapon_attachment":
 		var source_weapon_uid := str(data.get("source_weapon_uid", ""))
@@ -607,7 +612,7 @@ func _on_equipment_item_dropped(slot: String, data: Dictionary) -> void:
 				return
 			_status_label.text = "无法替换：目标接口不兼容或仓库没有空位。"
 			return
-		var replaced := slot == "weapon" and str(backpack_item_data.get("type", "")) == "WEAPON" and WarehouseService.replace_equipped_item_from_backpack(inventory, backpack_uid, backpack_position, slot, SaveManager.current_data.player)
+		var replaced := _type_to_slot(str(backpack_item_data.get("type", ""))) == slot and not WarehouseService.get_equipped_uid(inventory, slot, OPERATOR_ID).is_empty() and WarehouseService.replace_equipped_item_from_backpack(inventory, backpack_uid, backpack_position, slot, SaveManager.current_data.player)
 		if replaced or WarehouseService.equip_backpack_item(inventory, backpack_uid, backpack_position, slot, SaveManager.current_data.player):
 			var item_uid := str(data.get("uid", ""))
 			_on_equipment_slot_pressed(slot, item_uid)
@@ -639,10 +644,15 @@ func _on_equipment_item_dropped(slot: String, data: Dictionary) -> void:
 			return
 		_status_label.text = "请将配件拖到武器或武器装备栏。"
 		return
-	var replaced: bool = slot == "weapon" and str(item_data.get("type", "")) == "WEAPON" and not WarehouseService.get_equipped_uid(inventory, "weapon", OPERATOR_ID).is_empty() and WarehouseService.replace_equipped_item_from_warehouse(inventory, slot, item_uid, SaveManager.current_data.player)
+	var has_equipped_item := not WarehouseService.get_equipped_uid(inventory, slot, OPERATOR_ID).is_empty()
+	var is_matching_equipment_type := _type_to_slot(str(item_data.get("type", ""))) == slot
+	var replaced: bool = is_matching_equipment_type and has_equipped_item and WarehouseService.replace_equipped_item_from_warehouse(inventory, slot, item_uid, SaveManager.current_data.player)
 	if replaced or WarehouseService.equip_item(inventory, slot, item_uid, SaveManager.current_data.player):
 		_on_equipment_slot_pressed(slot, item_uid)
 		_status_label.text = "%s 已装配至%s。" % [str(item_data.get("name", "物品")), _get_slot_name(slot)]
+		return
+	if slot == "backpack" and is_matching_equipment_type and has_equipped_item:
+		_status_label.text = "新背包空间不足，无法迁移当前背包中的物品。"
 		return
 	_status_label.text = "%s 不能装配到%s。" % [str(item_data.get("name", "该物品")), _get_slot_name(slot)]
 
@@ -689,8 +699,10 @@ func _return_equipment_to_warehouse(slot: String, item_uid: String, target_posit
 	_move_returned_item_to_target(item_uid, target_position)
 	_selected_uid = item_uid
 	_selected_equip_slot = ""
-	_selected_weapon_uid = ""
-	_selected_backpack_uid = ""
+	if slot == "weapon":
+		_selected_weapon_uid = ""
+	if slot == "backpack":
+		_selected_backpack_uid = ""
 	_status_label.text = "%s 已放回仓库。" % _get_slot_name(slot)
 	if not _filter_type.is_empty():
 		_status_label.text += " 当前筛选未包含该物品时不会显示。"
@@ -774,6 +786,7 @@ func _on_drag_started(data: Dictionary) -> void:
 	_active_drag_data = data.duplicate(true)
 	_drag_drop_received = false
 	_last_drag_target_position = -1
+	_last_backpack_drag_target = -1
 	_last_drag_mouse_position = Vector2.INF
 	_update_drag_target_highlights()
 
@@ -821,10 +834,19 @@ func _on_grid_gap_dropped(data: Dictionary) -> void:
 	_drop_at_grid_target(data, _last_drag_target_position)
 
 
-func _apply_grid_drop_fallback(data: Dictionary, target_position: int, is_in_storage: bool) -> void:
-	if _drag_drop_received or not is_in_storage:
+func _on_backpack_grid_gap_dropped(data: Dictionary, backpack_uid: String) -> void:
+	_drag_drop_received = true
+	_drop_at_backpack_target(data, _last_backpack_drag_target, backpack_uid)
+
+
+func _apply_drag_drop_fallback(data: Dictionary, grid_target_position: int, backpack_target_position: int, is_in_storage: bool, is_in_backpack: bool, backpack_uid: String) -> void:
+	if _drag_drop_received:
 		return
-	_drop_at_grid_target(data, target_position)
+	if is_in_storage:
+		_drop_at_grid_target(data, grid_target_position)
+		return
+	if is_in_backpack:
+		_drop_at_backpack_target(data, backpack_target_position, backpack_uid)
 
 
 func _drop_at_grid_target(data: Dictionary, target_position: int) -> void:
@@ -832,6 +854,19 @@ func _drop_at_grid_target(data: Dictionary, target_position: int) -> void:
 		return
 	var target_item: Dictionary = _position_index.get(target_position, {})
 	_on_inventory_item_dropped(data, str(target_item.get("uid", "")), target_position)
+
+
+func _drop_at_backpack_target(data: Dictionary, target_position: int, backpack_uid: String) -> void:
+	if target_position < 0 or backpack_uid.is_empty():
+		return
+	var backpack_items := WarehouseService.get_backpack_items(inventory, backpack_uid)
+	var target_item := WarehouseService.get_item_by_uid(inventory, str(backpack_items.get(target_position, "")))
+	_on_backpack_item_dropped(data, str(target_item.get("uid", "")), target_position, backpack_uid)
+
+
+func _update_drag_targets(mouse_position: Vector2) -> void:
+	_update_grid_drag_target(mouse_position)
+	_update_backpack_drag_target(mouse_position)
 
 
 func _update_grid_drag_target(mouse_position: Vector2) -> void:
@@ -844,6 +879,18 @@ func _update_grid_drag_target(mouse_position: Vector2) -> void:
 	var target_position := _get_grid_position_from_mouse(mouse_position)
 	if target_position >= 0:
 		_set_grid_drag_target(target_position)
+
+
+func _update_backpack_drag_target(mouse_position: Vector2) -> void:
+	if _backpack_grid == null or not is_instance_valid(_backpack_grid):
+		_set_backpack_drag_target(-1)
+		return
+	if not _backpack_panel.get_global_rect().has_point(mouse_position):
+		_set_backpack_drag_target(-1)
+		return
+	var target_position := _get_backpack_position_from_mouse(mouse_position)
+	if target_position >= 0:
+		_set_backpack_drag_target(target_position)
 
 
 func _get_grid_position_from_mouse(mouse_position: Vector2) -> int:
@@ -859,6 +906,22 @@ func _get_grid_position_from_mouse(mouse_position: Vector2) -> int:
 	var row := clampi(roundi(relative_position.y / pitch.y), 0, 9)
 	var position := row * WarehouseService.get_grid_columns(inventory) + column
 	return position if position < WarehouseService.get_grid_capacity(inventory) else -1
+
+
+func _get_backpack_position_from_mouse(mouse_position: Vector2) -> int:
+	if _backpack_grid == null or _backpack_slot_nodes.is_empty() or not _backpack_grid.get_global_rect().has_point(mouse_position):
+		return -1
+	var first_slot: InventorySlot = _backpack_slot_nodes[0]
+	var slot_size := first_slot.size
+	var pitch := slot_size + Vector2(_backpack_grid.get_theme_constant("h_separation"), _backpack_grid.get_theme_constant("v_separation"))
+	if pitch.x <= 0.0 or pitch.y <= 0.0:
+		return -1
+	var grid_size := WarehouseService.get_backpack_grid_size(inventory, _selected_backpack_uid)
+	var relative_position := mouse_position - first_slot.get_global_rect().position
+	var column := clampi(roundi(relative_position.x / pitch.x), 0, grid_size.x - 1)
+	var row := clampi(roundi(relative_position.y / pitch.y), 0, grid_size.y - 1)
+	var position := row * grid_size.x + column
+	return position if position < _backpack_slot_nodes.size() else -1
 
 
 func _set_grid_drag_target(target_position: int) -> void:
@@ -881,6 +944,19 @@ func _set_backpack_drag_target(target_position: int) -> void:
 	if target_position >= 0 and target_position < _backpack_slot_nodes.size():
 		var target_slot: InventorySlot = _backpack_slot_nodes[target_position]
 		target_slot.set_drop_highlight(not target_slot.is_occupied)
+
+
+func _refresh_backpack_slots(backpack_uid: String, positions: Array[int]) -> void:
+	if backpack_uid != _selected_backpack_uid or _backpack_slot_nodes.is_empty():
+		_refresh_all()
+		return
+	var backpack_items := WarehouseService.get_backpack_items(inventory, backpack_uid)
+	for position in positions:
+		if position < 0 or position >= _backpack_slot_nodes.size():
+			continue
+		var item := WarehouseService.get_item_by_uid(inventory, str(backpack_items.get(position, "")))
+		var slot: InventorySlot = _backpack_slot_nodes[position]
+		slot.configure(position, item, str(item.get("uid", "")) == _selected_uid, true, {"kind": "backpack_item", "source_backpack_uid": backpack_uid, "source_backpack_position": position})
 
 
 func _select_item(item_uid: String, position: int) -> void:
@@ -951,10 +1027,17 @@ func _on_info_action() -> void:
 		return
 	var backpack_items := WarehouseService.get_backpack_items(inventory, _selected_backpack_uid)
 	var is_backpack_source := not _selected_backpack_uid.is_empty() and str(backpack_items.get(_selected_position, "")) == _selected_uid
-	var equipped := WarehouseService.equip_backpack_item(inventory, _selected_backpack_uid, _selected_position, slot, SaveManager.current_data.player) if is_backpack_source else WarehouseService.equip_item(inventory, slot, _selected_uid, SaveManager.current_data.player)
+	var has_equipped_item := not WarehouseService.get_equipped_uid(inventory, slot, OPERATOR_ID).is_empty()
+	var equipped := false
+	if has_equipped_item:
+		equipped = WarehouseService.replace_equipped_item_from_backpack(inventory, _selected_backpack_uid, _selected_position, slot, SaveManager.current_data.player) if is_backpack_source else WarehouseService.replace_equipped_item_from_warehouse(inventory, slot, _selected_uid, SaveManager.current_data.player)
+	if not equipped:
+		equipped = WarehouseService.equip_backpack_item(inventory, _selected_backpack_uid, _selected_position, slot, SaveManager.current_data.player) if is_backpack_source else WarehouseService.equip_item(inventory, slot, _selected_uid, SaveManager.current_data.player)
 	if equipped:
 		_status_label.text = "%s 已装配至%s。" % [str(item_data.get("name", "物品")), _get_slot_name(slot)]
 		call_deferred("_focus_equipped_item", slot, _selected_uid, false)
+	elif slot == "backpack" and has_equipped_item:
+		_status_label.text = "新背包空间不足，无法迁移当前背包中的物品。"
 
 
 func _attach_selected_item() -> void:

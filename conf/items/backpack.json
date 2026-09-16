@@ -7,7 +7,46 @@
 		"description": "基础行军背包",
 		"price": 180,
 		"merge_level": 1,
+		"can_bring_to_battle": false,
 		"battle_grid_width": 4,
 		"battle_grid_height": 4
+	},
+	{
+		"id": "backpack_expedition_07",
+		"name": "远征背包",
+		"type": "BACKPACK",
+		"icon": "res://Items/icons/backpack/backpack_expedition_07.png",
+		"description": "提高本局撤离物资携行上限的远征背包。",
+		"price": 260,
+		"merge_level": 7,
+		"can_bring_to_battle": true,
+		"battle_effect_id": "increase_carry_capacity",
+		"battle_grid_width": 6,
+		"battle_grid_height": 6
+	},
+	{
+		"id": "backpack_modular_frame_06",
+		"name": "模块化背包主体",
+		"type": "BACKPACK",
+		"icon": "res://Items/icons/backpack/backpack_modular_frame_06.png",
+		"description": "介于常规背包与远征背包之间的中级携行件。",
+		"price": 520,
+		"merge_level": 6,
+		"can_bring_to_battle": false,
+		"battle_grid_width": 5,
+		"battle_grid_height": 6
+	},
+	{
+		"id": "backpack_tactical_pack_08",
+		"name": "战术作业背包",
+		"type": "BACKPACK",
+		"icon": "res://Items/icons/backpack/backpack_tactical_pack_08.png",
+		"description": "本局最大携行上限的战术作业背包，并提供抗污染过滤。",
+		"price": 760,
+		"merge_level": 8,
+		"can_bring_to_battle": true,
+		"battle_effect_id": "increase_carry_capacity_max",
+		"battle_grid_width": 6,
+		"battle_grid_height": 8
 	}
 ]

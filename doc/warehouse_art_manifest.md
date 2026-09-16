@@ -33,7 +33,7 @@
 | 织物 | Lv5 | 耐磨帆布包 | 修补中度受损掩体，适合长线撤离，4x6空间 | 是 | `repair_cover_medium` | — | `material_durable_canvas_pack_05` | `res://Items/icons/material/material_durable_canvas_pack_05.png` |
 | 织物 | Lv6 | 模块化背包主体 | 介于常规背包与远征背包之间的中级携行件，5x6空间 | 否（装入 `backpack` 槽） | — | — | `backpack_modular_frame_06` | `res://Items/icons/backpack/backpack_modular_frame_06.png` |
 | 织物 | Lv7 | 远征背包 | 提高本局撤离物资携行上限，6x6空间 | 是 | `increase_carry_capacity` | — | `backpack_expedition_07` | `res://Items/icons/backpack/backpack_expedition_07.png` |
-| 织物 | Lv8 | 战术作业背包 | 重型战术作业背包，本局最大携行上限，并提供抗污染过滤 | 是 | `increase_carry_capacity_max` | — | `backpack_tactical_pack_08` | `res://Items/icons/backpack/backpack_tactical_pack_08.png` |
+| 织物 | Lv8 | 战术作业背包 | 重型战术作业背包，本局最大携行上限，6x8空间，并提供抗污染过滤 | 是 | `increase_carry_capacity_max` | — | `backpack_tactical_pack_08` | `res://Items/icons/backpack/backpack_tactical_pack_08.png` |
 | 食物 | 起始档位 | — | — | — | — | — | — | — |
 | 食物 | Lv0 | 损耗作物 | 残次品，几乎无用 | 否 | — | — | `material_spoiled_crop_00` | `res://Items/icons/material/material_spoiled_crop_00.png` |
 | 食物 | Lv1 | 赤浆果 | 防止基础食物链被单一掉落卡住 | 否 | — | — | `consumable_red_berry_01` | `res://Items/icons/consumable/consumable_red_berry_01.png` |
