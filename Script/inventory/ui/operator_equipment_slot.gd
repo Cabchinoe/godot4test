@@ -12,9 +12,10 @@ var item_uid := ""
 var item_data: Dictionary = {}
 var is_selected := false
 var drop_highlighted := false
+var _armor_status_dot: Panel
 
 
-func configure(p_slot_name: String, p_item_uid: String, item_data: Dictionary, selected: bool) -> void:
+func configure(p_slot_name: String, p_item_uid: String, item_data: Dictionary, selected: bool, item_instance: Dictionary = {}) -> void:
 	slot_name = p_slot_name
 	item_uid = p_item_uid
 	self.item_data = item_data.duplicate(true)
@@ -28,12 +29,48 @@ func configure(p_slot_name: String, p_item_uid: String, item_data: Dictionary, s
 	add_theme_color_override("font_color", Color(0.86, 0.96, 1.0, 1.0))
 	var icon_path := str(self.item_data.get("icon", ""))
 	icon = load(icon_path) if not icon_path.is_empty() else null
+	_ensure_armor_status_dot()
+	_update_armor_status_dot(item_instance)
 	_refresh_style()
 
 
 func _ready() -> void:
 	pressed.connect(func() -> void: slot_activated.emit(slot_name, item_uid))
 	gui_input.connect(_on_gui_input)
+
+
+func _ensure_armor_status_dot() -> void:
+	if is_instance_valid(_armor_status_dot):
+		return
+	_armor_status_dot = Panel.new()
+	_armor_status_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_armor_status_dot.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_armor_status_dot.offset_left = -17.0
+	_armor_status_dot.offset_top = -17.0
+	_armor_status_dot.offset_right = -5.0
+	_armor_status_dot.offset_bottom = -5.0
+	add_child(_armor_status_dot)
+
+
+func _update_armor_status_dot(item_instance: Dictionary) -> void:
+	var armor_state := WarehouseService.get_armor_state(item_instance)
+	var max_armor := int(armor_state.get("max_armor", 0))
+	_armor_status_dot.visible = bool(armor_state.get("tracks_armor", false)) and max_armor > 0
+	if not _armor_status_dot.visible:
+		return
+	var color := Color(0.4, 0.92, 0.56, 1.0) if not bool(armor_state.get("is_damaged", false)) else Color(0.92, 0.76, 0.39, 1.0)
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.border_color = Color(0.02, 0.06, 0.09, 0.95)
+	style.corner_radius_top_left = 6
+	style.corner_radius_top_right = 6
+	style.corner_radius_bottom_left = 6
+	style.corner_radius_bottom_right = 6
+	_armor_status_dot.add_theme_stylebox_override("panel", style)
 
 
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:

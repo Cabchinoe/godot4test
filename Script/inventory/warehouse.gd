@@ -265,7 +265,7 @@ func _render_operator_panel() -> void:
 		var item := WarehouseService.get_item_by_uid(inventory, uid)
 		var item_data := _get_item_data(item)
 		var equipment_slot := OPERATOR_EQUIPMENT_SLOT_SCRIPT.new()
-		equipment_slot.configure(slot, uid, item_data, slot == _selected_equip_slot)
+		equipment_slot.configure(slot, uid, item_data, slot == _selected_equip_slot, item)
 		equipment_slot.slot_activated.connect(_on_equipment_slot_pressed)
 		equipment_slot.item_dropped.connect(_on_equipment_item_dropped)
 		equipment_slot.item_double_clicked.connect(_on_equipment_item_double_clicked)
