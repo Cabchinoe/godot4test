@@ -10,8 +10,10 @@ const WAREHOUSE_CONTAINER_SCRIPT := preload("res://Script/inventory/warehouse_co
 const BACKPACK_CONTAINER_SCRIPT := preload("res://Script/inventory/backpack_container.gd")
 const EQUIPMENT_CONTAINER_SCRIPT := preload("res://Script/inventory/equipment_container.gd")
 const WEAPON_ATTACHMENT_CONTAINER_SCRIPT := preload("res://Script/inventory/weapon_attachment_container.gd")
+const TEMPORARY_CONTAINER_SCRIPT := preload("res://Script/inventory/temporary_container.gd")
 
 static var _indexes: Dictionary = {}
+static var _temporary_containers_by_inventory: Dictionary = {}
 
 
 static func ensure_data(save_data: SaveData) -> InventorySaveData:
@@ -70,6 +72,8 @@ static func get_container(inventory: InventorySaveData, location: ItemLocation) 
 			return EQUIPMENT_CONTAINER_SCRIPT.new(inventory, location.owner_id, location.slot_id)
 		ItemLocation.WEAPON_ATTACHMENT:
 			return WEAPON_ATTACHMENT_CONTAINER_SCRIPT.new(inventory, location.owner_id, location.slot_id)
+		ItemLocation.TEMPORARY:
+			return TEMPORARY_CONTAINER_SCRIPT.new(inventory, location.owner_id)
 	return null
 
 
@@ -93,6 +97,11 @@ static func get_item_location(inventory: InventorySaveData, item_uid: String) ->
 			for backpack_position in backpack_items:
 				if str(backpack_items[backpack_position]) == item_uid:
 					return ITEM_LOCATION_SCRIPT.backpack(str(backpack_uid), int(backpack_position))
+	for container_id in _get_temporary_containers(inventory):
+		var container: Dictionary = _get_temporary_containers(inventory)[container_id]
+		for temporary_position in (container.get("items", {}) as Dictionary):
+			if str((container.get("items", {}) as Dictionary)[temporary_position]) == item_uid:
+				return ITEM_LOCATION_SCRIPT.temporary(str(container_id), int(temporary_position))
 	return null
 
 
@@ -189,6 +198,91 @@ static func get_backpack_grid_size(inventory: InventorySaveData, backpack_uid: S
 
 static func get_backpack_item_count(inventory: InventorySaveData, backpack_uid: String) -> int:
 	return get_backpack_items(inventory, backpack_uid).size()
+
+
+static func create_temporary_container(inventory: InventorySaveData, container_id: String, capacity: int, columns: int = 4) -> void:
+	if container_id.is_empty():
+		return
+	var containers := _get_temporary_containers(inventory, true)
+	var existing: Dictionary = containers.get(container_id, {})
+	var items: Dictionary = existing.get("items", {})
+	containers[container_id] = {
+		"capacity": maxi(capacity, items.size()),
+		"columns": maxi(1, columns),
+		"items": items,
+	}
+	_set_temporary_containers(inventory, containers)
+
+
+static func clear_temporary_container(inventory: InventorySaveData, container_id: String, discard_items: bool = true) -> void:
+	var containers := _get_temporary_containers(inventory)
+	if not containers.has(container_id):
+		return
+	if discard_items:
+		var temporary_items := get_temporary_items(inventory, container_id)
+		var discarded_uids: Dictionary = {}
+		for item_uid in temporary_items.values():
+			discarded_uids[str(item_uid)] = true
+		var retained_items: Array[Dictionary] = []
+		for item in inventory.warehouse_items:
+			if not discarded_uids.has(str(item.get("uid", ""))):
+				retained_items.append(item)
+		inventory.warehouse_items = retained_items
+		_touch(inventory)
+	containers.erase(container_id)
+	_set_temporary_containers(inventory, containers)
+
+
+static func get_temporary_items(inventory: InventorySaveData, container_id: String) -> Dictionary:
+	var container: Dictionary = _get_temporary_containers(inventory).get(container_id, {})
+	return (container.get("items", {}) as Dictionary).duplicate(true)
+
+
+static func get_temporary_capacity(inventory: InventorySaveData, container_id: String) -> int:
+	var container: Dictionary = _get_temporary_containers(inventory).get(container_id, {})
+	return int(container.get("capacity", 0))
+
+
+static func get_temporary_columns(inventory: InventorySaveData, container_id: String) -> int:
+	var container: Dictionary = _get_temporary_containers(inventory).get(container_id, {})
+	return maxi(1, int(container.get("columns", 1)))
+
+
+static func move_temporary_item(inventory: InventorySaveData, container_id: String, source_position: int, target_position: int) -> bool:
+	var container := get_container(inventory, ITEM_LOCATION_SCRIPT.temporary(container_id, source_position))
+	return container != null and container.swap(source_position, target_position)
+
+
+static func add_temporary_item(inventory: InventorySaveData, container_id: String, item_id: String, position: int = -1) -> bool:
+	var capacity := get_temporary_capacity(inventory, container_id)
+	if capacity <= 0:
+		return false
+	var target_position := position
+	if target_position < 0:
+		var temporary_items := get_temporary_items(inventory, container_id)
+		for index in capacity:
+			if not temporary_items.has(index):
+				target_position = index
+				break
+	if target_position < 0 or target_position >= capacity or not get_container(inventory, ITEM_LOCATION_SCRIPT.temporary(container_id, target_position)).get_item(target_position).is_empty():
+		return false
+	var item := _add_item_instance(inventory, item_id)
+	var item_uid := str(item.get("uid", ""))
+	if item_uid.is_empty():
+		return false
+	_set_item_position(inventory, item_uid, -1)
+	if get_container(inventory, ITEM_LOCATION_SCRIPT.temporary(container_id, target_position)).insert(item_uid, target_position):
+		return true
+	inventory.warehouse_items.erase(item)
+	_touch(inventory)
+	return false
+
+
+static func transfer_item(inventory: InventorySaveData, source_location: ItemLocation, target_location: ItemLocation, player_data: PlayerSaveData = null) -> bool:
+	var moved := _replace_container_item(inventory, source_location, target_location)
+	if moved and (source_location.container_id == ItemLocation.EQUIPMENT or target_location.container_id == ItemLocation.EQUIPMENT):
+		_sync_player_equipment(inventory, player_data)
+	return moved
 
 
 static func move_warehouse_item_to_backpack(inventory: InventorySaveData, backpack_uid: String, item_uid: String, target_position: int) -> bool:
@@ -725,6 +819,38 @@ static func _set_backpack_items(inventory: InventorySaveData, backpack_uid: Stri
 	loadout["backpack_items"] = all_backpack_items
 	inventory.operator_loadouts[OPERATOR_ID] = loadout
 	_touch(inventory)
+
+
+static func _set_temporary_items(inventory: InventorySaveData, container_id: String, items: Dictionary) -> void:
+	var containers := _get_temporary_containers(inventory)
+	var container: Dictionary = containers.get(container_id, {})
+	if container.is_empty():
+		return
+	container["items"] = items.duplicate(true)
+	containers[container_id] = container
+	_set_temporary_containers(inventory, containers)
+
+
+static func clear_all_temporary_containers(inventory: InventorySaveData, discard_items: bool = true) -> void:
+	var container_ids: Array = _get_temporary_containers(inventory).keys()
+	for container_id in container_ids:
+		clear_temporary_container(inventory, str(container_id), discard_items)
+	_temporary_containers_by_inventory.erase(inventory.get_instance_id())
+
+
+static func _get_temporary_containers(inventory: InventorySaveData, create: bool = false) -> Dictionary:
+	if inventory == null:
+		return {}
+	var inventory_id := inventory.get_instance_id()
+	if create and not _temporary_containers_by_inventory.has(inventory_id):
+		_temporary_containers_by_inventory[inventory_id] = {}
+	return (_temporary_containers_by_inventory.get(inventory_id, {}) as Dictionary).duplicate(true)
+
+
+static func _set_temporary_containers(inventory: InventorySaveData, containers: Dictionary) -> void:
+	if inventory == null:
+		return
+	_temporary_containers_by_inventory[inventory.get_instance_id()] = containers.duplicate(true)
 
 
 static func _set_equipped_uid(inventory: InventorySaveData, operator_id: String, equipment_slot: String, item_uid: String) -> void:

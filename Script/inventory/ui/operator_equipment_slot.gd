@@ -122,12 +122,12 @@ func can_accept_data(data: Variant) -> bool:
 	var source_kind := str(data.get("kind", ""))
 	var item_type := str(data.get("item_type", ""))
 	if slot_name == "weapon":
-		if source_kind == "inventory_item":
+		if source_kind == "inventory_item" or source_kind == "temporary_item":
 			return item_type == "WEAPON" or (item_type == "WEAPON_ATTACHMENT" and not item_uid.is_empty())
 		if source_kind == "backpack_item":
 			return item_type == "WEAPON" or (item_type == "WEAPON_ATTACHMENT" and not item_uid.is_empty())
 		return source_kind == "weapon_attachment" and not item_uid.is_empty()
-	return source_kind in ["inventory_item", "backpack_item"] and item_type == {"helmet": "HELMET", "armor": "ARMOR", "backpack": "BACKPACK"}.get(slot_name, "")
+	return source_kind in ["inventory_item", "backpack_item", "temporary_item"] and item_type == {"helmet": "HELMET", "armor": "ARMOR", "backpack": "BACKPACK"}.get(slot_name, "")
 
 
 func _refresh_style() -> void:

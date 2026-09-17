@@ -72,10 +72,10 @@ func _process(_delta: float) -> void:
 	if _active_drag_data.is_empty():
 		return
 	var mouse_position := get_viewport().get_mouse_position()
-	if mouse_position == _last_drag_mouse_position:
-		return
-	_last_drag_mouse_position = mouse_position
-	_update_drag_targets(mouse_position)
+	if _grid == null or not _grid.get_global_rect().has_point(mouse_position):
+		_set_grid_drag_target(-1)
+	if _backpack_grid == null or not _backpack_grid.get_global_rect().has_point(mouse_position):
+		_set_backpack_drag_target(-1)
 
 
 func _input(event: InputEvent) -> void:
@@ -862,66 +862,6 @@ func _drop_at_backpack_target(data: Dictionary, target_position: int, backpack_u
 	var backpack_items := WarehouseService.get_backpack_items(inventory, backpack_uid)
 	var target_item := WarehouseService.get_item_by_uid(inventory, str(backpack_items.get(target_position, "")))
 	_on_backpack_item_dropped(data, str(target_item.get("uid", "")), target_position, backpack_uid)
-
-
-func _update_drag_targets(mouse_position: Vector2) -> void:
-	_update_grid_drag_target(mouse_position)
-	_update_backpack_drag_target(mouse_position)
-
-
-func _update_grid_drag_target(mouse_position: Vector2) -> void:
-	if _is_reordering_locked():
-		_set_grid_drag_target(-1)
-		return
-	if not _storage_panel.get_global_rect().has_point(mouse_position):
-		_set_grid_drag_target(-1)
-		return
-	var target_position := _get_grid_position_from_mouse(mouse_position)
-	if target_position >= 0:
-		_set_grid_drag_target(target_position)
-
-
-func _update_backpack_drag_target(mouse_position: Vector2) -> void:
-	if _backpack_grid == null or not is_instance_valid(_backpack_grid):
-		_set_backpack_drag_target(-1)
-		return
-	if not _backpack_panel.get_global_rect().has_point(mouse_position):
-		_set_backpack_drag_target(-1)
-		return
-	var target_position := _get_backpack_position_from_mouse(mouse_position)
-	if target_position >= 0:
-		_set_backpack_drag_target(target_position)
-
-
-func _get_grid_position_from_mouse(mouse_position: Vector2) -> int:
-	if _grid_slot_nodes.is_empty() or not _grid.get_global_rect().has_point(mouse_position):
-		return -1
-	var first_slot: InventorySlot = _grid_slot_nodes[0]
-	var slot_size := first_slot.size
-	var pitch := slot_size + Vector2(_grid.get_theme_constant("h_separation"), _grid.get_theme_constant("v_separation"))
-	if pitch.x <= 0.0 or pitch.y <= 0.0:
-		return -1
-	var relative_position := mouse_position - first_slot.get_global_rect().position
-	var column := clampi(roundi(relative_position.x / pitch.x), 0, WarehouseService.get_grid_columns(inventory) - 1)
-	var row := clampi(roundi(relative_position.y / pitch.y), 0, 9)
-	var position := row * WarehouseService.get_grid_columns(inventory) + column
-	return position if position < WarehouseService.get_grid_capacity(inventory) else -1
-
-
-func _get_backpack_position_from_mouse(mouse_position: Vector2) -> int:
-	if _backpack_grid == null or _backpack_slot_nodes.is_empty() or not _backpack_grid.get_global_rect().has_point(mouse_position):
-		return -1
-	var first_slot: InventorySlot = _backpack_slot_nodes[0]
-	var slot_size := first_slot.size
-	var pitch := slot_size + Vector2(_backpack_grid.get_theme_constant("h_separation"), _backpack_grid.get_theme_constant("v_separation"))
-	if pitch.x <= 0.0 or pitch.y <= 0.0:
-		return -1
-	var grid_size := WarehouseService.get_backpack_grid_size(inventory, _selected_backpack_uid)
-	var relative_position := mouse_position - first_slot.get_global_rect().position
-	var column := clampi(roundi(relative_position.x / pitch.x), 0, grid_size.x - 1)
-	var row := clampi(roundi(relative_position.y / pitch.y), 0, grid_size.y - 1)
-	var position := row * grid_size.x + column
-	return position if position < _backpack_slot_nodes.size() else -1
 
 
 func _set_grid_drag_target(target_position: int) -> void:

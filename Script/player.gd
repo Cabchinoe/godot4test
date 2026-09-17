@@ -71,6 +71,13 @@ func write_save_data(data: PlayerSaveData) -> void:
 	data.equipped_item_ids = equipped_item_ids.duplicate(true)
 	data.unlocked_flags = unlocked_flags.duplicate(true)
 
+
+func sync_equipment_from_save(data: PlayerSaveData) -> void:
+	if data == null:
+		return
+	equipped_item_ids = data.equipped_item_ids.duplicate(true)
+	profile_changed.emit()
+
 func upgrade_to(target_level: int) -> bool:
 	if character_definition == null:
 		return false

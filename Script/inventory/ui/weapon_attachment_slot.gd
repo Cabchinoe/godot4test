@@ -79,7 +79,7 @@ func can_accept_data(data: Variant) -> bool:
 	if not data is Dictionary:
 		return false
 	var source_kind := str(data.get("kind", ""))
-	if source_kind not in ["inventory_item", "weapon_attachment", "backpack_item"]:
+	if source_kind not in ["inventory_item", "weapon_attachment", "backpack_item", "temporary_item"]:
 		return false
 	if str(data.get("item_type", "")) != "WEAPON_ATTACHMENT" or str(data.get("attachment_slot", "")) != attachment_slot:
 		return false

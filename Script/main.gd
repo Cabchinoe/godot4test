@@ -12,10 +12,14 @@ extends Node2D
 @onready var hover_sprite2: Line2D = $HUD/CoverSprite2
 @onready var camera: Camera2D = $Camera2D
 @onready var ap_label: Label = $UILayer/UIRoot/StatusBar/APLabel
+@onready var hp_label: Label = $UILayer/UIRoot/StatusBar/HPLabel
+@onready var hp_bar: ProgressBar = $UILayer/UIRoot/StatusBar/HPBar
 @onready var turn_label: Label = $UILayer/UIRoot/StatusBar/TurnLabel
 @onready var end_turn_button: Button = $UILayer/UIRoot/StatusBar/EndTurnButton
-@onready var context_menu: PopupMenu = $UILayer/UIRoot/ContextMenu
+@onready var context_menu: BattleContextMenu = $UILayer/UIRoot/ContextMenu
 @onready var enemies_container: Node2D = $Enemies
+
+const BATTLE_LOADOUT_PANEL_SCRIPT := preload("res://Script/inventory/ui/battle_loadout_panel.gd")
 
 const DRAG_THRESHOLD: float = 5.0
 const MOVE_RANGE_SOURCE_ID: int = 0
@@ -31,6 +35,8 @@ var current_state: int = State.IDLE
 var enemy_spawner: EnemySpawner
 var enemy_ai: EnemyAI
 var player_save_provider: PlayerSaveProvider
+var inventory: InventorySaveData
+var battle_loadout_panel: BattleLoadoutPanel
 var reachable_cells: Array[Dictionary] = []
 var attack_cells: Array[Dictionary] = []
 var attack_unit_cells: Array = []
@@ -59,6 +65,14 @@ func _ready():
 	player_save_provider = PlayerSaveProvider.new(player)
 	SaveManager.register_provider(player_save_provider)
 	SaveManager.reload_current()
+	if SaveManager.current_data == null:
+		SaveManager.create_new_game()
+	inventory = WarehouseService.ensure_data(SaveManager.current_data)
+	player.sync_equipment_from_save(SaveManager.current_data.player)
+	battle_loadout_panel = BATTLE_LOADOUT_PANEL_SCRIPT.new()
+	$UILayer/UIRoot.add_child(battle_loadout_panel)
+	battle_loadout_panel.configure(inventory, player, SaveManager.current_data.player)
+	_configure_hud()
 	print("Player start grid: ", player.grid_pos, " level: ", player.current_level, " world: ", player.global_position)
 
 	turn_controller = TurnController.new(10)
@@ -68,7 +82,9 @@ func _ready():
 	turn_controller.start_game()
 
 	end_turn_button.pressed.connect(_on_end_turn_pressed)
-	context_menu.id_pressed.connect(_on_context_menu_pressed)
+	context_menu.attack_requested.connect(_on_attack_requested)
+	context_menu.end_turn_requested.connect(_on_end_turn_pressed)
+	context_menu.properties_requested.connect(_on_properties_requested)
 	context_menu.popup_hide.connect(_on_context_menu_hide)
 
 	bullet_range = BulletRange.new(level_manager)
@@ -81,6 +97,8 @@ func _ready():
 	enemy_ai = EnemyAI.new()
 
 func _exit_tree() -> void:
+	if inventory:
+		WarehouseService.clear_all_temporary_containers(inventory)
 	if player_save_provider:
 		SaveManager.unregister_provider(player_save_provider)
 
@@ -143,12 +161,14 @@ func _on_end_turn_pressed():
 	_change_state(State.IDLE)
 	turn_controller.end_turn()
 
-func _on_context_menu_pressed(id: int):
-	if id == 0:
-		_change_state(State.ATTACK_STATE)
-	elif id == 1:
-		_change_state(State.IDLE)
-		turn_controller.end_turn()
+func _on_attack_requested() -> void:
+	battle_loadout_panel.hide_panel()
+	_change_state(State.ATTACK_STATE)
+
+
+func _on_properties_requested() -> void:
+	_change_state(State.IDLE)
+	battle_loadout_panel.show_for_operator()
 
 func _on_context_menu_hide():
 	if current_state == State.MENU_STATE:
@@ -179,7 +199,6 @@ func _change_state(new_state: int):
 			_show_context_menu()
 		State.ATTACK_STATE:
 			_enter_attack()
-
 	_update_player_animation()
 
 func _process(delta: float):
@@ -187,6 +206,8 @@ func _process(delta: float):
 		return
 
 	_update_skip_input()
+	if battle_loadout_panel and battle_loadout_panel.is_item_drag_active():
+		return
 
 	if turn_controller.current_phase != TurnController.Phase.PLAYER_PHASE:
 		return
@@ -246,6 +267,8 @@ func _unhandled_input(event: InputEvent):
 	if turn_controller.is_game_over:
 		return
 	if turn_controller.current_phase != TurnController.Phase.PLAYER_PHASE:
+		return
+	if battle_loadout_panel and battle_loadout_panel.is_item_drag_active():
 		return
 	if player.is_moving:
 		return
@@ -323,6 +346,7 @@ func _handle_left_click():
 
 	if current_state == State.IDLE:
 		if _is_same_node(click_node, player_node):
+			battle_loadout_panel.hide_panel()
 			_change_state(State.MOVE_STATE)
 
 func _handle_right_click(event: InputEvent):
@@ -337,15 +361,13 @@ func _handle_right_click(event: InputEvent):
 		var click_node = _get_closest_walkable_node(mouse_world)
 		var player_node = {"grid": player.grid_pos, "level": player.current_level}
 		if _is_same_node(click_node, player_node):
+			battle_loadout_panel.hide_panel()
 			_change_state(State.MENU_STATE)
 
 func _show_context_menu():
-	context_menu.clear()
-	context_menu.add_item("攻击", 0)
-	context_menu.add_item("结束回合", 1)
 	var menu_pos = get_viewport().get_mouse_position()
-	context_menu.position = Vector2i(menu_pos.x, menu_pos.y)
-	context_menu.popup()
+	var attack_cost := player.get_attack_cost()
+	context_menu.show_actions(attack_cost, player.action_points >= attack_cost, Vector2i(menu_pos.x, menu_pos.y))
 
 func _show_move_range():
 	_clear_all_highlights()
@@ -460,5 +482,35 @@ func _clear_all_highlights():
 			hud.clear()
 
 func _update_hud():
-	ap_label.text = "行动点: %d/%d" % [player.action_points, player.ap_max]
+	ap_label.text = "AP  %d / %d" % [player.action_points, player.ap_max]
+	hp_label.text = "HP  %d / %d" % [player.current_hp, player.max_hp]
+	hp_bar.max_value = maxi(1, player.max_hp)
+	hp_bar.value = player.current_hp
 	turn_label.text = "回合 %d/%d" % [turn_controller.current_turn, turn_controller.max_turns]
+
+
+func _configure_hud() -> void:
+	var font := SystemFont.new()
+	font.font_names = PackedStringArray(["PingFang SC", "Hiragino Sans GB", "Arial"])
+	for label in [ap_label, hp_label, turn_label]:
+		label.add_theme_font_override("font", font)
+	ap_label.add_theme_font_size_override("font_size", 24)
+	ap_label.add_theme_color_override("font_color", Color(0.36, 0.93, 1.0, 1.0))
+	hp_label.add_theme_font_size_override("font_size", 18)
+	hp_label.add_theme_color_override("font_color", Color(0.5, 0.96, 0.63, 1.0))
+	turn_label.add_theme_font_size_override("font_size", 24)
+	turn_label.add_theme_color_override("font_color", Color(0.92, 0.76, 0.39, 1.0))
+	var background := StyleBoxFlat.new()
+	background.bg_color = Color(0.015, 0.055, 0.08, 0.92)
+	background.corner_radius_top_left = 5
+	background.corner_radius_top_right = 5
+	background.corner_radius_bottom_left = 5
+	background.corner_radius_bottom_right = 5
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color(0.22, 0.84, 0.48, 1.0)
+	fill.corner_radius_top_left = 5
+	fill.corner_radius_top_right = 5
+	fill.corner_radius_bottom_left = 5
+	fill.corner_radius_bottom_right = 5
+	hp_bar.add_theme_stylebox_override("background", background)
+	hp_bar.add_theme_stylebox_override("fill", fill)

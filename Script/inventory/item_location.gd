@@ -5,6 +5,7 @@ const WAREHOUSE := &"warehouse"
 const BACKPACK := &"backpack"
 const EQUIPMENT := &"equipment"
 const WEAPON_ATTACHMENT := &"weapon_attachment"
+const TEMPORARY := &"temporary"
 
 var container_id: StringName
 var owner_id: String
@@ -40,8 +41,12 @@ static func weapon_attachment(weapon_uid: String, slot_id: String) -> ItemLocati
 	return ItemLocation.new(WEAPON_ATTACHMENT, weapon_uid, 0, slot_id)
 
 
+static func temporary(container_id: String, position: int) -> ItemLocation:
+	return ItemLocation.new(TEMPORARY, container_id, position)
+
+
 func is_valid() -> bool:
-	if container_id == WAREHOUSE or container_id == BACKPACK:
+	if container_id == WAREHOUSE or container_id == BACKPACK or container_id == TEMPORARY:
 		return position >= 0
 	if container_id == EQUIPMENT or container_id == WEAPON_ATTACHMENT:
 		return not owner_id.is_empty() and not slot_id.is_empty()

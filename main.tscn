@@ -10,10 +10,10 @@
 [ext_resource type="Texture2D" uid="uid://cdkmmfcmx7owl" path="res://Art/tilesets/urban_night/atlases/ground/asphalt_01.png" id="11_yaehf"]
 [ext_resource type="Texture2D" uid="uid://cgkfqt5k8hupi" path="res://Art/tilesets/urban_night/atlases/props/vehicles_all_orientations_02.png" id="12_074og"]
 [ext_resource type="Texture2D" uid="uid://bi7qu8w83sg5r" path="res://Art/tilesets/urban_night/atlases/structures/stairs_urban_shape_10.png" id="13_cegan"]
+[ext_resource type="Resource" uid="uid://cwals6ovb5j3y" path="res://conf/characters/benny.tres" id="character_benny"]
+[ext_resource type="Script" uid="uid://bw2uywjhr23ni" path="res://Script/benny.gd" id="script_benny"]
+[ext_resource type="Script" uid="uid://jv68itladubh" path="res://Script/ui/battle_context_menu.gd" id="script_context_menu"]
 [ext_resource type="Script" uid="uid://bkpl2eys4kgy3" path="res://Script/main.gd" id="script_main"]
-[ext_resource type="Script" uid="uid://l743efe0mkta" path="res://Script/unit.gd" id="script_unit"]
-[ext_resource type="Script" path="res://Script/benny.gd" id="script_benny"]
-[ext_resource type="Resource" path="res://conf/characters/benny.tres" id="character_benny"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_82xsv"]
 texture = ExtResource("7_ycdy4")
@@ -2034,23 +2034,63 @@ anchors_preset = 10
 anchor_right = 1.0
 grow_horizontal = 2
 
-[node name="StatusBar" type="HBoxContainer" parent="UILayer/UIRoot" unique_id=751288848]
+[node name="StatusBar" type="Control" parent="UILayer/UIRoot" unique_id=751288848]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 40.0
+offset_bottom = 68.0
 grow_horizontal = 2
 
 [node name="APLabel" type="Label" parent="UILayer/UIRoot/StatusBar" unique_id=673039064]
-layout_mode = 2
-text = "AP: 5/5"
+layout_mode = 0
+offset_left = 28.0
+offset_top = 12.0
+offset_right = 200.0
+offset_bottom = 48.0
+text = "AP  5 / 5"
+vertical_alignment = 1
+
+[node name="HPLabel" type="Label" parent="UILayer/UIRoot/StatusBar" unique_id=870063626]
+layout_mode = 0
+offset_left = 218.0
+offset_top = 8.0
+offset_right = 395.0
+offset_bottom = 30.0
+text = "HP  90 / 90"
+
+[node name="HPBar" type="ProgressBar" parent="UILayer/UIRoot/StatusBar" unique_id=2134770476]
+layout_mode = 0
+offset_left = 218.0
+offset_top = 34.0
+offset_right = 402.0
+offset_bottom = 49.0
+max_value = 90.0
+value = 90.0
+show_percentage = false
 
 [node name="TurnLabel" type="Label" parent="UILayer/UIRoot/StatusBar" unique_id=1887660873]
-layout_mode = 2
+layout_mode = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -126.0
+offset_top = 14.0
+offset_right = 28.0
+offset_bottom = 49.0
+grow_horizontal = 2
 text = "回合 1/10"
+horizontal_alignment = 2
+vertical_alignment = 1
 
 [node name="EndTurnButton" type="Button" parent="UILayer/UIRoot/StatusBar" unique_id=60157208]
-layout_mode = 2
+layout_mode = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 42.0
+offset_top = 13.0
+offset_right = 146.0
+offset_bottom = 52.0
+grow_horizontal = 2
 text = "结束回合"
 
-[node name="ContextMenu" type="PopupMenu" parent="UILayer/UIRoot" unique_id=1841701995]
+[node name="ContextMenu" type="PopupPanel" parent="UILayer/UIRoot" unique_id=1841701995]
+script = ExtResource("script_context_menu")

@@ -112,7 +112,7 @@ func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	if not data is Dictionary:
 		return false
 	var source_kind := str(data.get("kind", ""))
-	var accepted := source_kind in ["inventory_item", "equipped_item", "weapon_attachment", "backpack_item"]
+	var accepted := source_kind in ["inventory_item", "equipped_item", "weapon_attachment", "backpack_item", "temporary_item"]
 	if accepted:
 		drop_hovered.emit(position_index)
 	return accepted
