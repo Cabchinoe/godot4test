@@ -47,12 +47,22 @@ func _has_wall_single(grid: Vector2i, dir: Vector2i, level: int) -> bool:
 
 func _has_obstacle_block(grid: Vector2i, level: int) -> bool:
 	var obstacle := level_manager.get_layer(level, "obstacle")
-	if obstacle == null:
+	if obstacle != null:
+		var data := obstacle.get_cell_tile_data(grid)
+		if data != null and not data.get_custom_data("can_walk"):
+			return true
+	return _has_dynamic_container_block(grid, level)
+
+func _has_dynamic_container_block(grid: Vector2i, level: int) -> bool:
+	var tree = Engine.get_main_loop() as SceneTree
+	if tree == null:
 		return false
-	var data := obstacle.get_cell_tile_data(grid)
-	if data == null:
-		return false
-	return not data.get_custom_data("can_walk")
+	for container in tree.get_nodes_in_group("battle_containers"):
+		if not is_instance_valid(container):
+			continue
+		if container.grid_pos == grid and container.current_level == level and not container.can_walk:
+			return true
+	return false
 
 func _dda_path(origin: Vector2i, target: Vector2i) -> Array:
 	var steps: Array = []
@@ -108,7 +118,7 @@ func _dda_path(origin: Vector2i, target: Vector2i) -> Array:
 
 	return steps
 
-func _is_path_clear(path: Array, travel_level: int, unit_cells: Array, block_on_unit: bool) -> bool:
+func _is_path_clear(path: Array, travel_level: int, unit_cells: Array, block_on_unit: bool, allow_target_obstacle: bool = false) -> bool:
 	var path_size: int = path.size()
 	for i in range(path_size):
 		var step = path[i]
@@ -146,7 +156,7 @@ func _is_path_clear(path: Array, travel_level: int, unit_cells: Array, block_on_
 			continue
 		if to_lv > travel_level:
 			return false
-		if _has_obstacle_block(to_grid, to_lv):
+		if _has_obstacle_block(to_grid, to_lv) and not (allow_target_obstacle and is_last):
 			return false
 
 		if block_on_unit and not is_last:
@@ -164,7 +174,7 @@ func _is_in_cells(grid: Vector2i, level: int, cells: Array) -> bool:
 func get_bullet_path(origin: Vector2i, target: Vector2i) -> Array:
 	return _dda_path(origin, target)
 
-func get_reachable_cells(origin: Vector2i, origin_level: int, max_range: int, unit_cells: Array) -> Array[Dictionary]:
+func get_reachable_cells(origin: Vector2i, origin_level: int, max_range: int, unit_cells: Array = [], allow_target_obstacle: bool = false) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 
 	for dy in range(-max_range, max_range + 1):
@@ -196,7 +206,7 @@ func get_reachable_cells(origin: Vector2i, origin_level: int, max_range: int, un
 						continue
 					if _has_wall(target, -move_dir, target_level):
 						continue
-				if _has_obstacle_block(target, target_level):
+				if _has_obstacle_block(target, target_level) and not allow_target_obstacle:
 					continue
 				result.append({"grid": target, "level": target_level})
 			else:
@@ -204,7 +214,19 @@ func get_reachable_cells(origin: Vector2i, origin_level: int, max_range: int, un
 				if path.is_empty():
 					continue
 				var block_on_unit: bool = (target_level == origin_level)
-				if _is_path_clear(path, target_level, unit_cells, block_on_unit):
+				if _is_path_clear(path, target_level, unit_cells, block_on_unit, allow_target_obstacle):
 					result.append({"grid": target, "level": target_level})
 
 	return result
+
+func can_reach_cell(origin: Vector2i, origin_level: int, target: Vector2i, target_level: int, max_range: int, unit_cells: Array = [], allow_target_obstacle: bool = false) -> bool:
+	if target_level == -1 or origin == target:
+		return false
+	var dx := target.x - origin.x
+	var dy := target.y - origin.y
+	if abs(dx) > max_range or abs(dy) > max_range:
+		return false
+	for cell in get_reachable_cells(origin, origin_level, max_range, unit_cells, allow_target_obstacle):
+		if cell["grid"] == target and cell["level"] == target_level:
+			return true
+	return false

@@ -112,16 +112,18 @@ static func get_item_by_uid(inventory: InventorySaveData, uid: String) -> Dictio
 static func get_armor_state(item: Dictionary) -> Dictionary:
 	var item_data: Variant = ItemDB.get_item(str(item.get("id", "")))
 	if not (item_data is Dictionary):
-		return {"tracks_armor": false, "max_armor": 0, "current_armor": 0, "is_damaged": false}
+		return {"tracks_armor": false, "max_armor": 0, "current_armor": 0, "per_hit_absorb": 0, "is_damaged": false}
 	var item_type := str((item_data as Dictionary).get("type", ""))
 	if item_type not in ["ARMOR", "HELMET"]:
-		return {"tracks_armor": false, "max_armor": 0, "current_armor": 0, "is_damaged": false}
+		return {"tracks_armor": false, "max_armor": 0, "current_armor": 0, "per_hit_absorb": 0, "is_damaged": false}
 	var max_armor := maxi(0, int(item.get("max_armor", (item_data as Dictionary).get("defense", 0))))
 	var current_armor := clampi(int(item.get("current_armor", max_armor)), 0, max_armor)
+	var per_hit_absorb := clampi(int((item_data as Dictionary).get("per_hit_absorb", max_armor)), 0, max_armor)
 	return {
 		"tracks_armor": true,
 		"max_armor": max_armor,
 		"current_armor": current_armor,
+		"per_hit_absorb": per_hit_absorb,
 		"is_damaged": max_armor > 0 and current_armor < max_armor,
 	}
 
@@ -283,6 +285,22 @@ static func transfer_item(inventory: InventorySaveData, source_location: ItemLoc
 	if moved and (source_location.container_id == ItemLocation.EQUIPMENT or target_location.container_id == ItemLocation.EQUIPMENT):
 		_sync_player_equipment(inventory, player_data)
 	return moved
+
+
+static func consume_item(inventory: InventorySaveData, source_location: ItemLocation, player_data: PlayerSaveData = null) -> bool:
+	var source := get_container(inventory, source_location)
+	if source == null:
+		return false
+	var item_uid := str(source.get_item(source_location.position).get("uid", ""))
+	if item_uid.is_empty() or source.remove(source_location.position) != item_uid:
+		return false
+	var item_index := get_item_array_index(inventory, item_uid)
+	if item_index >= 0:
+		inventory.warehouse_items.remove_at(item_index)
+	_touch(inventory)
+	if source_location.container_id == ItemLocation.EQUIPMENT:
+		_sync_player_equipment(inventory, player_data)
+	return true
 
 
 static func move_warehouse_item_to_backpack(inventory: InventorySaveData, backpack_uid: String, item_uid: String, target_position: int) -> bool:

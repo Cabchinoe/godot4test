@@ -1,22 +1,162 @@
 [
 	{
+		"id": "consumable_red_berry_01",
+		"name": "赤浆果",
+		"type": "CONSUMABLE",
+		"icon": "res://Items/icons/consumable/consumable_red_berry_01.png",
+		"description": "基础食物订单品，暂不提供战斗主动效果。",
+		"price": 20,
+		"merge_level": 1
+	},
+	{
+		"id": "consumable_dried_medicine_02",
+		"name": "干燥药包",
+		"type": "CONSUMABLE",
+		"icon": "res://Items/icons/consumable/consumable_dried_medicine_02.png",
+		"description": "恢复 8 点生命值。",
+		"price": 80,
+		"merge_level": 2,
+		"battle_effect_id": "heal_small",
+		"battle_use": {"ap_cost": 1, "heal": 8}
+	},
+	{
+		"id": "consumable_debridement_dressing_03",
+		"name": "清创敷料",
+		"type": "CONSUMABLE",
+		"icon": "res://Items/icons/consumable/consumable_debridement_dressing_03.png",
+		"description": "清除全部流血层数。",
+		"price": 120,
+		"merge_level": 3,
+		"battle_effect_id": "stop_bleeding",
+		"battle_use": {"ap_cost": 1, "remove_statuses": ["bleeding"]}
+	},
+	{
+		"id": "consumable_sterile_bandage_04",
+		"name": "无菌绷带组",
+		"type": "CONSUMABLE",
+		"icon": "res://Items/icons/consumable/consumable_sterile_bandage_04.png",
+		"description": "处理骨折并恢复行动能力。",
+		"price": 180,
+		"merge_level": 4,
+		"battle_use": {"ap_cost": 1, "remove_statuses": ["fractured"]}
+	},
+	{
+		"id": "consumable_compressed_ration_04",
+		"name": "压缩口粮",
+		"type": "CONSUMABLE",
+		"icon": "res://Items/icons/consumable/consumable_compressed_ration_04.png",
+		"description": "恢复少量行动资源。",
+		"price": 90,
+		"merge_level": 4,
+		"battle_effect_id": "restore_stamina_medium",
+		"battle_use": {"ap_cost": 1, "restore_ap": 2}
+	},
+	{
 		"id": "consumable_medkit_01",
 		"name": "急救包",
 		"type": "CONSUMABLE",
 		"icon": "res://Items/icons/consumable/consumable_medkit_01.png",
-		"description": "恢复少量生命值",
-		"price": 50,
+		"description": "恢复 40 点生命值，并移除 1 层流血。",
+		"price": 260,
+		"merge_level": 5,
 		"battle_effect_id": "heal_small",
-		"merge_level": 1
+		"battle_use": {"ap_cost": 1, "heal": 40, "remove_status_stacks": {"bleeding": 1}}
+	},
+	{
+		"id": "consumable_field_meal_06",
+		"name": "强化野战餐",
+		"type": "CONSUMABLE",
+		"icon": "res://Items/icons/consumable/consumable_field_meal_06.png",
+		"description": "高热量野战餐，恢复行动资源。",
+		"price": 180,
+		"merge_level": 6,
+		"battle_use": {"ap_cost": 1, "restore_ap": 3}
+	},
+	{
+		"id": "consumable_field_medical_case_06",
+		"name": "战地医疗箱",
+		"type": "CONSUMABLE",
+		"icon": "res://Items/icons/consumable/consumable_field_medical_case_06.png",
+		"description": "恢复 80 点生命值，并处理骨折。",
+		"price": 520,
+		"merge_level": 6,
+		"battle_use": {"ap_cost": 1, "heal": 80, "remove_statuses": ["fractured"]}
+	},
+	{
+		"id": "consumable_trauma_kit_07",
+		"name": "创伤处理包",
+		"type": "CONSUMABLE",
+		"icon": "res://Items/icons/consumable/consumable_trauma_kit_07.png",
+		"description": "恢复 100 点生命值，移除 1 层流血并处理骨折。",
+		"price": 900,
+		"merge_level": 7,
+		"battle_use": {"ap_cost": 1, "heal": 100, "remove_status_stacks": {"bleeding": 1}, "remove_statuses": ["fractured"]}
+	},
+	{
+		"id": "consumable_frontline_rescue_08",
+		"name": "前线救援套件",
+		"type": "CONSUMABLE",
+		"icon": "res://Items/icons/consumable/consumable_frontline_rescue_08.png",
+		"description": "恢复至满生命值，清除流血和骨折。",
+		"price": 1600,
+		"merge_level": 8,
+		"battle_use": {"ap_cost": 1, "heal_full": true, "remove_statuses": ["bleeding", "fractured"]}
 	},
 	{
 		"id": "consumable_adrenaline_01",
 		"name": "肾上腺素",
 		"type": "CONSUMABLE",
 		"icon": "res://Items/icons/consumable/consumable_adrenaline_01.png",
-		"description": "临时提升行动力",
+		"description": "即时恢复少量行动资源，不创建持续状态。",
 		"price": 120,
+		"merge_level": 2,
 		"battle_effect_id": "restore_action_points",
+		"battle_use": {"ap_cost": 1, "restore_ap": 2}
+	},
+	{
+		"id": "consumable_clean_fruit_box_02",
+		"name": "清洗果盒",
+		"type": "CONSUMABLE",
+		"icon": "res://Items/icons/consumable/consumable_clean_fruit_box_02.png",
+		"description": "长期保存食物订单品，暂不提供战斗主动效果。",
+		"price": 45,
 		"merge_level": 2
+	},
+	{
+		"id": "consumable_dried_fruit_03",
+		"name": "晒干果脯",
+		"type": "CONSUMABLE",
+		"icon": "res://Items/icons/consumable/consumable_dried_fruit_03.png",
+		"description": "长期保存食物订单品，暂不提供战斗主动效果。",
+		"price": 60,
+		"merge_level": 3
+	},
+	{
+		"id": "consumable_calorie_meal_05",
+		"name": "热量餐包",
+		"type": "CONSUMABLE",
+		"icon": "res://Items/icons/consumable/consumable_calorie_meal_05.png",
+		"description": "高热量餐食，恢复行动资源。",
+		"price": 130,
+		"merge_level": 5,
+		"battle_use": {"ap_cost": 1, "restore_ap": 3}
+	},
+	{
+		"id": "consumable_squad_supply_07",
+		"name": "班组补给箱",
+		"type": "CONSUMABLE",
+		"icon": "res://Items/icons/consumable/consumable_squad_supply_07.png",
+		"description": "班组级订单物资，暂不提供单人战斗主动效果。",
+		"price": 260,
+		"merge_level": 7
+	},
+	{
+		"id": "consumable_outpost_rations_08",
+		"name": "前哨应急粮储",
+		"type": "CONSUMABLE",
+		"icon": "res://Items/icons/consumable/consumable_outpost_rations_08.png",
+		"description": "前哨级订单物资，暂不提供单人战斗主动效果。",
+		"price": 480,
+		"merge_level": 8
 	}
 ]

@@ -4,6 +4,7 @@ extends Button
 signal slot_activated(position_index: int, item_uid: String)
 signal item_dropped(data: Dictionary, target_uid: String, target_position: int)
 signal item_double_clicked(item_uid: String)
+signal item_right_clicked(item_uid: String, screen_position: Vector2)
 signal drag_started(data: Dictionary)
 signal drag_ended
 signal drop_hovered(position_index: int)
@@ -148,6 +149,9 @@ func _build_drag_data() -> Dictionary:
 func _on_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.double_click and not item_uid.is_empty():
 		item_double_clicked.emit(item_uid)
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed and not item_uid.is_empty():
+		accept_event()
+		item_right_clicked.emit(item_uid, get_viewport().get_mouse_position())
 
 
 func _refresh_style() -> void:

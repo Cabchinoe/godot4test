@@ -44,3 +44,9 @@ func end_enemy_phase():
 	current_phase = Phase.PLAYER_PHASE
 	phase_changed.emit(current_phase)
 	turn_started.emit(current_turn)
+
+func end_game() -> void:
+	if is_game_over:
+		return
+	is_game_over = true
+	game_over.emit()

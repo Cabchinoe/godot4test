@@ -38,7 +38,7 @@
 | 食物 | Lv0 | 损耗作物 | 残次品，几乎无用 | 否 | — | — | `material_spoiled_crop_00` | `res://Items/icons/material/material_spoiled_crop_00.png` |
 | 食物 | Lv1 | 赤浆果 | 防止基础食物链被单一掉落卡住 | 否 | — | — | `consumable_red_berry_01` | `res://Items/icons/consumable/consumable_red_berry_01.png` |
 | 食物 | Lv2 | 清洗果盒 | 第一次可长期保存的食物成品 | 否 | — | — | `consumable_clean_fruit_box_02` | `res://Items/icons/consumable/consumable_clean_fruit_box_02.png` |
-| 食物 | Lv3 | 晒干果脯 | 长期保存的食物成品 | 是 | `restore_stamina_small` | — | `consumable_dried_fruit_03` | `res://Items/icons/consumable/consumable_dried_fruit_03.png` |
+| 食物 | Lv3 | 晒干果脯 | 长期保存的食物成品 | 否 | `restore_stamina_small` | — | `consumable_dried_fruit_03` | `res://Items/icons/consumable/consumable_dried_fruit_03.png` |
 | 食物 | Lv4 | 压缩口粮 | 恢复较多行动资源，临时增加1AP | 是 | `restore_stamina_medium` | — | `consumable_compressed_ration_04` | `res://Items/icons/consumable/consumable_compressed_ration_04.png` |
 | 食物 | Lv5 | 热量餐包 | 自热型卡路里密集餐盒，临时增加3AP | 否 | — | — | `consumable_calorie_meal_05` | `res://Items/icons/consumable/consumable_calorie_meal_05.png` |
 | 食物 | Lv6 | 强化野战餐 | 单兵野战加固餐盒，临时增加5AP | 否 | — | — | `consumable_field_meal_06` | `res://Items/icons/consumable/consumable_field_meal_06.png` |
@@ -47,12 +47,12 @@
 | 医疗 | 起始档位 | — | — | — | — | — | — | — |
 | 医疗 | Lv0 | 药渣 | 残次品，几乎无用 | 否 | — | — | `material_herbal_residue_00` | `res://Items/icons/material/material_herbal_residue_00.png` |
 | 医疗 | Lv1 | 灰叶药草 | 为医疗树提供保底起点 | 否 | — | — | `material_grayleaf_herb_01` | `res://Items/icons/material/material_grayleaf_herb_01.png` |
-| 医疗 | Lv2 | 干燥药包 | 恢复20生命值 | 是 | `heal_small` | — | `consumable_dried_medicine_02` | `res://Items/icons/consumable/consumable_dried_medicine_02.png` |
-| 医疗 | Lv3 | 清创敷料 | 清除流血等持续伤害 | 是 | `stop_bleeding` | — | `consumable_debridement_dressing_03` | `res://Items/icons/consumable/consumable_debridement_dressing_03.png` |
+| 医疗 | Lv2 | 干燥药包 | 恢复8生命值 | 是 | `heal_small` | — | `consumable_dried_medicine_02` | `res://Items/icons/consumable/consumable_dried_medicine_02.png` |
+| 医疗 | Lv3 | 清创敷料 | 清除流血debuff | 是 | `stop_bleeding` | — | `consumable_debridement_dressing_03` | `res://Items/icons/consumable/consumable_debridement_dressing_03.png` |
 | 医疗 | Lv4 | 无菌绷带组 | 战斗负伤包扎，清除骨折的负面影响 | 是 | — | — | `consumable_sterile_bandage_04` | `res://Items/icons/consumable/consumable_sterile_bandage_04.png` |
-| 医疗 | Lv5 | 急救包 | 战场基础医疗与中阶居民订单，恢复40生命值 | 是 | `heal_small`（基础版） | — | `consumable_medkit_01` | `res://Items/icons/consumable/consumable_medkit_01.png` |
-| 医疗 | Lv6 | 战地医疗箱 | 班组级医疗供应，恢复90生命值 | 否 | — | — | `consumable_field_medical_case_06` | `res://Items/icons/consumable/consumable_field_medical_case_06.png` |
-| 医疗 | Lv7 | 创伤处理包 | 处理中重度战伤，恢复100生命值，清除流血和骨折 | 否 | — | — | `consumable_trauma_kit_07` | `res://Items/icons/consumable/consumable_trauma_kit_07.png` |
+| 医疗 | Lv5 | 急救包 | 战场基础医疗与中阶居民订单，恢复40生命值，移除1层流血debuff | 是 | `heal_small`（基础版） | — | `consumable_medkit_01` | `res://Items/icons/consumable/consumable_medkit_01.png` |
+| 医疗 | Lv6 | 战地医疗箱 | 班组级医疗供应，恢复80生命值，清除骨折debuff | 否 | — | — | `consumable_field_medical_case_06` | `res://Items/icons/consumable/consumable_field_medical_case_06.png` |
+| 医疗 | Lv7 | 创伤处理包 | 处理中重度战伤，恢复100生命值，移除1层流血并清除骨折 | 否 | — | — | `consumable_trauma_kit_07` | `res://Items/icons/consumable/consumable_trauma_kit_07.png` |
 | 医疗 | Lv8 | 前线救援套件 | 大型综合急救套件，恢复全部生命值，清除流血和骨折 | 否 | — | — | `consumable_frontline_rescue_08` | `res://Items/icons/consumable/consumable_frontline_rescue_08.png` |
 | 护甲 | 起始档位 | — | — | — | — | — | — | — |
 | 护甲 | Lv0 | 破损甲片 | 极低概率在野装甲残骸中获得 | 否 | — | — | `material_damaged_armor_plate_00` | `res://Items/icons/material/material_damaged_armor_plate_00.png` |
@@ -114,3 +114,17 @@
 | 贝妮 | 防卫者-9 | 野兔跳跃者 → 黎明初霁 | 晨辉共鸣核心（仅限黎明初霁） |
 
 贝妮目前是唯一已配置角色；因此首轮武器美术只需围绕她的“紧凑冲锋枪 → 战术冲锋枪 → 高频脉冲冲锋枪”形成清晰的三段成长轮廓。
+
+## 6. 护具战斗参数
+
+本节补充战场代码使用的数值，不改变上文的物品等级、ID 或图标规划。表中“最大 / 初始吸收值”沿用上文已定义的护甲值；“单次吸收上限”是一次攻击最多可由该护具吸收的绝对伤害。
+
+| 装备 | ID | 最大 / 初始吸收值 | 单次吸收上限 |
+| --- | --- | ---: | ---: |
+| 轻型护甲组件 | `armor_light_component_05` | 20 | 10 |
+| 模块化护甲 | `armor_modular_06` | 40 | 20 |
+| 前哨防护护甲 | `armor_outpost_defense_08` | 180 | 60 |
+| 加固盔体 | `helmet_reinforced_shell_04` | 8 | 4 |
+| 模块化战术头盔 | `helmet_modular_tactical_06` | 35 | 12 |
+| 晶纤维战术头盔 | `helmet_crystal_fiber_07` | 80 | 30 |
+| 前哨防护头盔 | `helmet_outpost_defense_08` | 160 | 50 |

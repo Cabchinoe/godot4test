@@ -5,8 +5,14 @@ const OPERATOR_EQUIPMENT_SLOT_SCRIPT := preload("res://Script/inventory/ui/opera
 const WEAPON_ATTACHMENT_SLOT_SCRIPT := preload("res://Script/inventory/ui/weapon_attachment_slot.gd")
 const INVENTORY_GRID_SCRIPT := preload("res://Script/inventory/ui/inventory_grid.gd")
 const TRANSFER_POLICY_SCRIPT := preload("res://Script/inventory/transfer_policy.gd")
+const BATTLE_ITEM_ACTION_MENU_SCRIPT := preload("res://Script/ui/battle_item_action_menu.gd")
+const BATTLE_DISCARD_ZONE_SCRIPT := preload("res://Script/ui/battle_discard_zone.gd")
 const DEFAULT_PANEL_RIGHT := 1000.0
 const SEARCH_PANEL_RIGHT := 1314.0
+
+signal consumable_use_requested(source: ItemLocation, item_uid: String)
+signal discard_requested(source: ItemLocation, item_uid: String)
+signal temporary_container_changed(container_id: String)
 
 var inventory: InventorySaveData
 var player: Player
@@ -36,6 +42,12 @@ var _temporary_grid: InventoryGrid
 var _temporary_slot_nodes: Array = []
 var _last_backpack_drag_target := -1
 var _last_temporary_drag_target := -1
+var _item_action_menu: BattleItemActionMenu
+var _pending_consumable_source: ItemLocation
+var _pending_consumable_uid := ""
+var _discard_zone: BattleDiscardZone
+var _discard_confirmation: ConfirmationDialog
+var _pending_discard_data: Dictionary = {}
 
 
 func _ready() -> void:
@@ -91,6 +103,18 @@ func _ready() -> void:
 	_temporary_panel = _temporary_content.get_parent() as PanelContainer
 	_temporary_title = _temporary_content.get_node("SectionTitle") as Label
 	_temporary_panel.visible = false
+	_item_action_menu = BATTLE_ITEM_ACTION_MENU_SCRIPT.new()
+	get_parent().add_child(_item_action_menu)
+	_item_action_menu.use_requested.connect(_on_item_use_requested)
+	_discard_zone = BATTLE_DISCARD_ZONE_SCRIPT.new()
+	get_parent().add_child(_discard_zone)
+	_discard_zone.discard_requested.connect(_on_discard_zone_requested)
+	_discard_confirmation = ConfirmationDialog.new()
+	_discard_confirmation.title = "确认丢弃"
+	_discard_confirmation.ok_button_text = "丢弃"
+	_discard_confirmation.cancel_button_text = "取消"
+	get_parent().add_child(_discard_confirmation)
+	_discard_confirmation.confirmed.connect(_on_discard_confirmed)
 	visible = false
 	_refresh()
 
@@ -135,6 +159,19 @@ func hide_panel() -> void:
 	visible = false
 
 
+func hide_all_panels() -> void:
+	hide_panel()
+	if _item_action_menu:
+		_item_action_menu.hide()
+	if _discard_confirmation:
+		_discard_confirmation.hide()
+	if _discard_zone:
+		_discard_zone.set_drag_active(false)
+	_pending_consumable_source = null
+	_pending_consumable_uid = ""
+	_pending_discard_data.clear()
+
+
 func is_item_drag_active() -> bool:
 	return not _active_drag_data.is_empty()
 
@@ -159,10 +196,11 @@ func open_search_container(resource_id: String, resource_name: String, capacity:
 	_status_label.text = "正在搜索：%s" % resource_name
 
 
-func close_temporary_container(discard_items: bool = true) -> void:
+func close_temporary_container(discard_items: bool = false) -> void:
 	if inventory == null or _temporary_container_id.is_empty():
 		return
-	WarehouseService.clear_temporary_container(inventory, _temporary_container_id, discard_items)
+	if discard_items:
+		WarehouseService.clear_temporary_container(inventory, _temporary_container_id, true)
 	_temporary_container_id = ""
 	_temporary_container_name = ""
 	_refresh()
@@ -283,6 +321,7 @@ func _render_backpack() -> void:
 		slot.slot_activated.connect(_on_backpack_slot_activated.bind(backpack_uid))
 		slot.item_dropped.connect(_on_backpack_item_dropped.bind(backpack_uid))
 		slot.item_double_clicked.connect(_on_backpack_item_double_clicked.bind(backpack_uid, position))
+		slot.item_right_clicked.connect(_on_backpack_item_right_clicked.bind(backpack_uid, position))
 		slot.drag_started.connect(_on_drag_started)
 		slot.drag_ended.connect(_on_drag_ended)
 		slot.drop_hovered.connect(_on_backpack_drop_hovered)
@@ -419,6 +458,42 @@ func _on_backpack_item_double_clicked(item_uid: String, backpack_uid: String, po
 	_double_click_transfer(ItemLocation.backpack(backpack_uid, position), "backpack", item_uid)
 
 
+func _on_backpack_item_right_clicked(item_uid: String, screen_position: Vector2, backpack_uid: String, position: int) -> void:
+	var item := WarehouseService.get_item_by_uid(inventory, item_uid)
+	var item_data := _item_data(item)
+	if str(item_data.get("type", "")) != "CONSUMABLE":
+		return
+	var source := ItemLocation.backpack(backpack_uid, position)
+	var ap_cost := BattleItemUseResolver.get_ap_cost(item_data)
+	var has_effect := BattleItemUseResolver.can_use(player, item_data)
+	var enough_ap := player != null and player.action_points >= ap_cost
+	var enabled := has_effect and enough_ap
+	var reason := BattleItemUseResolver.get_unavailable_reason(player, item_data) if not has_effect else ""
+	if has_effect and not enough_ap:
+		reason = "行动点不足。"
+	_pending_consumable_source = source
+	_pending_consumable_uid = item_uid
+	_item_action_menu.show_use(
+		str(item_data.get("name", "物品")),
+		ap_cost,
+		enabled,
+		reason,
+		Vector2i(screen_position.x, screen_position.y)
+	)
+
+
+func _on_item_use_requested() -> void:
+	if _pending_consumable_source == null or _pending_consumable_uid.is_empty():
+		return
+	consumable_use_requested.emit(_pending_consumable_source, _pending_consumable_uid)
+	_pending_consumable_source = null
+	_pending_consumable_uid = ""
+
+
+func refresh_after_battle_action(message: String) -> void:
+	_complete_transfer(message)
+
+
 func _on_equipment_item_double_clicked(slot: String) -> void:
 	var item_uid := WarehouseService.get_equipped_uid(inventory, slot, operator_id)
 	_double_click_transfer(ItemLocation.equipment(operator_id, slot), "equipment", item_uid)
@@ -475,9 +550,12 @@ func _try_transfer(source: ItemLocation, target: ItemLocation, refresh_after: bo
 func _complete_transfer(message: String) -> void:
 	if player and player_data:
 		player.sync_equipment_from_save(player_data)
+		player.sync_battle_equipment(inventory)
 	if WarehouseService.get_item_by_uid(inventory, _selected_weapon_uid).is_empty():
 		_selected_weapon_uid = WarehouseService.get_equipped_uid(inventory, "weapon", operator_id)
 	_status_label.text = message
+	if not _temporary_container_id.is_empty():
+		temporary_container_changed.emit(_temporary_container_id)
 	_refresh()
 
 
@@ -495,6 +573,8 @@ func _on_drag_started(data: Dictionary) -> void:
 	_active_drag_data = data.duplicate(true)
 	_last_backpack_drag_target = -1
 	_last_temporary_drag_target = -1
+	if _discard_zone:
+		_discard_zone.set_drag_active(true)
 	_update_drag_target_highlights()
 
 
@@ -502,7 +582,38 @@ func _on_drag_ended() -> void:
 	_active_drag_data.clear()
 	_set_backpack_drag_target(-1)
 	_set_temporary_drag_target(-1)
+	if _discard_zone:
+		_discard_zone.set_drag_active(false)
 	_update_drag_target_highlights()
+
+
+func _on_discard_zone_requested(data: Dictionary) -> void:
+	var source := _source_location(data)
+	if source == null:
+		return
+	if source.container_id == ItemLocation.EQUIPMENT and source.slot_id == "backpack":
+		var backpack_uid := WarehouseService.get_equipped_uid(inventory, "backpack", operator_id)
+		if WarehouseService.get_backpack_item_count(inventory, backpack_uid) > 0:
+			_status_label.text = "背包内还有物品，不能直接丢弃背包。"
+			return
+	var item := WarehouseService.get_item_by_uid(inventory, str(data.get("uid", "")))
+	var item_data := _item_data(item)
+	if item_data.is_empty():
+		return
+	_pending_discard_data = data.duplicate(true)
+	_discard_confirmation.dialog_text = "确认丢弃“%s”到当前格吗？" % str(item_data.get("name", "物品"))
+	_discard_confirmation.popup_centered()
+
+
+func _on_discard_confirmed() -> void:
+	if _pending_discard_data.is_empty():
+		return
+	var source := _source_location(_pending_discard_data)
+	var item_uid := str(_pending_discard_data.get("uid", ""))
+	_pending_discard_data.clear()
+	if source == null or item_uid.is_empty():
+		return
+	discard_requested.emit(source, item_uid)
 
 
 func _update_drag_target_highlights() -> void:

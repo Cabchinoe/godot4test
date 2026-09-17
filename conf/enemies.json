@@ -1,8 +1,135 @@
 [
   {
 	"id": "infantry",
-	"name": "鹰酱大兵",
+	"name": "街区掠夺兵",
 	"ap_max": 4,
-	"sprite_frames_path": "res://Unit/eagle_soldier_sprites.tres"
+	"max_hp": 70,
+	"attack_power": 22,
+	"accuracy": 76,
+	"evasion": 5,
+	"body_armor": 8,
+	"attack_range": 4,
+	"attack_cost": 1,
+	"hit_location_indices": {"head": 8, "body": 80, "limb": 12},
+	"unprotected_debuffs": [
+		{"id": "bleeding", "chance": 12, "locations": ["body", "limb"]},
+		{"id": "fractured", "chance": 4, "locations": ["limb"]}
+	],
+	"sprite_frames_path": "res://Unit/eagle_soldier_sprites.tres",
+	"art_key": "raider_infantry",
+	"art_status": "placeholder",
+	"drop_container": {
+		"display_name": "掠夺兵战利品箱",
+		"open_ap_cost": 1,
+		"capacity": 8,
+		"columns": 4,
+		"loot": ["material_metal_01", "consumable_dried_medicine_02"]
+	}
+  },
+  {
+	"id": "raider_scout",
+	"name": "斥候掠夺者",
+	"ap_max": 5,
+	"max_hp": 58,
+	"attack_power": 18,
+	"accuracy": 72,
+	"evasion": 12,
+	"body_armor": 4,
+	"attack_range": 5,
+	"attack_cost": 1,
+	"hit_location_indices": {"head": 12, "body": 56, "limb": 32},
+	"unprotected_debuffs": [
+		{"id": "bleeding", "chance": 10, "locations": ["body", "limb"]},
+		{"id": "fractured", "chance": 10, "locations": ["limb"]}
+	],
+	"sprite_frames_path": "res://Unit/eagle_soldier_sprites.tres",
+	"art_key": "raider_scout",
+	"art_status": "placeholder",
+	"drop_container": {
+		"display_name": "斥候战利品箱",
+		"open_ap_cost": 1,
+		"capacity": 8,
+		"columns": 4,
+		"loot": ["material_frayed_fiber_00", "consumable_red_berry_01"]
+	}
+  },
+  {
+	"id": "raider_bulwark",
+	"name": "护盾掠夺者",
+	"ap_max": 3,
+	"max_hp": 110,
+	"attack_power": 24,
+	"accuracy": 66,
+	"evasion": 0,
+	"body_armor": 30,
+	"attack_range": 3,
+	"attack_cost": 1,
+	"hit_location_indices": {"head": 3, "body": 90, "limb": 7},
+	"unprotected_debuffs": [
+		{"id": "bleeding", "chance": 16, "locations": ["body", "limb"]}
+	],
+	"sprite_frames_path": "res://Unit/eagle_soldier_sprites.tres",
+	"art_key": "raider_bulwark",
+	"art_status": "placeholder",
+	"drop_container": {
+		"display_name": "护盾兵战利品箱",
+		"open_ap_cost": 2,
+		"capacity": 8,
+		"columns": 4,
+		"loot": ["material_riveted_plate_02", "material_impact_liner_04"]
+	}
+  },
+  {
+	"id": "pyroxene_hound",
+	"name": "辉石猎犬",
+	"ap_max": 6,
+	"max_hp": 72,
+	"attack_power": 24,
+	"accuracy": 80,
+	"evasion": 18,
+	"body_armor": 8,
+	"attack_range": 1,
+	"attack_cost": 1,
+	"hit_location_indices": {"head": 0, "body": 35, "limb": 65},
+	"unprotected_debuffs": [
+		{"id": "bleeding", "chance": 45, "locations": ["body", "limb"]},
+		{"id": "fractured", "chance": 16, "locations": ["limb"]}
+	],
+	"sprite_frames_path": "res://Unit/eagle_soldier_sprites.tres",
+	"art_key": "pyroxene_hound",
+	"art_status": "placeholder",
+	"drop_container": {
+		"display_name": "晶兽遗骸箱",
+		"open_ap_cost": 1,
+		"capacity": 8,
+		"columns": 4,
+		"loot": ["material_crystal_purification_core_08", "material_grayleaf_herb_01"]
+	}
+  },
+  {
+	"id": "pyroxene_sentry",
+	"name": "晶涌哨戒机",
+	"ap_max": 4,
+	"max_hp": 86,
+	"attack_power": 28,
+	"accuracy": 82,
+	"evasion": 4,
+	"body_armor": 14,
+	"attack_range": 6,
+	"attack_cost": 1,
+	"hit_location_indices": {"head": 18, "body": 74, "limb": 8},
+	"unprotected_debuffs": [
+		{"id": "fractured", "chance": 14, "locations": ["limb"]}
+	],
+	"sprite_frames_path": "res://Unit/eagle_soldier_sprites.tres",
+	"art_key": "pyroxene_sentry",
+	"art_status": "placeholder",
+	"drop_container": {
+		"display_name": "哨戒机残骸箱",
+		"open_ap_cost": 2,
+		"capacity": 8,
+		"columns": 4,
+		"loot": ["material_active_filter_03", "material_riveted_plate_02"]
+	}
   }
 ]

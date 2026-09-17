@@ -15,6 +15,18 @@
 - 携行资格不使用单独的配置字段：任何物品只要能放入已装备背包且背包容量允许，就可随干员进入战场。
 - `battle_effect_id` 只描述物品在战场内触发的具体效果；它不决定物品能否被携带。
 
+### 与仓库美术清单对齐（2026-09-17）
+
+`warehouse_art_manifest.md` 是首轮物品 **ID、图标目标路径、等级节点与战场直接效果** 的唯一清单来源；本文件负责解释产出、二合节奏和订单用途。后续新增或改名时，必须先更新清单，再同步本设计与 JSON 配置。
+
+| 规则 | 对齐结果 |
+| --- | --- |
+| 基础层级 | 六条谱系均包含 `Lv0～Lv8` 共 9 个节点；`Lv0 × 2 → Lv1` 也是合法二合，Lv0 仅代表不进入常规成品展示的原料。 |
+| 首轮图标范围 | 11 项当前独立入仓物品 + 54 个二合树节点 + 30 个物资包，共 95 项目标图标；物资包仍是规划资源，不能误标为已实装图标。 |
+| 织物终点 | Lv8 固定为 `backpack_tactical_pack_08`「战术作业背包」，不再使用未建模且未配置的「防护作业服」分支。 |
+| 装备终点 | Lv5 之后的护甲、头盔和背包是装备成品，不可继续二合；受损实例也不可参与二合。 |
+| 战场效果 | 只有「战场直接效果 = 是」且具有效果 ID 的物品才进入主动使用或装备被动实现；例如晒干果脯当前是可携行订单品，不应因为有旧 ID 备注而表现为可点击战斗消耗品。 |
+
 ## 2. 三个玩法的资源分工
 
 | 系统 | 主要产出 | 在合成体系中的作用 | 设计目的 |
@@ -28,19 +40,27 @@
 ### 战场携行与效果
 
 - 已装备背包是唯一的战场携行空间；背包内所有物品都可随干员进入战场，受网格容量和场景容器规则限制。
-- `battle_effect_id` 关联战斗内的具体效果；战斗系统后续根据该标识读取生命恢复、行动力恢复、掩体修复、负重或抗性等属性。
-- 当前效果标识约定：`restore_stamina_small`、`restore_stamina_medium`、`restore_action_points`、`heal_small`、`heal_medium`、`stop_bleeding`、`repair_cover_small`、`repair_cover_medium`、`increase_carry_capacity`、`hazard_resist_small`。
+- `battle_effect_id` 是消耗品/装备效果的语义键；战斗运行时状态效果由 `doc/battlefield_combat_design.md` 与 `BattleStatusDB` 管理。消耗品使用面板接入前，未在配置中启用的键不产生战场行为。
+- 当前保留的效果键：`restore_stamina_medium`、`restore_action_points`、`heal_small`、`stop_bleeding`、`repair_cover_small`、`repair_cover_medium`、`increase_carry_capacity`、`increase_carry_capacity_max`。
 
 | 物品 | `battle_effect_id` | 战场定位 |
 | --- | --- | --- |
 | 密织布包 | `repair_cover_small` | 修补轻度受损的掩体或临时路障 |
 | 耐磨帆布包 | `repair_cover_medium` | 修补中度受损掩体，适合长线撤离 |
-| 晒干果脯 | `restore_stamina_small` | 恢复少量行动资源 |
 | 压缩口粮 | `restore_stamina_medium` | 恢复较多行动资源 |
 | 干燥药包 | `heal_small` | 恢复少量生命值 |
-| 清创敷料 | `stop_bleeding` | 清除流血等持续伤害 |
+| 清创敷料 | `stop_bleeding` | 清除 `bleeding` 流血状态 |
+| 肾上腺素 | `restore_action_points` | 即时恢复 AP，不创建持续 Buff 或闪避增益 |
 | 远征背包 | `increase_carry_capacity` | 提高本局撤离物资携行上限 |
-| 防护作业服 | `hazard_resist_small` | 提高本局对辉石污染与恶劣环境的抵抗 |
+| 战术作业背包 | `increase_carry_capacity_max` | 织物 Lv8 装备终点，提供最大携行上限与抗污染过滤 |
+
+### 战场医疗使用规则（2026-09-17）
+
+- 医疗消耗品从已装备背包右键使用，统一花费 `1 AP`；不创建持续 Buff。
+- 使用条件采用“至少一项效果可生效”：生命未满、存在 `bleeding` 或存在 `fractured` 任一成立即可；否则菜单禁用且不消耗物品。
+- `bleeding` 的治疗来源：清创敷料移除全部层数；急救包与创伤处理包各移除 1 层；前线救援套件移除全部层数。
+- `fractured` 的治疗来源：无菌绷带组、战地医疗箱、创伤处理包、前线救援套件。
+- 干燥药包恢复 8 HP；急救包恢复 40 HP；战地医疗箱恢复 80 HP；创伤处理包恢复 100 HP；前线救援套件恢复至满 HP。
 
 ## 3. 温室种植表
 
@@ -91,7 +111,7 @@
 | Lv5 | 耐磨帆布包 | 中阶订单与远征背包维护，可带入战场 |
 | Lv6 | 模块化背包主体 | 增加仓库格位的材料订单，可带入战场 |
 | Lv7 | 远征背包 | 远征队携行上限提升素材，可带入战场 |
-| Lv8 | 防护作业服 | 高级居民订单；解锁服装外观与耐候加成 |
+| Lv8 | 战术作业背包 | `backpack_tactical_pack_08`；织物树装备终点，提供最大携行上限与抗污染过滤 |
 
 ### B. 食物与野战补给树
 

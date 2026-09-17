@@ -9,10 +9,19 @@ character_id = &"benny"
 display_name = "Benny"
 rarity = 4
 sprite_frames = ExtResource("2_sprites")
-allowed_weapon_ids = PackedStringArray("weapon_benny_defender_9", "weapon_benny_hare_hopper", "weapon_benny_dawn_pulse")
 default_loadout = {
 "backpack": "backpack_basic_01",
 "weapon": "weapon_benny_defender_9"
+}
+combat_profile = {
+"accuracy_bonus": 0,
+"damage_flat": 0,
+"hit_location_indices": {
+"body": 65,
+"head": 10,
+"limb": 25
+},
+"unprotected_debuffs": []
 }
 level_stats = Array[Dictionary]([{
 "base_ap": 5,

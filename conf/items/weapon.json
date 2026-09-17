@@ -10,6 +10,16 @@
 		"range": 5,
 		"attack_power": 35,
 		"attack_cost": 1,
+		"distance_bands": [
+			{"min": 1, "max": 2, "damage_multiplier": 0.95, "accuracy": 88},
+			{"min": 3, "max": 4, "damage_multiplier": 0.80, "accuracy": 78},
+			{"min": 5, "max": 5, "damage_multiplier": 0.60, "accuracy": 64}
+		],
+		"hit_location_indices": {"head": 0, "body": 10, "limb": 0},
+		"unprotected_debuffs": [
+			{"id": "bleeding", "chance": 12, "locations": ["body", "limb"]},
+			{"id": "fractured", "chance": 4, "locations": ["limb"]}
+		],
 		"can_equip": true,
 		"attachment_slots": ["SCOPE", "BARREL", "STOCK"],
 		"merge_level": 1
@@ -25,6 +35,16 @@
 		"range": 6,
 		"attack_power": 44,
 		"attack_cost": 1,
+		"distance_bands": [
+			{"min": 1, "max": 2, "damage_multiplier": 0.95, "accuracy": 85},
+			{"min": 3, "max": 4, "damage_multiplier": 0.82, "accuracy": 77},
+			{"min": 5, "max": 6, "damage_multiplier": 0.62, "accuracy": 65}
+		],
+		"hit_location_indices": {"head": 4, "body": 8, "limb": 0},
+		"unprotected_debuffs": [
+			{"id": "bleeding", "chance": 15, "locations": ["body", "limb"]},
+			{"id": "fractured", "chance": 7, "locations": ["limb"]}
+		],
 		"can_equip": true,
 		"attachment_slots": ["SCOPE", "BARREL", "STOCK"],
 		"merge_level": 2
@@ -40,6 +60,16 @@
 		"range": 6,
 		"attack_power": 52,
 		"attack_cost": 1,
+		"distance_bands": [
+			{"min": 1, "max": 2, "damage_multiplier": 1.00, "accuracy": 92},
+			{"min": 3, "max": 4, "damage_multiplier": 0.85, "accuracy": 83},
+			{"min": 5, "max": 6, "damage_multiplier": 0.70, "accuracy": 74}
+		],
+		"hit_location_indices": {"head": 8, "body": 6, "limb": 0},
+		"unprotected_debuffs": [
+			{"id": "bleeding", "chance": 18, "locations": ["body", "limb"]},
+			{"id": "fractured", "chance": 10, "locations": ["limb"]}
+		],
 		"can_equip": true,
 		"attachment_slots": ["SCOPE", "BARREL", "STOCK", "RESONANCE_CORE"],
 		"merge_level": 3

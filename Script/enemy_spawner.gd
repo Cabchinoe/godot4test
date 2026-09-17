@@ -27,7 +27,8 @@ func spawn(id: String, grid: Vector2i, level: int) -> Unit:
 
 	enemies_container.add_child(enemy)
 	enemy.init_unit(data["name"], "enemy", int(data["ap_max"]), level_manager, level)
-	enemy.configure_appearance(sprite_frames, &"idle", &"walk", &"aim")
+	enemy.configure_combat(data)
+	enemy.configure_appearance(sprite_frames, &"walk", &"walk", &"walk")
 	enemy.grid_pos = grid
 	_align_to_grid(enemy)
 	return enemy

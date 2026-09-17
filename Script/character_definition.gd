@@ -10,6 +10,7 @@ extends Resource
 @export var animation_aim: StringName = &"aim"
 @export var allowed_weapon_ids: PackedStringArray = []
 @export var default_loadout: Dictionary = {}
+@export var combat_profile: Dictionary = {}
 @export var level_stats: Array[Dictionary] = []
 
 func get_level_data(level: int) -> Dictionary:

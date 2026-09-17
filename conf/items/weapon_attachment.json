@@ -8,6 +8,7 @@
 		"description": "红点瞄具，为全距离射击提供稳定的瞄准基准。",
 		"compatible_weapon_ids": ["weapon_benny_defender_9", "weapon_benny_hare_hopper", "weapon_benny_dawn_pulse"],
 		"stat_modifiers": {"accuracy": 5},
+		"hit_location_indices": {"head": 4, "body": 0, "limb": 0},
 		"merge_level": 1
 	},
 	{
@@ -19,6 +20,7 @@
 		"description": "降低连续射击时的枪口偏移，提升全距离命中稳定性。",
 		"compatible_weapon_ids": ["weapon_benny_defender_9", "weapon_benny_hare_hopper", "weapon_benny_dawn_pulse"],
 		"stat_modifiers": {"accuracy": 5},
+		"hit_location_indices": {"head": 0, "body": 4, "limb": 0},
 		"merge_level": 1
 	},
 	{
@@ -30,6 +32,7 @@
 		"description": "改善射击稳定性，提高命中率。",
 		"compatible_weapon_ids": ["weapon_benny_defender_9", "weapon_benny_hare_hopper", "weapon_benny_dawn_pulse"],
 		"stat_modifiers": {"accuracy": 5},
+		"hit_location_indices": {"head": 2, "body": 2, "limb": 0},
 		"merge_level": 1
 	},
 	{
@@ -40,8 +43,9 @@
 		"slot": "RESONANCE_CORE",
 		"description": "仅供贝妮的黎明初霁使用的辉石共鸣核心，强化高频脉冲输出。",
 		"compatible_weapon_ids": ["weapon_benny_dawn_pulse"],
-		"stat_modifiers": {},
-		"special_effect": "专属共鸣核心效果待后续战斗系统开放。",
+		"stat_modifiers": {"attack_power": 6},
+		"hit_location_indices": {"head": 4, "body": 2, "limb": 0},
+		"special_effect": "专属共鸣核心提高脉冲输出与头部命中窗口。",
 		"merge_level": 3
 	}
 ]

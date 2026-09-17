@@ -41,6 +41,7 @@
 		"price": 460,
 		"merge_level": 4,
 		"defense": 8,
+		"per_hit_absorb": 4,
 		"can_equip": true
 	},
 	{
@@ -63,6 +64,7 @@
 		"price": 920,
 		"merge_level": 6,
 		"defense": 35,
+		"per_hit_absorb": 12,
 		"can_equip": true
 	},
 	{
@@ -74,6 +76,7 @@
 		"price": 1300,
 		"merge_level": 7,
 		"defense": 80,
+		"per_hit_absorb": 30,
 		"can_equip": true
 	},
 	{
@@ -85,6 +88,7 @@
 		"price": 1700,
 		"merge_level": 8,
 		"defense": 160,
+		"per_hit_absorb": 50,
 		"can_equip": true
 	}
 ]

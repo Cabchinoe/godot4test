@@ -54,6 +54,8 @@ func is_walkable(grid: Vector2i, level: int, exclude_unit = null) -> bool:
 		if obstacle_data != null:
 			if not obstacle_data.get_custom_data("can_walk"):
 				return false
+	if _has_dynamic_container_block(grid, level):
+		return false
 
 	var tree = Engine.get_main_loop() as SceneTree
 	if tree:
@@ -64,6 +66,17 @@ func is_walkable(grid: Vector2i, level: int, exclude_unit = null) -> bool:
 				return false
 
 	return true
+
+func _has_dynamic_container_block(grid: Vector2i, level: int) -> bool:
+	var tree = Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return false
+	for container in tree.get_nodes_in_group("battle_containers"):
+		if not is_instance_valid(container):
+			continue
+		if container.grid_pos == grid and container.current_level == level and not container.can_walk:
+			return true
+	return false
 
 func is_stairs(grid: Vector2i, level: int) -> bool:
 	var obstacle = level_manager.get_layer(level, "obstacle")
