@@ -28,8 +28,5 @@ func get_description() -> String:
 func get_price() -> int:
 	return item_data.get("price", 0)
 
-func can_bring_to_battle() -> bool:
-	return item_data.get("can_bring_to_battle", false)
-
 func get_battle_effect_id() -> String:
 	return item_data.get("battle_effect_id", "")

@@ -10,6 +10,7 @@
 		"range": 5,
 		"attack_power": 35,
 		"attack_cost": 1,
+		"can_equip": true,
 		"attachment_slots": ["SCOPE", "BARREL", "STOCK"],
 		"merge_level": 1
 	},
@@ -24,6 +25,7 @@
 		"range": 6,
 		"attack_power": 44,
 		"attack_cost": 1,
+		"can_equip": true,
 		"attachment_slots": ["SCOPE", "BARREL", "STOCK"],
 		"merge_level": 2
 	},
@@ -38,6 +40,7 @@
 		"range": 6,
 		"attack_power": 52,
 		"attack_cost": 1,
+		"can_equip": true,
 		"attachment_slots": ["SCOPE", "BARREL", "STOCK", "RESONANCE_CORE"],
 		"merge_level": 3
 	}

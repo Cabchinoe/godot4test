@@ -6,7 +6,6 @@
 		"icon": "res://Items/icons/consumable/consumable_medkit_01.png",
 		"description": "恢复少量生命值",
 		"price": 50,
-		"can_bring_to_battle": true,
 		"battle_effect_id": "heal_small",
 		"merge_level": 1
 	},
@@ -17,7 +16,6 @@
 		"icon": "res://Items/icons/consumable/consumable_adrenaline_01.png",
 		"description": "临时提升行动力",
 		"price": 120,
-		"can_bring_to_battle": true,
 		"battle_effect_id": "restore_action_points",
 		"merge_level": 2
 	}

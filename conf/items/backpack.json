@@ -7,7 +7,7 @@
 		"description": "基础行军背包",
 		"price": 180,
 		"merge_level": 1,
-		"can_bring_to_battle": false,
+		"can_equip": true,
 		"battle_grid_width": 4,
 		"battle_grid_height": 4
 	},
@@ -19,7 +19,7 @@
 		"description": "提高本局撤离物资携行上限的远征背包。",
 		"price": 260,
 		"merge_level": 7,
-		"can_bring_to_battle": true,
+		"can_equip": true,
 		"battle_effect_id": "increase_carry_capacity",
 		"battle_grid_width": 6,
 		"battle_grid_height": 6
@@ -32,7 +32,7 @@
 		"description": "介于常规背包与远征背包之间的中级携行件。",
 		"price": 520,
 		"merge_level": 6,
-		"can_bring_to_battle": false,
+		"can_equip": true,
 		"battle_grid_width": 5,
 		"battle_grid_height": 6
 	},
@@ -44,7 +44,7 @@
 		"description": "本局最大携行上限的战术作业背包，并提供抗污染过滤。",
 		"price": 760,
 		"merge_level": 8,
-		"can_bring_to_battle": true,
+		"can_equip": true,
 		"battle_effect_id": "increase_carry_capacity_max",
 		"battle_grid_width": 6,
 		"battle_grid_height": 8

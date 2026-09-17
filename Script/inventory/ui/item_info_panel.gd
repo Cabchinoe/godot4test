@@ -3,6 +3,9 @@ extends PanelContainer
 
 signal action_requested
 
+const DETAIL_COLOR := Color(0.92, 0.76, 0.39, 1.0)
+const INTACT_ARMOR_COLOR := Color(0.4, 0.92, 0.56, 1.0)
+
 var _icon: TextureRect
 var _title: Label
 var _type_label: Label
@@ -45,7 +48,7 @@ func _ready() -> void:
 	_details = Label.new()
 	_details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_details.add_theme_font_size_override("font_size", 14)
-	_details.add_theme_color_override("font_color", Color(0.92, 0.76, 0.39, 1.0))
+	_details.add_theme_color_override("font_color", DETAIL_COLOR)
 	content.add_child(_details)
 	_action_button = Button.new()
 	_action_button.visible = false
@@ -55,13 +58,15 @@ func _ready() -> void:
 	show_empty()
 
 
-func show_item(item_data: Dictionary, action_text: String = "") -> void:
+func show_item(item_data: Dictionary, action_text: String = "", item_instance: Dictionary = {}) -> void:
 	var icon_path := str(item_data.get("icon", ""))
 	_icon.texture = load(icon_path) if not icon_path.is_empty() else null
 	_title.text = str(item_data.get("name", "未知物品"))
 	_type_label.text = "%s · 等级 L%d" % [ItemDB.VALID_TYPES.get(str(item_data.get("type", "")), "物品"), WarehouseService.get_merge_level(item_data)]
 	_description.text = str(item_data.get("description", "暂无说明"))
-	_details.text = _get_detail_text(item_data)
+	var armor_state := WarehouseService.get_armor_state(item_instance if not item_instance.is_empty() else item_data)
+	_details.add_theme_color_override("font_color", INTACT_ARMOR_COLOR if bool(armor_state.get("tracks_armor", false)) and not bool(armor_state.get("is_damaged", false)) else DETAIL_COLOR)
+	_details.text = _get_detail_text(item_data, item_instance)
 	_action_button.text = action_text
 	_action_button.visible = not action_text.is_empty()
 
@@ -72,6 +77,7 @@ func show_empty() -> void:
 	_type_label.text = "点击查看详情"
 	_description.text = "点击仓库物品、干员装备或武器配件槽，可查看对应的属性与用途。"
 	_details.text = ""
+	_details.add_theme_color_override("font_color", DETAIL_COLOR)
 	_action_button.visible = false
 
 
@@ -80,7 +86,7 @@ func set_action(action_text: String) -> void:
 	_action_button.visible = not action_text.is_empty()
 
 
-func _get_detail_text(item_data: Dictionary) -> String:
+func _get_detail_text(item_data: Dictionary, item_instance: Dictionary = {}) -> String:
 	match str(item_data.get("type", "")):
 		"WEAPON":
 			return "射程 %d  ·  攻击 %d  ·  行动消耗 %d" % [int(item_data.get("range", 0)), int(item_data.get("attack_power", 0)), int(item_data.get("attack_cost", 0))]
@@ -98,7 +104,11 @@ func _get_detail_text(item_data: Dictionary) -> String:
 		"MATERIAL":
 			return "用于合成与基地生产。"
 		"HELMET", "ARMOR":
-			return "护甲值 %d" % int(item_data.get("defense", 0))
+			var armor_state := WarehouseService.get_armor_state(item_instance if not item_instance.is_empty() else item_data)
+			var current_armor := int(armor_state.get("current_armor", 0))
+			var max_armor := int(armor_state.get("max_armor", 0))
+			var status_text := "破损 · 不可参与二合" if bool(armor_state.get("is_damaged", false)) else "完好"
+			return "护甲值 %d / %d\n状态：%s" % [current_armor, max_armor, status_text]
 		"BACKPACK":
 			return "战场携行空间：%d × %d" % [int(item_data.get("battle_grid_width", 0)), int(item_data.get("battle_grid_height", 0))]
 	return "信用点估值：%d" % int(item_data.get("price", 0))

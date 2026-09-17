@@ -9,6 +9,12 @@
 - **工厂等级**：工厂升级主要扩大二合棋盘尺寸，不限制物品等级、物资包等级或合成谱系；玩家的成长卡点来自物资获取与棋盘空间管理。
 - **顶级定位**：Lv8 不作为日常消耗，主要用于大型居民订单、精英远征前的备战，或解锁永久性基地增益。常规订单优先索取 Lv3~Lv6。
 
+### 配置字段语义
+
+- `can_equip`：物品是否可放入干员的固定装备槽；槽位由 `type` 决定（武器、头盔、护甲、背包）。合成材料、损坏部件和半成品应为 `false`。
+- 携行资格不使用单独的配置字段：任何物品只要能放入已装备背包且背包容量允许，就可随干员进入战场。
+- `battle_effect_id` 只描述物品在战场内触发的具体效果；它不决定物品能否被携带。
+
 ## 2. 三个玩法的资源分工
 
 | 系统 | 主要产出 | 在合成体系中的作用 | 设计目的 |
@@ -19,22 +25,22 @@
 | 交易行 | 金属碎片、纺织线、净水滤棉、基础种子包 | 补齐低阶缺口，仅售 Lv1 基础品 | 防卡关，不售中高阶，不替代战场与温室 |
 | 居民订单 | 信用点、声望、低阶物资包、蓝图碎片 | 消耗中阶与高阶成品，反哺交易行购买力与物资包储备 | 形成“生产—交付—扩张”的经济闭环 |
 
-### 战场携带属性
+### 战场携行与效果
 
-- 每个物品配置新增 `can_bring_to_battle: bool`，默认值为 `false`；它只决定物品能否放入出战携行栏，不决定物品能否用于居民订单或工厂二合。
-- 可携带物品以 `battle_effect_id` 关联战斗内的具体效果；战斗系统后续根据该标识读取生命恢复、行动力恢复、掩体修复、负重或抗性等属性。
+- 已装备背包是唯一的战场携行空间；背包内所有物品都可随干员进入战场，受网格容量和场景容器规则限制。
+- `battle_effect_id` 关联战斗内的具体效果；战斗系统后续根据该标识读取生命恢复、行动力恢复、掩体修复、负重或抗性等属性。
 - 当前效果标识约定：`restore_stamina_small`、`restore_stamina_medium`、`restore_action_points`、`heal_small`、`heal_medium`、`stop_bleeding`、`repair_cover_small`、`repair_cover_medium`、`increase_carry_capacity`、`hazard_resist_small`。
 
-| 物品 | `can_bring_to_battle` | `battle_effect_id` | 战场定位 |
-| --- | --- | --- | --- |
-| 密织布包 | `true` | `repair_cover_small` | 修补轻度受损的掩体或临时路障 |
-| 耐磨帆布包 | `true` | `repair_cover_medium` | 修补中度受损掩体，适合长线撤离 |
-| 晒干果脯 | `true` | `restore_stamina_small` | 恢复少量行动资源 |
-| 压缩口粮 | `true` | `restore_stamina_medium` | 恢复较多行动资源 |
-| 干燥药包 | `true` | `heal_small` | 恢复少量生命值 |
-| 清创敷料 | `true` | `stop_bleeding` | 清除流血等持续伤害 |
-| 远征背包 | `true` | `increase_carry_capacity` | 提高本局撤离物资携行上限 |
-| 防护作业服 | `true` | `hazard_resist_small` | 提高本局对辉石污染与恶劣环境的抵抗 |
+| 物品 | `battle_effect_id` | 战场定位 |
+| --- | --- | --- |
+| 密织布包 | `repair_cover_small` | 修补轻度受损的掩体或临时路障 |
+| 耐磨帆布包 | `repair_cover_medium` | 修补中度受损掩体，适合长线撤离 |
+| 晒干果脯 | `restore_stamina_small` | 恢复少量行动资源 |
+| 压缩口粮 | `restore_stamina_medium` | 恢复较多行动资源 |
+| 干燥药包 | `heal_small` | 恢复少量生命值 |
+| 清创敷料 | `stop_bleeding` | 清除流血等持续伤害 |
+| 远征背包 | `increase_carry_capacity` | 提高本局撤离物资携行上限 |
+| 防护作业服 | `hazard_resist_small` | 提高本局对辉石污染与恶劣环境的抵抗 |
 
 ## 3. 温室种植表
 

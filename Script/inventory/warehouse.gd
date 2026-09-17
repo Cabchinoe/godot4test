@@ -980,7 +980,7 @@ func _show_item_info(item_uid: String) -> void:
 	if item_data.is_empty():
 		_info_panel.show_empty()
 		return
-	_info_panel.show_item(item_data, _get_item_action_text(item_data))
+	_info_panel.show_item(item_data, _get_item_action_text(item_data), item)
 
 
 func _focus_attachment_target_weapon(weapon_uid: String, status_text: String) -> void:

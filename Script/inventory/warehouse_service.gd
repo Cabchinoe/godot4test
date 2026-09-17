@@ -26,8 +26,9 @@ static func ensure_data(save_data: SaveData) -> InventorySaveData:
 		_add_high_level_test_content(inventory)
 		_add_backpack_test_content(inventory)
 		_add_varied_backpack_test_content(inventory)
+		_add_armor_state_test_content(inventory)
 		inventory.initial_content_created = true
-		inventory.starter_content_version = 5
+		inventory.starter_content_version = 6
 	elif inventory.starter_content_version < 2:
 		_add_test_content(inventory)
 		inventory.starter_content_version = 2
@@ -40,7 +41,11 @@ static func ensure_data(save_data: SaveData) -> InventorySaveData:
 	if inventory.starter_content_version < 5:
 		_add_varied_backpack_test_content(inventory)
 		inventory.starter_content_version = 5
+	if inventory.starter_content_version < 6:
+		_add_armor_state_test_content(inventory)
+		inventory.starter_content_version = 6
 	_ensure_loadout(inventory, save_data.player)
+	_ensure_armor_state(inventory)
 	_normalize_positions(inventory)
 	return inventory
 
@@ -93,6 +98,43 @@ static func get_item_location(inventory: InventorySaveData, item_uid: String) ->
 
 static func get_item_by_uid(inventory: InventorySaveData, uid: String) -> Dictionary:
 	return _get_index(inventory).items_by_uid.get(uid, {})
+
+
+static func get_armor_state(item: Dictionary) -> Dictionary:
+	var item_data: Variant = ItemDB.get_item(str(item.get("id", "")))
+	if not (item_data is Dictionary):
+		return {"tracks_armor": false, "max_armor": 0, "current_armor": 0, "is_damaged": false}
+	var item_type := str((item_data as Dictionary).get("type", ""))
+	if item_type not in ["ARMOR", "HELMET"]:
+		return {"tracks_armor": false, "max_armor": 0, "current_armor": 0, "is_damaged": false}
+	var max_armor := maxi(0, int(item.get("max_armor", (item_data as Dictionary).get("defense", 0))))
+	var current_armor := clampi(int(item.get("current_armor", max_armor)), 0, max_armor)
+	return {
+		"tracks_armor": true,
+		"max_armor": max_armor,
+		"current_armor": current_armor,
+		"is_damaged": max_armor > 0 and current_armor < max_armor,
+	}
+
+
+static func can_merge_item(item: Dictionary) -> bool:
+	var armor_state := get_armor_state(item)
+	return not bool(armor_state.get("tracks_armor", false)) or not bool(armor_state.get("is_damaged", false))
+
+
+static func set_item_current_armor(inventory: InventorySaveData, item_uid: String, current_armor: int) -> bool:
+	var index := get_item_array_index(inventory, item_uid)
+	if index < 0:
+		return false
+	var item: Dictionary = inventory.warehouse_items[index]
+	var armor_state := get_armor_state(item)
+	if not bool(armor_state.get("tracks_armor", false)):
+		return false
+	item["max_armor"] = int(armor_state.get("max_armor", 0))
+	item["current_armor"] = clampi(current_armor, 0, int(armor_state.get("max_armor", 0)))
+	inventory.warehouse_items[index] = item
+	_touch(inventory)
+	return true
 
 
 static func get_item_at_position(inventory: InventorySaveData, position: int) -> Dictionary:
@@ -551,6 +593,19 @@ static func _add_varied_backpack_test_content(inventory: InventorySaveData) -> v
 		_add_item_instance(inventory, item_id)
 
 
+static func _add_armor_state_test_content(inventory: InventorySaveData) -> void:
+	for item_id in [
+		"armor_outpost_defense_08", "armor_outpost_defense_08",
+		"helmet_modular_tactical_06", "helmet_modular_tactical_06",
+		"helmet_crystal_fiber_07", "helmet_outpost_defense_08",
+	]:
+		_add_item_instance(inventory, item_id)
+	var damaged_armor := _add_item_instance(inventory, "armor_modular_06")
+	set_item_current_armor(inventory, str(damaged_armor.get("uid", "")), 18)
+	var damaged_helmet := _add_item_instance(inventory, "helmet_reinforced_shell_04")
+	set_item_current_armor(inventory, str(damaged_helmet.get("uid", "")), 4)
+
+
 static func _import_pending_items(inventory: InventorySaveData) -> void:
 	for item_id in inventory.item_quantities:
 		var count := int(inventory.item_quantities[item_id])
@@ -598,10 +653,33 @@ static func _normalize_positions(inventory: InventorySaveData) -> void:
 	_touch(inventory)
 
 
+static func _ensure_armor_state(inventory: InventorySaveData) -> void:
+	var changed := false
+	for index in inventory.warehouse_items.size():
+		var item: Dictionary = inventory.warehouse_items[index]
+		var armor_state := get_armor_state(item)
+		if not bool(armor_state.get("tracks_armor", false)):
+			continue
+		var max_armor := int(armor_state.get("max_armor", 0))
+		var current_armor := int(armor_state.get("current_armor", 0))
+		if int(item.get("max_armor", -1)) == max_armor and int(item.get("current_armor", -1)) == current_armor:
+			continue
+		item["max_armor"] = max_armor
+		item["current_armor"] = current_armor
+		inventory.warehouse_items[index] = item
+		changed = true
+	if changed:
+		_touch(inventory)
+
+
 static func _add_item_instance(inventory: InventorySaveData, item_id: String) -> Dictionary:
 	if not (ItemDB.get_item(item_id) is Dictionary):
 		return {}
 	var item := {"uid": _make_uid(), "id": item_id, "position": _find_open_position(inventory)}
+	var armor_state := get_armor_state(item)
+	if bool(armor_state.get("tracks_armor", false)):
+		item["max_armor"] = int(armor_state.get("max_armor", 0))
+		item["current_armor"] = int(armor_state.get("current_armor", 0))
 	inventory.warehouse_items.append(item)
 	_touch(inventory)
 	return item

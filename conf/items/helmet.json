@@ -1,23 +1,90 @@
 [
 	{
 		"id": "helmet_salvaged_shell_01",
-		"name": "回收盔壳",
+		"name": "废旧盔壳",
 		"type": "HELMET",
 		"icon": "res://Items/icons/helmet/helmet_salvaged_shell_01.png",
-		"description": "破旧的废弃盔壳，不能再次服役。",
+		"description": "破旧的、不能再用的头盔。",
 		"price": 120,
 		"merge_level": 1,
 		"defense": 0,
 		"can_equip": false
 	},
 	{
+		"id": "helmet_patched_shell_02",
+		"name": "拼接盔壳",
+		"type": "HELMET",
+		"icon": "res://Items/icons/helmet/helmet_patched_shell_02.png",
+		"description": "修补后不能再次服役的头盔。",
+		"price": 180,
+		"merge_level": 2,
+		"defense": 0,
+		"can_equip": false
+	},
+	{
+		"id": "helmet_cushion_liner_03",
+		"name": "缓冲内衬",
+		"type": "HELMET",
+		"icon": "res://Items/icons/helmet/helmet_cushion_liner_03.png",
+		"description": "提供冲击缓冲的内部衬垫。",
+		"price": 280,
+		"merge_level": 3,
+		"defense": 0,
+		"can_equip": false
+	},
+	{
 		"id": "helmet_reinforced_shell_04",
-		"name": "强化盔壳",
+		"name": "加固盔体",
 		"type": "HELMET",
 		"icon": "res://Items/icons/helmet/helmet_reinforced_shell_04.png",
 		"description": "抗小口径直射的加固盔壳，受击后会进入破损状态。",
 		"price": 460,
 		"merge_level": 4,
-		"defense": 8
+		"defense": 8,
+		"can_equip": true
+	},
+	{
+		"id": "helmet_tactical_component_05",
+		"name": "战术头盔组件",
+		"type": "HELMET",
+		"icon": "res://Items/icons/helmet/helmet_tactical_component_05.png",
+		"description": "准备挂载夜视与导轨的战术件。",
+		"price": 620,
+		"merge_level": 5,
+		"defense": 0,
+		"can_equip": false
+	},
+	{
+		"id": "helmet_modular_tactical_06",
+		"name": "模块化战术头盔",
+		"type": "HELMET",
+		"icon": "res://Items/icons/helmet/helmet_modular_tactical_06.png",
+		"description": "完整模块化战术盔，受击后会进入破损状态。",
+		"price": 920,
+		"merge_level": 6,
+		"defense": 35,
+		"can_equip": true
+	},
+	{
+		"id": "helmet_crystal_fiber_07",
+		"name": "晶纤维战术头盔",
+		"type": "HELMET",
+		"icon": "res://Items/icons/helmet/helmet_crystal_fiber_07.png",
+		"description": "复合晶能纤维的高级战术盔，受击后会进入破损状态。",
+		"price": 1300,
+		"merge_level": 7,
+		"defense": 80,
+		"can_equip": true
+	},
+	{
+		"id": "helmet_outpost_defense_08",
+		"name": "前哨防护头盔",
+		"type": "HELMET",
+		"icon": "res://Items/icons/helmet/helmet_outpost_defense_08.png",
+		"description": "大型前哨终极防护盔，受击后会进入破损状态。",
+		"price": 1700,
+		"merge_level": 8,
+		"defense": 160,
+		"can_equip": true
 	}
 ]
