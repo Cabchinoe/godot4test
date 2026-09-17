@@ -13,7 +13,6 @@ extends Node2D
 @onready var camera: Camera2D = $Camera2D
 @onready var ap_label: Label = $UILayer/UIRoot/StatusBar/APLabel
 @onready var hp_label: Label = $UILayer/UIRoot/StatusBar/HPLabel
-@onready var hp_bar: ProgressBar = $UILayer/UIRoot/StatusBar/HPBar
 @onready var turn_label: Label = $UILayer/UIRoot/StatusBar/TurnLabel
 @onready var end_turn_button: Button = $UILayer/UIRoot/StatusBar/EndTurnButton
 @onready var context_menu: BattleContextMenu = $UILayer/UIRoot/ContextMenu
@@ -484,8 +483,7 @@ func _clear_all_highlights():
 func _update_hud():
 	ap_label.text = "AP  %d / %d" % [player.action_points, player.ap_max]
 	hp_label.text = "HP  %d / %d" % [player.current_hp, player.max_hp]
-	hp_bar.max_value = maxi(1, player.max_hp)
-	hp_bar.value = player.current_hp
+	hp_label.add_theme_color_override("font_color", _get_hp_color(player.current_hp, player.max_hp))
 	turn_label.text = "回合 %d/%d" % [turn_controller.current_turn, turn_controller.max_turns]
 
 
@@ -500,17 +498,12 @@ func _configure_hud() -> void:
 	hp_label.add_theme_color_override("font_color", Color(0.5, 0.96, 0.63, 1.0))
 	turn_label.add_theme_font_size_override("font_size", 24)
 	turn_label.add_theme_color_override("font_color", Color(0.92, 0.76, 0.39, 1.0))
-	var background := StyleBoxFlat.new()
-	background.bg_color = Color(0.015, 0.055, 0.08, 0.92)
-	background.corner_radius_top_left = 5
-	background.corner_radius_top_right = 5
-	background.corner_radius_bottom_left = 5
-	background.corner_radius_bottom_right = 5
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color(0.22, 0.84, 0.48, 1.0)
-	fill.corner_radius_top_left = 5
-	fill.corner_radius_top_right = 5
-	fill.corner_radius_bottom_left = 5
-	fill.corner_radius_bottom_right = 5
-	hp_bar.add_theme_stylebox_override("background", background)
-	hp_bar.add_theme_stylebox_override("fill", fill)
+
+
+func _get_hp_color(current_hp: int, max_hp: int) -> Color:
+	var ratio := float(current_hp) / float(maxi(1, max_hp))
+	if ratio <= 0.3:
+		return Color(1.0, 0.32, 0.34, 1.0)
+	if ratio <= 0.6:
+		return Color(1.0, 0.78, 0.28, 1.0)
+	return Color(0.5, 0.96, 0.63, 1.0)

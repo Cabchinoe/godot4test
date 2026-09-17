@@ -219,13 +219,7 @@ func _render_character() -> void:
 	var name_label := _make_label(player.unit_name if player else "贝妮", 20, Color(0.88, 0.97, 1.0, 1.0))
 	_character_content.add_child(name_label)
 	var hp_text := "%d / %d HP" % [player.current_hp, player.max_hp] if player else "HP --"
-	_character_content.add_child(_make_label(hp_text, 15, Color(0.48, 0.95, 0.62, 1.0)))
-	var hp_bar := ProgressBar.new()
-	hp_bar.custom_minimum_size = Vector2(0, 18)
-	hp_bar.max_value = float(maxi(1, player.max_hp)) if player else 1.0
-	hp_bar.value = float(player.current_hp) if player else 0.0
-	hp_bar.show_percentage = false
-	_character_content.add_child(hp_bar)
+	_character_content.add_child(_make_label(hp_text, 15, _get_hp_color(player.current_hp, player.max_hp) if player else Color(0.5, 0.96, 0.63, 1.0)))
 	_character_content.add_child(_make_label("装备栏", 16, Color(0.55, 0.83, 0.96, 1.0)))
 	for slot in WarehouseService.EQUIPMENT_SLOTS:
 		var item_uid := WarehouseService.get_equipped_uid(inventory, slot, operator_id)
@@ -609,6 +603,15 @@ func _item_data(item: Dictionary) -> Dictionary:
 
 func _slot_name(slot: String) -> String:
 	return {"weapon": "武器", "helmet": "头盔", "armor": "护甲", "backpack": "背包"}.get(slot, slot)
+
+
+func _get_hp_color(current_hp: int, max_hp: int) -> Color:
+	var ratio := float(current_hp) / float(maxi(1, max_hp))
+	if ratio <= 0.3:
+		return Color(1.0, 0.32, 0.34, 1.0)
+	if ratio <= 0.6:
+		return Color(1.0, 0.78, 0.28, 1.0)
+	return Color(0.5, 0.96, 0.63, 1.0)
 
 
 func _clear_section(section: VBoxContainer) -> void:

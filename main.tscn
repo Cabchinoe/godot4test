@@ -2053,20 +2053,10 @@ vertical_alignment = 1
 [node name="HPLabel" type="Label" parent="UILayer/UIRoot/StatusBar" unique_id=870063626]
 layout_mode = 0
 offset_left = 218.0
-offset_top = 8.0
+offset_top = 17.0
 offset_right = 395.0
-offset_bottom = 30.0
+offset_bottom = 47.0
 text = "HP  90 / 90"
-
-[node name="HPBar" type="ProgressBar" parent="UILayer/UIRoot/StatusBar" unique_id=2134770476]
-layout_mode = 0
-offset_left = 218.0
-offset_top = 34.0
-offset_right = 402.0
-offset_bottom = 49.0
-max_value = 90.0
-value = 90.0
-show_percentage = false
 
 [node name="TurnLabel" type="Label" parent="UILayer/UIRoot/StatusBar" unique_id=1887660873]
 layout_mode = 0
