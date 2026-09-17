@@ -118,6 +118,12 @@ func equip_item(slot: StringName, item_id: String) -> bool:
 func get_equipped_item_id(slot: StringName) -> String:
 	return str(equipped_item_ids.get(slot, ""))
 
+
+func has_equipped_weapon() -> bool:
+	var weapon_data := _get_equipped_weapon_data()
+	return not weapon_data.is_empty() and str(weapon_data.get("type", "")) == "WEAPON"
+
+
 func get_attack_range() -> int:
 	return maxi(1, int(_get_equipped_weapon_data().get("range", base_attack_range)))
 
@@ -285,10 +291,13 @@ func _get_equipment_protection_snapshot(slot: String) -> Dictionary:
 func _get_equipped_weapon_data() -> Dictionary:
 	if _battle_inventory != null:
 		var weapon_uid := WarehouseService.get_equipped_uid(_battle_inventory, "weapon", WarehouseService.OPERATOR_ID)
+		if weapon_uid.is_empty():
+			return {}
 		var weapon := WarehouseService.get_item_by_uid(_battle_inventory, weapon_uid)
 		var equipped_data: Variant = ItemDB.get_item(str(weapon.get("id", "")))
 		if equipped_data is Dictionary:
 			return (equipped_data as Dictionary).duplicate(true)
+		return {}
 	var item_id := get_equipped_item_id(&"weapon")
 	var item_data = ItemDB.get_item(item_id)
 	return item_data if item_data is Dictionary else {}

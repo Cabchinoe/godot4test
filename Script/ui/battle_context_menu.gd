@@ -73,7 +73,8 @@ func _ready() -> void:
 
 func show_actions(
 	attack_cost: int,
-	has_enough_ap: bool,
+	attack_enabled: bool,
+	attack_reason: String,
 	has_search_target: bool,
 	search_label: String,
 	search_cost: int,
@@ -81,10 +82,10 @@ func show_actions(
 	search_reason: String,
 	screen_position: Vector2i
 ) -> void:
-	_attack_button.disabled = not has_enough_ap
-	_attack_button.tooltip_text = "行动点不足" if not has_enough_ap else ""
+	_attack_button.disabled = not attack_enabled
+	_attack_button.tooltip_text = attack_reason if not attack_enabled else ""
 	_cost_label.text = "%d AP" % attack_cost
-	_cost_label.add_theme_color_override("font_color", Color(1.0, 0.28, 0.3, 1.0) if not has_enough_ap else Color(0.42, 0.94, 0.72, 1.0))
+	_cost_label.add_theme_color_override("font_color", Color(1.0, 0.28, 0.3, 1.0) if not attack_enabled else Color(0.42, 0.94, 0.72, 1.0))
 	_search_button.visible = has_search_target
 	_search_button.text = search_label
 	_search_button.disabled = not search_enabled

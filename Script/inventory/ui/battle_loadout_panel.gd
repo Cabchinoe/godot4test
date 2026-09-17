@@ -29,6 +29,7 @@ var _character_content: VBoxContainer
 var _attachment_content: VBoxContainer
 var _backpack_content: VBoxContainer
 var _temporary_content: VBoxContainer
+var _info_panel: ItemInfoPanel
 var _attachment_panel: PanelContainer
 var _backpack_panel: PanelContainer
 var _temporary_panel: PanelContainer
@@ -92,6 +93,9 @@ func _ready() -> void:
 	loadout_column.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	loadout_column.add_theme_constant_override("separation", 10)
 	body.add_child(loadout_column)
+	_info_panel = ItemInfoPanel.new()
+	_info_panel.custom_minimum_size = Vector2(0, 220)
+	loadout_column.add_child(_info_panel)
 	_attachment_content = _add_section(loadout_column, "武器配件")
 	_attachment_panel = _attachment_content.get_parent() as PanelContainer
 	_attachment_panel.custom_minimum_size = Vector2(0, 246)
@@ -237,9 +241,12 @@ func _add_section(parent: Container, title_text: String, width: float = 0.0) -> 
 func _refresh() -> void:
 	if not is_node_ready() or inventory == null:
 		return
-	if _selected_weapon_uid.is_empty():
-		_selected_weapon_uid = WarehouseService.get_equipped_uid(inventory, "weapon", operator_id)
+	var equipped_weapon_uid := WarehouseService.get_equipped_uid(inventory, "weapon", operator_id)
+	if _selected_weapon_uid != equipped_weapon_uid:
+		_selected_weapon_uid = equipped_weapon_uid
+		_attachment_target_slot = ""
 	_render_character()
+	_refresh_item_info()
 	_render_attachments()
 	_render_backpack()
 	_render_temporary()
@@ -273,13 +280,34 @@ func _render_character() -> void:
 		_character_content.add_child(slot_node)
 
 
+func _refresh_item_info() -> void:
+	if _info_panel == null:
+		return
+	if _selected_uid.is_empty():
+		_info_panel.show_empty()
+		return
+	var item := WarehouseService.get_item_by_uid(inventory, _selected_uid)
+	var item_data := _item_data(item)
+	if item_data.is_empty():
+		_info_panel.show_empty()
+		return
+	_info_panel.show_item(item_data, "", item)
+
+
 func _render_attachments() -> void:
 	_clear_section(_attachment_content)
 	_attachment_slot_nodes.clear()
-	var weapon := WarehouseService.get_item_by_uid(inventory, _selected_weapon_uid)
+	var equipped_weapon_uid := WarehouseService.get_equipped_uid(inventory, "weapon", operator_id)
+	if equipped_weapon_uid.is_empty():
+		_attachment_panel.visible = false
+		_selected_weapon_uid = ""
+		return
+	_attachment_panel.visible = true
+	_selected_weapon_uid = equipped_weapon_uid
+	var weapon := WarehouseService.get_item_by_uid(inventory, equipped_weapon_uid)
 	var weapon_data := _item_data(weapon)
 	if weapon_data.is_empty():
-		_attachment_content.add_child(_make_label("未装备武器", 15, Color(0.52, 0.66, 0.74, 1.0)))
+		_attachment_panel.visible = false
 		return
 	_attachment_content.add_child(_make_label(str(weapon_data.get("name", "武器")), 17, Color(0.88, 0.96, 1.0, 1.0)))
 	var attachment_slots: Array = weapon_data.get("attachment_slots", [])
@@ -447,6 +475,8 @@ func _on_equipment_item_dropped(slot: String, data: Dictionary) -> void:
 
 
 func _on_attachment_item_dropped(slot: String, data: Dictionary) -> void:
+	if _selected_weapon_uid.is_empty():
+		return
 	_try_transfer(_source_location(data), ItemLocation.weapon_attachment(_selected_weapon_uid, slot))
 
 
@@ -500,6 +530,8 @@ func _on_equipment_item_double_clicked(slot: String) -> void:
 
 
 func _on_attachment_item_double_clicked(slot: String) -> void:
+	if _selected_weapon_uid.is_empty():
+		return
 	var item_uid := str(WarehouseService.get_weapon_attachments(inventory, _selected_weapon_uid, operator_id).get(slot, ""))
 	_double_click_transfer(ItemLocation.weapon_attachment(_selected_weapon_uid, slot), "weapon_attachment", item_uid)
 
@@ -551,8 +583,8 @@ func _complete_transfer(message: String) -> void:
 	if player and player_data:
 		player.sync_equipment_from_save(player_data)
 		player.sync_battle_equipment(inventory)
-	if WarehouseService.get_item_by_uid(inventory, _selected_weapon_uid).is_empty():
-		_selected_weapon_uid = WarehouseService.get_equipped_uid(inventory, "weapon", operator_id)
+	_selected_weapon_uid = WarehouseService.get_equipped_uid(inventory, "weapon", operator_id)
+	_attachment_target_slot = ""
 	_status_label.text = message
 	if not _temporary_container_id.is_empty():
 		temporary_container_changed.emit(_temporary_container_id)

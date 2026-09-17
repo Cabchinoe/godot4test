@@ -200,6 +200,8 @@ func _hide_all_battle_panels() -> void:
 	_context_search_container = null
 
 func _on_attack_requested() -> void:
+	if not player.has_equipped_weapon():
+		return
 	battle_loadout_panel.hide_panel()
 	_change_state(State.ATTACK_STATE)
 
@@ -476,6 +478,13 @@ func _handle_right_click(event: InputEvent):
 func _show_context_menu():
 	var menu_pos = get_viewport().get_mouse_position()
 	var attack_cost := player.get_attack_cost()
+	var has_weapon := player.has_equipped_weapon()
+	var attack_enabled := has_weapon and player.action_points >= attack_cost
+	var attack_reason := ""
+	if not has_weapon:
+		attack_reason = "未装备武器。"
+	elif player.action_points < attack_cost:
+		attack_reason = "行动点不足。"
 	var standing_container := _get_container_at_grid(player.grid_pos, player.current_level)
 	_context_search_container = standing_container
 	var has_search_target := standing_container != null
@@ -497,7 +506,8 @@ func _show_context_menu():
 			search_reason = "行动点不足。"
 	context_menu.show_actions(
 		attack_cost,
-		player.action_points >= attack_cost,
+		attack_enabled,
+		attack_reason,
 		has_search_target,
 		search_label,
 		search_cost,
@@ -519,6 +529,9 @@ func _show_move_range():
 		hud.set_cell(node["grid"], MOVE_RANGE_SOURCE_ID, Vector2i(0, 0))
 
 func _enter_attack():
+	if not player.has_equipped_weapon():
+		_change_state(State.IDLE)
+		return
 	attack_unit_cells = _collect_targetable_cells()
 	attack_cells = bullet_range.get_reachable_cells(player.grid_pos, player.current_level, player.get_attack_range(), attack_unit_cells)
 	print("[Attack] enter mode, cells=", attack_cells.size())

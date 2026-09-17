@@ -42,10 +42,10 @@
 
 ```
 Boot.tscn ──► MainMenu.tscn ──► CommandCenter.tscn（前哨指挥台）
-                                    ├── main.tscn          战场（搜打撤）
-                                    ├── Warehouse.tscn     仓库工作台
-                                    ├── TradingPost.tscn   交易行
-                                    └── Base.tscn          旧版基地场景
+									├── main.tscn          战场（搜打撤）
+									├── Warehouse.tscn     仓库工作台
+									├── TradingPost.tscn   交易行
+									└── Base.tscn          旧版基地场景
 ```
 
 | 场景 | 脚本 | 说明 |
@@ -80,10 +80,10 @@ Main (Node2D, y_sort_enabled = true, Script/main.gd)
 │   └── Sprite2D (AnimatedSprite2D, offset = (32, 40))
 ├── Enemies (Node2D)                          ← EnemySpawner 生成的敌方单位
 └── UILayer (CanvasLayer, layer = 10)
-    └── UIRoot (Control)
-        ├── StatusBar            ← APLabel / HPLabel / TurnLabel / EndTurnButton
-        ├── ContextMenu          ← 右键行动菜单（attack / end turn / properties）
-        └── BattleLoadoutPanel   ← 运行时挂载的战术装备面板
+	└── UIRoot (Control)
+		├── StatusBar            ← APLabel / HPLabel / TurnLabel / EndTurnButton
+		├── ContextMenu          ← 右键行动菜单（attack / end turn / properties）
+		└── BattleLoadoutPanel   ← 运行时挂载的战术装备面板
 ```
 
 - **高亮绘制**：移动范围写入各层 `HUD` 的 `moverange.png`（源 id 0）；攻击范围写入 `attack_range.png`（源 id 1，`(0,0)` 灰 = 范围内无可攻击目标，`(1,0)` 绿 = 可攻击）；路径预览与瞄准线由 `Line2D` 实时绘制。
