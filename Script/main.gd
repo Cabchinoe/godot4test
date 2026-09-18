@@ -52,7 +52,7 @@ var press_pos: Vector2 = Vector2.ZERO
 var last_mouse_pos: Vector2 = Vector2.ZERO
 var pending_recalc_range: bool = false
 
-const DEFAULT_MOVE_INTERVAL: float = 0.15
+const DEFAULT_MOVE_INTERVAL: float = 0.3
 const FAST_MOVE_INTERVAL: float = 0.01
 var skip_held: bool = false
 var _pending_container: BattleContainer

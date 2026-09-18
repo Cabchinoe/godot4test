@@ -19,7 +19,7 @@ static func build(animation_sheets: Dictionary, frame_size: Vector2i = Vector2i(
 		if not sprite_frames.has_animation(animation_name):
 			sprite_frames.add_animation(animation_name)
 		sprite_frames.set_animation_loop(animation_name, true)
-		sprite_frames.set_animation_speed(animation_name, float(config.get("speed", 4.0)))
+		sprite_frames.set_animation_speed(animation_name, float(config.get("speed", 2.0)))
 		var frame_count := maxi(1, int(config.get("frames", 1)))
 		for frame_index in frame_count:
 			var atlas := AtlasTexture.new()

@@ -39,7 +39,7 @@ var grid_pos: Vector2i = Vector2i.ZERO
 var current_level: int = 1
 var move_path: Array[Dictionary] = []
 var move_timer: float = 0.0
-var move_interval: float = 0.15
+var move_interval: float = 0.3
 var is_moving: bool = false
 var action_points: int = 0
 
