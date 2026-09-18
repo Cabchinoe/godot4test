@@ -308,14 +308,14 @@ func _process(delta: float):
 	if battle_loadout_panel and battle_loadout_panel.is_item_drag_active():
 		return
 
-	if turn_controller.current_phase != TurnController.Phase.PLAYER_PHASE:
-		return
-
+	# 相机拖拽是观看操作，敌方回合与单位移动中同样生效，因此放在阶段判断之前
 	if is_dragging:
-		var current_mouse = get_global_mouse_position()
 		var screen_mouse = get_viewport().get_mouse_position()
 		camera.position -= (screen_mouse - last_mouse_pos)
 		last_mouse_pos = screen_mouse
+		return
+
+	if turn_controller.current_phase != TurnController.Phase.PLAYER_PHASE:
 		return
 
 	if player.is_moving:
@@ -365,9 +365,12 @@ func _process(delta: float):
 func _unhandled_input(event: InputEvent):
 	if turn_controller.is_game_over:
 		return
-	if turn_controller.current_phase != TurnController.Phase.PLAYER_PHASE:
-		return
 	if battle_loadout_panel and battle_loadout_panel.is_item_drag_active():
+		return
+	# 相机拖拽不受回合阶段限制；被拖拽消费的事件不再进入玩家阶段交互
+	if _handle_camera_drag_input(event):
+		return
+	if turn_controller.current_phase != TurnController.Phase.PLAYER_PHASE:
 		return
 	if player.is_moving:
 		return
@@ -390,24 +393,30 @@ func _unhandled_input(event: InputEvent):
 			if event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 				_change_state(State.IDLE)
 			return
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			if event.pressed:
-				press_pos = event.position
-				last_mouse_pos = event.position
-				is_dragging = false
-			else:
-				var drag_dist = event.position.distance_to(press_pos)
-				if drag_dist < DRAG_THRESHOLD:
-					_handle_left_click()
-				is_dragging = false
+		if event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+			_handle_left_click()
 			return
 
-	if event is InputEventMouseMotion:
-		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-			var current_pos = event.position
-			if not is_dragging and current_pos.distance_to(press_pos) >= DRAG_THRESHOLD:
-				is_dragging = true
-				last_mouse_pos = current_pos
+# 追踪相机拖拽：菜单打开时交回原逻辑，返回 true 表示事件已被拖拽消费
+func _handle_camera_drag_input(event: InputEvent) -> bool:
+	if container_action_menu.visible or context_menu.visible:
+		return false
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			press_pos = event.position
+			last_mouse_pos = event.position
+			is_dragging = false
+			return true
+		var drag_dist: float = event.position.distance_to(press_pos)
+		is_dragging = false
+		return drag_dist >= DRAG_THRESHOLD
+	if event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		var current_pos: Vector2 = event.position
+		if not is_dragging and current_pos.distance_to(press_pos) >= DRAG_THRESHOLD:
+			is_dragging = true
+			last_mouse_pos = current_pos
+		return true
+	return false
 
 func _handle_left_click():
 	var mouse_world = get_global_mouse_position()
