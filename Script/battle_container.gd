@@ -67,8 +67,17 @@ func get_search_ap_cost() -> int:
 	return 0 if is_opened or is_ground_pile else open_ap_cost
 
 
+# 同格多容器的选择优先级：没搜过 > 搜过。丢弃物不参与分档，始终视为最优先可搜
+func get_search_priority() -> int:
+	if is_ground_pile or not is_opened:
+		return 0
+	return 1
+
+
 func can_be_searched_by(actor: Unit, bullet_range: BulletRange) -> bool:
 	if actor == null or actor.is_defeated:
+		return false
+	if actor.current_level != current_level:
 		return false
 	if not requires_attack_range:
 		return true

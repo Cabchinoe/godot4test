@@ -11,9 +11,14 @@ var _cost_label: Label
 var _search_button: Button
 var _search_cost_label: Label
 
+const BASE_MIN_SIZE := Vector2i(186, 186)
+const MAX_WIDTH := 420
+const COST_LABEL_WIDTH := 70
+const CONTENT_PADDING := 34
+
 
 func _ready() -> void:
-	min_size = Vector2i(186, 186)
+	min_size = BASE_MIN_SIZE
 	add_theme_stylebox_override("panel", _make_style())
 	var content := VBoxContainer.new()
 	content.add_theme_constant_override("separation", 5)
@@ -90,10 +95,33 @@ func show_actions(
 	_search_button.text = search_label
 	_search_button.disabled = not search_enabled
 	_search_button.tooltip_text = search_reason if not search_enabled else ""
-	_search_cost_label.text = "免费" if search_cost <= 0 else "%d AP" % search_cost
+	_search_cost_label.text = "%d AP" % maxi(0, search_cost)
 	_search_cost_label.add_theme_color_override("font_color", Color(1.0, 0.28, 0.3, 1.0) if not search_enabled else Color(0.42, 0.94, 0.72, 1.0))
+	var width := BASE_MIN_SIZE.x
+	if has_search_target:
+		width = _required_width(search_label)
+	min_size = Vector2i(width, BASE_MIN_SIZE.y)
 	position = screen_position
 	popup()
+
+
+# 按搜索项文案撑开菜单，避免“搜索…（同格 N 个）”被截断
+func _required_width(text: String) -> int:
+	var font := get_theme_font("font", "Button")
+	var font_size := get_theme_font_size("font_size", "Button")
+	var text_width := maxi(
+		int(font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x),
+		_estimate_text_width(text, font_size)
+	)
+	return clampi(text_width + COST_LABEL_WIDTH + CONTENT_PADDING, BASE_MIN_SIZE.x, MAX_WIDTH)
+
+
+# 字体缺失或无字形的中日韩字符会被量成 0 宽，用字符数兜底估算
+func _estimate_text_width(text: String, font_size: int) -> int:
+	var width := 0.0
+	for character in text:
+		width += float(font_size) if character.unicode_at(0) >= 0x2E80 else float(font_size) * 0.55
+	return int(width)
 
 
 func _make_style() -> StyleBoxFlat:

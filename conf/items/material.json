@@ -34,5 +34,194 @@
 		"description": "混装的耐污染作物种子，可在温室开垦初始作物。",
 		"price": 35,
 		"merge_level": 1
+	},
+	{
+		"id": "material_frayed_fiber_00",
+		"name": "破损纤维",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_frayed_fiber_00.png",
+		"description": "野生纤维类残骸里拆出的破损纤维，极低概率获得，可在工厂二合为纺织线。",
+		"price": 9,
+		"merge_level": 0
+	},
+	{
+		"id": "material_twisted_thread_02",
+		"name": "加捻线束",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_twisted_thread_02.png",
+		"description": "纤维方向一致的加捻线束，强化后的纺织线，可在工厂二合为粗织布。",
+		"price": 36,
+		"merge_level": 2
+	},
+	{
+		"id": "material_coarse_cloth_03",
+		"name": "粗织布",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_coarse_cloth_03.png",
+		"description": "第一次可作为建筑结构材料的成品粗织布，可在工厂二合为密织布包。",
+		"price": 72,
+		"merge_level": 3
+	},
+	{
+		"id": "material_dense_fabric_pack_04",
+		"name": "密织布包",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_dense_fabric_pack_04.png",
+		"description": "用于修补轻度受损掩体或临时路障的密织布包，可在工厂二合为耐磨帆布包。",
+		"price": 144,
+		"merge_level": 4
+	},
+	{
+		"id": "material_durable_canvas_pack_05",
+		"name": "耐磨帆布包",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_durable_canvas_pack_05.png",
+		"description": "修补中度受损掩体的耐磨帆布包，适合长线撤离；织物谱系材料的最高档。",
+		"price": 288,
+		"merge_level": 5
+	},
+	{
+		"id": "material_spoiled_crop_00",
+		"name": "损耗作物",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_spoiled_crop_00.png",
+		"description": "温室里挑出的残次作物，几乎无用，可在工厂二合为赤浆果。",
+		"price": 10,
+		"merge_level": 0
+	},
+	{
+		"id": "material_herbal_residue_00",
+		"name": "药渣",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_herbal_residue_00.png",
+		"description": "煎煮后剩下的药渣，残次品，可在工厂二合为灰叶药草。",
+		"price": 20,
+		"merge_level": 0
+	},
+	{
+		"id": "material_grayleaf_herb_01",
+		"name": "灰叶药草",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_grayleaf_herb_01.png",
+		"description": "为医疗谱系提供保底起点的灰叶药草，可在工厂二合为干燥药包。",
+		"price": 40,
+		"merge_level": 1
+	},
+	{
+		"id": "material_damaged_armor_plate_00",
+		"name": "破损甲片",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_damaged_armor_plate_00.png",
+		"description": "野战装甲残骸上拆下的破损甲片，极低概率获得，可在工厂二合为金属碎片。",
+		"price": 5,
+		"merge_level": 0
+	},
+	{
+		"id": "material_riveted_plate_02",
+		"name": "铆接板材",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_riveted_plate_02.png",
+		"description": "第一次具有结构强度的护甲原料，可在工厂二合为加固护板。",
+		"price": 20,
+		"merge_level": 2
+	},
+	{
+		"id": "material_reinforced_plate_03",
+		"name": "加固护板",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_reinforced_plate_03.png",
+		"description": "抗小口径直射的复合护板，可在工厂二合为抗冲击衬层。",
+		"price": 40,
+		"merge_level": 3
+	},
+	{
+		"id": "material_impact_liner_04",
+		"name": "抗冲击衬层",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_impact_liner_04.png",
+		"description": "抗冲击吸能的复合衬层，可在工厂二合为轻型护甲组件。",
+		"price": 80,
+		"merge_level": 4
+	},
+	{
+		"id": "material_damaged_helmet_shell_00",
+		"name": "破损盔壳",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_damaged_helmet_shell_00.png",
+		"description": "野战头盔残骸上拆下的破损盔壳，极低概率获得，可在工厂二合为废旧盔壳。",
+		"price": 60,
+		"merge_level": 0
+	},
+	{
+		"id": "material_soiled_filter_00",
+		"name": "污损滤材",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_soiled_filter_00.png",
+		"description": "野战净水残骸里拆出的污损滤材，极低概率获得，可在工厂二合为净水滤棉。",
+		"price": 7,
+		"merge_level": 0
+	},
+	{
+		"id": "material_rough_filter_02",
+		"name": "粗滤芯",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_rough_filter_02.png",
+		"description": "第一次可重复使用的净水耗材，可在工厂二合为活性滤芯。",
+		"price": 28,
+		"merge_level": 2
+	},
+	{
+		"id": "material_active_filter_03",
+		"name": "活性滤芯",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_active_filter_03.png",
+		"description": "第一次具备活性炭层的滤芯，可在工厂二合为压力过滤罐。",
+		"price": 56,
+		"merge_level": 3
+	},
+	{
+		"id": "material_pressure_filter_04",
+		"name": "压力过滤罐",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_pressure_filter_04.png",
+		"description": "抗压型滤罐，配合水泵使用，可在工厂二合为净化模块。",
+		"price": 112,
+		"merge_level": 4
+	},
+	{
+		"id": "material_purification_module_05",
+		"name": "净化模块",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_purification_module_05.png",
+		"description": "模块化净水组件，可在工厂二合为便携净水器。",
+		"price": 224,
+		"merge_level": 5
+	},
+	{
+		"id": "material_portable_purifier_06",
+		"name": "便携净水器",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_portable_purifier_06.png",
+		"description": "单兵手压泵式净水器，可在工厂二合为社区净水单元。",
+		"price": 448,
+		"merge_level": 6
+	},
+	{
+		"id": "material_community_water_unit_07",
+		"name": "社区净水单元",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_community_water_unit_07.png",
+		"description": "社区级多户净水单元，可在工厂二合为晶能净化核心。",
+		"price": 896,
+		"merge_level": 7
+	},
+	{
+		"id": "material_crystal_purification_core_08",
+		"name": "晶能净化核心",
+		"type": "MATERIAL",
+		"icon": "res://Items/icons/material/material_crystal_purification_core_08.png",
+		"description": "大型晶能驱动的终极净水核心，净水谱系的最高档，不可继续二合。",
+		"price": 1792,
+		"merge_level": 8
 	}
 ]

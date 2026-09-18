@@ -8,12 +8,12 @@
 | --- | --- | ---: | --- | --- |
 | 补给箱关闭 | `Art/tilesets/urban_night/props/containers/supply_crate_closed_a.png` | 64×64 | 是 | 已被地图容器与敌人战利品箱复用。 |
 | 补给箱开启 | `Art/tilesets/urban_night/props/containers/supply_crate_open_a.png` | 64×64 | 是 | 与关闭态构图、占格一致，可直接切换。 |
-| 医疗柜关闭 | `Art/tilesets/urban_night/props/containers/medical_locker_closed_a.png` | 128×128 | 否 | 缺少开启/掏空态；可见绿色抠像残留，需要从 `medical_locker_master_01.png` 重新抠底导出。 |
+| 医疗柜关闭 | `Art/tilesets/urban_night/props/containers/medical_locker_closed_a.png` | 64×64 | 否 | 2026-09-18 由 128×128 缩为 64×64（`_a` / `_b` 两套同步，含 `major_props_01.png` 图集区域）。`_b` 套三态齐全并已用于 `map_medical_locker_01`；`_a` 套仍缺开启/掏空态，且可见绿色抠像残留，需要从 `medical_locker_master_01.png` 重新抠底导出。 |
 | 垃圾桶 | `Art/tilesets/urban_night/props/containers/trash_bin_a.png` | 64×64 | 否 | 缺少翻盖/掏空态。 |
 | 售货机 | `Art/tilesets/urban_night/props/containers/vending_machine_a.png` | 64×64 | 否 | 缺少破门/空机态。 |
-| 高金属架 | `Art/tilesets/urban_night/props/furniture/metal_shelf_tall_a.png` | 64×128 | 否 | 可作为可搜索家具底图，缺少翻倒/搜空态。 |
+| 高金属架 | `Art/tilesets/urban_night/props/furniture/metal_shelf_tall_a.png` | 64×128 | 否 | 跨两格，按 2.2 节规格不能直接做可搜索容器；若要作为可搜索家具，需重出 64×64 单格版本并补翻倒/搜空态。 |
 | 冰箱 | `Art/tilesets/urban_night/props/furniture/refrigerator_a.png` | 64×64 | 否 | 可作为食物容器底图，缺少开门/空置态。 |
-| 车辆、床、沙发、台面 | `Art/tilesets/urban_night/props/...` | 64×64～128×192 | 否 | 目前只作为场景障碍；除非补齐明确开闭态，否则不设为可搜索容器。 |
+| 车辆、床、沙发、台面 | `Art/tilesets/urban_night/props/...` | 64×64～128×192 | 否 | 目前只作为场景障碍；除非补齐明确开闭态，否则不设为可搜索容器。跨格尺寸（128×64、128×192 等）还需先重出 64×64 单格版本。 |
 
 母版现状：医疗柜、废弃轿车为 1024×1024；现有敌人原始图为 1024×1024（`eagle_soldier_raw_01.png`），精修母版为 512×512（`eagle_soldier_master_01.png`）。新批次统一提升到 1024px 母版，避免后续重做时细节不足。
 
@@ -30,8 +30,9 @@
 
 ### 2.2 容器与家具
 
-- **64×64 小型容器**：生成 1024×1024 绿幕母版，导出透明 64×64。相同容器的关闭/开启/搜空三态必须共用相同镜头、占格、轮廓与锚点。
-- **128×128 / 64×128 大型容器**：生成 1024×1024 绿幕母版，运行时保持对应 footprint；禁止缩成 64×64。
+- **可搜索容器硬性规格（2026-09-18 起，取代原“128×128 / 64×128 大型容器”条目）**：所有可搜索容器——地图容器、敌人战利品箱、地面丢弃物——的运行时贴图必须是 **透明 64×64，占地恰好一个 grid**，禁止跨格。母版仍按 1024×1024 绿幕生成，导出时缩到 64×64。相同容器的关闭 / 开启 / 搜空三态必须共用相同镜头、占格、轮廓与锚点。
+- **大型道具（128×128、64×128、128×192 等）**：只能作为不可搜索的场景障碍使用。要把某个大型道具改成可搜索容器，必须重新出 64×64 单格图，不能沿用跨格贴图；`BattleContainerSpawner.spawn()` 会对非 64×64 的容器贴图 `push_warning`。
+- **理由**：`BattleContainer` 的逻辑占格恒为 1 格（`grid_pos` + `can_walk`），贴图跨格会造成“视觉挡住 4 格、实际只挡 1 格”“点击命中范围与贴图不符”等表现与规则不一致的问题。
 - **严格描述**：`camera directly overhead; show only upward-facing surfaces; no front, side, underside, floor plane, or cast shadow`。
 - **导入路径**：母版存 `Art/source/urban_night/<group>/`；运行时存 `Art/tilesets/urban_night/props/<group>/`；更新 atlas、`manifest.json` 与 TileSet 区域后才可在关卡引用。
 
@@ -55,8 +56,8 @@
 
 | ID / 文件目标 | 规格 | 关闭态描述 | 开启 / 搜空态描述 |
 | --- | --- | --- | --- |
-| `medical_locker_open_a.png` | 128×128 | 复用现有暗绿战地医疗柜；红十字仅作小型磨损贴纸，不使用文字。 | 顶视柜门拉开，内部可见 2～3 个暗色隔板与少量医疗盒，保持 2×2 footprint。 |
-| `medical_locker_empty_a.png` | 128×128 | — | 柜门半开、隔板空置，避免地面与投影；用于已搜索状态。 |
+| `medical_locker_open_a.png` | 64×64 | 复用现有暗绿战地医疗柜；红十字仅作小型磨损贴纸，不使用文字。 | 顶视柜门拉开，内部可见 2～3 个暗色隔板与少量医疗盒，轮廓仍只占一格。 |
+| `medical_locker_empty_a.png` | 64×64 | — | 柜门半开、隔板空置，避免地面与投影；用于已搜索状态。 |
 | `trash_bin_closed_a.png` | 64×64 | 深灰金属垃圾桶，盖板闭合，少量雨水污渍。 | 作为现有 `trash_bin_a` 的重命名/统一版本。 |
 | `trash_bin_open_a.png` | 64×64 | — | 盖板翻开，能看到低饱和杂物袋；轮廓仍只占一格。 |
 | `trash_bin_empty_a.png` | 64×64 | — | 盖板半开、内部空置；与关闭态视角和锚点一致。 |

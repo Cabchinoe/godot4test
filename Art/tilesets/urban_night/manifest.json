@@ -114,7 +114,7 @@
       "path": "res://Art/tilesets/urban_night/atlases/props/major_props_01.png",
       "regions": [
         {"name": "sedan_abandoned_a", "x": 0, "y": 0, "width": 128, "height": 192},
-        {"name": "medical_locker_closed_a", "x": 128, "y": 0, "width": 128, "height": 128}
+        {"name": "medical_locker_closed_a", "x": 128, "y": 0, "width": 64, "height": 64}
       ]
     },
     "furniture_props": {

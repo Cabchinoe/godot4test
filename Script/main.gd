@@ -56,7 +56,9 @@ const DEFAULT_MOVE_INTERVAL: float = 0.3
 const FAST_MOVE_INTERVAL: float = 0.01
 var skip_held: bool = false
 var _pending_container: BattleContainer
+var _pending_containers: Array[BattleContainer] = []
 var _context_search_container: BattleContainer
+var _context_search_candidates: Array[BattleContainer] = []
 
 
 func _ready():
@@ -205,7 +207,9 @@ func _hide_all_battle_panels() -> void:
 	if battle_loadout_panel:
 		battle_loadout_panel.hide_all_panels()
 	_pending_container = null
+	_pending_containers = []
 	_context_search_container = null
+	_context_search_candidates = []
 
 func _on_attack_requested() -> void:
 	if not player.has_equipped_weapon():
@@ -268,6 +272,7 @@ func _on_consumable_use_requested(source: ItemLocation, item_uid: String) -> voi
 
 func _on_context_menu_hide():
 	_context_search_container = null
+	_context_search_candidates = []
 	if current_state == State.MENU_STATE:
 		_change_state(State.IDLE)
 
@@ -473,11 +478,11 @@ func _handle_right_click(event: InputEvent):
 			battle_loadout_panel.hide_panel()
 			_change_state(State.MENU_STATE)
 			return
-	var container := _get_container_at(mouse_world)
-	if container:
+	var containers := _get_containers_near(mouse_world)
+	if not containers.is_empty():
 		if current_state != State.IDLE:
 			_change_state(State.IDLE)
-		_show_container_action_menu(container, Vector2i(event.position.x, event.position.y))
+		_show_container_action_menu(containers, Vector2i(event.position.x, event.position.y))
 		return
 	if current_state == State.ATTACK_STATE:
 		_change_state(State.IDLE)
@@ -502,25 +507,34 @@ func _show_context_menu():
 		attack_reason = "未装备武器。"
 	elif player.action_points < attack_cost:
 		attack_reason = "行动点不足。"
-	var standing_container := _get_container_at_grid(player.grid_pos, player.current_level)
-	_context_search_container = standing_container
-	var has_search_target := standing_container != null
+	var standing_candidates := _get_containers_at_grid(player.grid_pos, player.current_level)
+	var sorted_candidates := _sorted_containers(standing_candidates)
+	_context_search_candidates = sorted_candidates
+	_context_search_container = _pick_container(standing_candidates)
+	_reorder_containers_at_grid(player.grid_pos, player.current_level)
+	var has_search_target := not sorted_candidates.is_empty()
 	var search_label := ""
 	var search_cost := 0
 	var search_enabled := false
 	var search_reason := ""
-	if standing_container:
-		search_label = "继续搜索" if standing_container.is_opened else "搜索"
-		search_cost = standing_container.get_search_ap_cost()
-		var has_loot := standing_container.has_remaining_loot(inventory)
-		var in_range := standing_container.can_be_searched_by(player, bullet_range)
-		search_enabled = has_loot and in_range and player.action_points >= search_cost
-		if not has_loot:
-			search_reason = "容器已搜空。"
-		elif not in_range:
-			search_reason = "当前无法搜索该容器。"
-		elif player.action_points < search_cost:
-			search_reason = "行动点不足。"
+	if has_search_target:
+		var infos: Array[Dictionary] = []
+		for container in sorted_candidates:
+			infos.append(_describe_container(container))
+		var default_info: Dictionary = infos[0]
+		search_cost = int(default_info["ap_cost"])
+		if sorted_candidates.size() >= 2:
+			# 多目标时只要有一个可搜就允许打开列表，具体目标由玩家在列表里选
+			search_label = "搜索…（同格 %d 个）" % sorted_candidates.size()
+			for info in infos:
+				if bool(info["enabled"]):
+					search_enabled = true
+					break
+			search_reason = "" if search_enabled else str(default_info["reason"])
+		else:
+			search_label = str(default_info["verb"])
+			search_enabled = bool(default_info["enabled"])
+			search_reason = str(default_info["reason"])
 	context_menu.show_actions(
 		attack_cost,
 		attack_enabled,
@@ -600,55 +614,137 @@ func _get_enemy_at_node(node: Dictionary) -> Unit:
 			return enemy
 	return null
 
-func _get_container_at(mouse_world: Vector2) -> BattleContainer:
-	var closest: BattleContainer
+func _get_containers_near(mouse_world: Vector2) -> Array[BattleContainer]:
+	var result: Array[BattleContainer] = []
 	var closest_distance := INF
 	for node in get_tree().get_nodes_in_group("battle_containers"):
 		var container := node as BattleContainer
 		if container == null:
 			continue
 		var distance := mouse_world.distance_to(container.global_position)
-		if distance <= container.interaction_radius and distance < closest_distance:
-			closest = container
+		if distance > container.interaction_radius:
+			continue
+		if distance < closest_distance:
 			closest_distance = distance
-	return closest
+			result.clear()
+			result.append(container)
+		elif is_equal_approx(distance, closest_distance):
+			result.append(container)
+	return result
 
 
-func _get_container_at_grid(grid: Vector2i, level: int) -> BattleContainer:
+func _get_containers_at_grid(grid: Vector2i, level: int) -> Array[BattleContainer]:
+	var result: Array[BattleContainer] = []
 	for node in get_tree().get_nodes_in_group("battle_containers"):
 		var container := node as BattleContainer
 		if container and container.grid_pos == grid and container.current_level == level:
-			return container
-	return null
+			result.append(container)
+	return result
 
-func _show_container_action_menu(container: BattleContainer, screen_position: Vector2i) -> void:
-	if container == null:
+
+# 优先级升序（没搜过 > 搜过，丢弃物恒定最前）；同档让树序靠后者排在前面，与绘制最上层一致
+func _sorted_containers(candidates: Array[BattleContainer]) -> Array[BattleContainer]:
+	var result: Array[BattleContainer] = []
+	for container in candidates:
+		var priority := container.get_search_priority()
+		var insert_at := result.size()
+		for index in result.size():
+			if priority <= result[index].get_search_priority():
+				insert_at = index
+				break
+		result.insert(insert_at, container)
+	return result
+
+
+func _pick_container(candidates: Array[BattleContainer]) -> BattleContainer:
+	var sorted := _sorted_containers(candidates)
+	return sorted[0] if not sorted.is_empty() else null
+
+
+# 按优先级重排同格容器的兄弟顺序：优先级最高者排到最后，即绘制在最上层
+func _reorder_containers_at_grid(grid: Vector2i, level: int) -> void:
+	var containers := _get_containers_at_grid(grid, level)
+	if containers.size() < 2:
 		return
-	_pending_container = container
+	var parent := containers[0].get_parent()
+	if parent == null:
+		return
+	var ordered := _sorted_containers(containers)
+	for index in range(ordered.size() - 1, -1, -1):
+		var container := ordered[index]
+		if container.get_parent() == parent:
+			parent.move_child(container, parent.get_child_count() - 1)
+
+
+func _describe_container(container: BattleContainer) -> Dictionary:
+	var same_level := container.current_level == player.current_level
 	var in_range := container.can_be_searched_by(player, bullet_range)
 	var has_loot := container.has_remaining_loot(inventory)
 	container.set_depleted(not has_loot and container.has_seeded_loot())
 	var ap_cost := container.get_search_ap_cost()
 	var enough_ap := player.action_points >= ap_cost
-	var enabled := in_range and has_loot and enough_ap
+	# 0 AP 的容器即使已搜空也允许打开面板查看，只有同层、射程与 AP 能拦住
+	var enabled := same_level and in_range and enough_ap and (has_loot or ap_cost <= 0)
 	var reason := ""
-	if not in_range:
+	if not same_level:
+		reason = "需要与角色位于同一层。"
+	elif not in_range:
 		reason = "需要位于 1 格攻击射线内。"
-	elif not has_loot:
-		reason = "容器已搜空。"
 	elif not enough_ap:
 		reason = "行动点不足。"
-	container_action_menu.show_search(
-		container.display_name,
-		container.is_opened,
-		ap_cost,
-		enabled,
-		reason,
-		screen_position
-	)
+	elif not has_loot:
+		reason = "容器已搜空。"
+	var verb := "搜索"
+	if container.is_opened:
+		verb = "继续搜索" if has_loot else "查看（已空）"
+	return {
+		"same_level": same_level,
+		"in_range": in_range,
+		"has_loot": has_loot,
+		"ap_cost": ap_cost,
+		"enabled": enabled,
+		"reason": reason,
+		"verb": verb,
+	}
+
+
+func _show_container_action_menu(candidates: Array[BattleContainer], screen_position: Vector2i) -> void:
+	var sorted := _sorted_containers(candidates)
+	if sorted.is_empty():
+		return
+	_pending_containers = sorted
+	_pending_container = sorted[0]
+	_reorder_containers_at_grid(sorted[0].grid_pos, sorted[0].current_level)
+	if sorted.size() == 1:
+		var container := sorted[0]
+		var info := _describe_container(container)
+		container_action_menu.show_search(
+			container.display_name,
+			str(info["verb"]),
+			int(info["ap_cost"]),
+			bool(info["enabled"]),
+			str(info["reason"]),
+			screen_position
+		)
+		return
+	var entries: Array[Dictionary] = []
+	for container in sorted:
+		var info := _describe_container(container)
+		entries.append({
+			"name": container.display_name,
+			"verb": str(info["verb"]),
+			"ap_cost": int(info["ap_cost"]),
+			"enabled": bool(info["enabled"]),
+			"reason": str(info["reason"]),
+		})
+	container_action_menu.show_search_list("同格 %d 个目标" % sorted.size(), entries, screen_position)
 
 
 func _on_container_search_requested() -> void:
+	var index := container_action_menu.get_selected_index()
+	if index >= 0 and index < _pending_containers.size():
+		_pending_container = _pending_containers[index]
+	_pending_containers = []
 	if _pending_container == null or not is_instance_valid(_pending_container):
 		return
 	var container := _pending_container
@@ -657,6 +753,14 @@ func _on_container_search_requested() -> void:
 
 
 func _on_context_menu_search_requested() -> void:
+	var candidates := _context_search_candidates
+	_context_search_candidates = []
+	if candidates.size() >= 2:
+		var screen_position := Vector2i(get_viewport().get_mouse_position())
+		context_menu.hide()
+		# 延迟到本帧末尾再弹出，避免行动菜单关闭时的窗口失焦把列表菜单一起带走
+		_show_container_action_menu.call_deferred(candidates, screen_position)
+		return
 	if _context_search_container == null or not is_instance_valid(_context_search_container):
 		return
 	var container := _context_search_container
@@ -667,9 +771,8 @@ func _on_context_menu_search_requested() -> void:
 func _search_container(container: BattleContainer) -> void:
 	if container == null:
 		return
-	if not container.has_remaining_loot(inventory):
-		return
-	container.set_depleted(false)
+	var had_loot := container.has_remaining_loot(inventory)
+	container.set_depleted(not had_loot and container.has_seeded_loot())
 	var search_result := container.begin_search(player, bullet_range)
 	if search_result.is_empty():
 		return
@@ -684,12 +787,14 @@ func _search_container(container: BattleContainer) -> void:
 			battle_loadout_panel.add_search_item(item_id)
 		container.mark_loot_seeded()
 	var ap_cost := int(search_result.get("ap_cost", 0))
-	battle_loadout_panel.refresh_after_battle_action(
-		"正在搜索：%s%s" % [
-			container.display_name,
-			"（免费）" if ap_cost <= 0 else "（%d AP）" % ap_cost,
-		]
-	)
+	var message := "正在搜索：%s%s" % [
+		container.display_name,
+		"（%d AP）" % ap_cost,
+	]
+	if not had_loot:
+		message = "%s 已搜空，仅查看。" % container.display_name
+	battle_loadout_panel.refresh_after_battle_action(message)
+	_reorder_containers_at_grid(container.grid_pos, container.current_level)
 	_update_hud()
 
 
@@ -729,6 +834,7 @@ func _get_or_create_ground_pile() -> BattleContainer:
 	if pile:
 		WarehouseService.create_temporary_container(inventory, pile.get_temporary_container_id(), pile.capacity, pile.columns)
 		pile.mark_loot_seeded()
+		_reorder_containers_at_grid(pile.grid_pos, pile.current_level)
 	return pile
 
 
@@ -749,9 +855,11 @@ func _on_temporary_container_changed(container_id: String) -> void:
 			continue
 		if container.has_remaining_loot(inventory):
 			container.set_depleted(false)
+			_reorder_containers_at_grid(container.grid_pos, container.current_level)
 			return
 		if not container.is_ground_pile:
 			container.set_depleted(true)
+			_reorder_containers_at_grid(container.grid_pos, container.current_level)
 			return
 		WarehouseService.clear_temporary_container(inventory, container_id, false)
 		container.queue_free()
@@ -759,7 +867,7 @@ func _on_temporary_container_changed(container_id: String) -> void:
 		return
 
 func _spawn_map_containers() -> void:
-	container_spawner.spawn_batch([
+	for container in container_spawner.spawn_batch([
 		{
 			"resource_id": "map_supply_crate_01",
 			"display_name": "街角补给箱",
@@ -794,7 +902,6 @@ func _spawn_map_containers() -> void:
 				"open_ap_cost": 1,
 				"capacity": 4,
 				"columns": 2,
-				"can_walk": true,
 				"loot": ["material_frayed_fiber_00", "material_metal_01"],
 				"closed_texture_path": "res://Art/tilesets/urban_night/props/containers/trash_bin_closed_b.png",
 				"opened_texture_path": "res://Art/tilesets/urban_night/props/containers/trash_bin_open_b.png",
@@ -813,7 +920,8 @@ func _spawn_map_containers() -> void:
 				"opened_texture_path": "res://Art/tilesets/urban_night/props/containers/vending_machine_breached_b.png",
 				"empty_texture_path": "res://Art/tilesets/urban_night/props/containers/vending_machine_empty_b.png",
 			},
-	])
+	]):
+		_reorder_containers_at_grid(container.grid_pos, container.current_level)
 
 func _on_unit_defeated(unit: Unit) -> void:
 	if unit == player:
@@ -824,7 +932,9 @@ func _on_unit_defeated(unit: Unit) -> void:
 	unit.remove_from_group("enemy")
 	unit.remove_from_group("units")
 	if container_spawner:
-		container_spawner.spawn_enemy_drop(unit)
+		var drop := container_spawner.spawn_enemy_drop(unit)
+		if drop:
+			_reorder_containers_at_grid(drop.grid_pos, drop.current_level)
 	unit.queue_free()
 
 func _on_player_damaged(_result: Dictionary) -> void:

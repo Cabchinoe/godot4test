@@ -5,6 +5,8 @@ const DEFAULT_CLOSED_TEXTURE := "res://Art/tilesets/urban_night/props/containers
 const DEFAULT_OPENED_TEXTURE := "res://Art/tilesets/urban_night/props/containers/supply_crate_open_b.png"
 const DEFAULT_EMPTY_TEXTURE := "res://Art/tilesets/urban_night/props/containers/supply_crate_empty_b.png"
 const GROUND_PILE_TEXTURE := "res://Art/tilesets/urban_night/props/containers/dropped_loot_pile_a.png"
+# 可搜索容器必须单格 footprint，贴图统一 64×64（见 doc/battlefield_art_asset_plan.md 2.2）
+const CONTAINER_TEXTURE_SIZE := Vector2(64, 64)
 
 var level_manager: LevelManager
 
@@ -30,6 +32,7 @@ func spawn(data: Dictionary) -> BattleContainer:
 	container.name = "Container_%s" % str(data.get("resource_id", obstacle.get_child_count()))
 	obstacle.add_child(container)
 	container.configure(data)
+	_check_texture_footprint(container)
 	container.top_level = true
 	container.z_as_relative = false
 	container.z_index = obstacle.z_index
@@ -48,6 +51,18 @@ func spawn_batch(entries: Array) -> Array[BattleContainer]:
 		if container:
 			result.append(container)
 	return result
+
+
+func _check_texture_footprint(container: BattleContainer) -> void:
+	var checked := {}
+	for texture in [container.closed_texture, container.opened_texture, container.empty_texture]:
+		if texture == null or checked.has(texture.resource_path):
+			continue
+		checked[texture.resource_path] = true
+		if texture.get_size() != CONTAINER_TEXTURE_SIZE:
+			push_warning("BattleContainerSpawner: %s 的贴图 %s 为 %s，可搜索容器必须是 64×64 单格" % [
+				container.resource_id, texture.resource_path, texture.get_size(),
+			])
 
 
 func spawn_enemy_drop(enemy: Unit) -> BattleContainer:

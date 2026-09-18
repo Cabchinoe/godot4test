@@ -41,7 +41,7 @@ Create a TileSet atlas source for each file in `atlases/ground/` with a `64×64`
 - `vehicles_all_orientations_02.png`: 4 columns × 2 rows. Columns 1–2 contain vertical sedan/van pairs; row 1 columns 3–4 contain the horizontal sedan; row 2 columns 3–4 contain the horizontal delivery van. Each vehicle spans either `1×2` or `2×1` cells.
 - `stairs_urban_shape_10.png`: 3 columns × 3 rows. It contains the exact nine `urban.png` stair forms: northwest, north, northeast, west, center, east, southwest, south, and southeast. Mark traversal cells as height transitions in the TileSet.
 
-`major_props_01.png` contains non-uniform regions. Use it from `Sprite2D` or as manually defined TileSet atlas regions: `sedan_abandoned_a` is `128×192`; `medical_locker_closed_a` is `128×128`.
+`major_props_01.png` contains non-uniform regions. Use it from `Sprite2D` or as manually defined TileSet atlas regions: `sedan_abandoned_a` is `128×192`; `medical_locker_closed_a` is `64×64` (searchable containers must fit a single 64×64 cell).
 
 `furniture_01.png` also uses manually defined regions: sofa `128×64`, tall shelf `64×128`, refrigerator `64×64`, kitchen counter `128×64`, and bed `128×64`.
 

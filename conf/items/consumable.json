@@ -111,7 +111,7 @@
 		"price": 120,
 		"merge_level": 2,
 		"battle_effect_id": "restore_action_points",
-		"battle_use": {"ap_cost": 1, "restore_ap": 2}
+		"battle_use": {"ap_cost": 0, "restore_ap": 2}
 	},
 	{
 		"id": "consumable_clean_fruit_box_02",
