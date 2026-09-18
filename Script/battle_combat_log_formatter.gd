@@ -13,12 +13,10 @@ static func format_attack(result: Dictionary) -> String:
 	_append_attacker_sources(lines, attacker)
 	_append_statuses(lines, "攻击方状态", attacker.get("statuses", []))
 	var totals: Dictionary = attacker.get("totals", {}) as Dictionary
-	lines.append("攻击方总数值：攻击力 %d；命中附加 %d；部位指数 %s；本回合移动 %d 格（命中惩罚 %d）" % [
+	lines.append("攻击方总数值：攻击力 %d；命中附加 %d；部位指数 %s。" % [
 		int(totals.get("attack_power", 0)),
 		int(totals.get("accuracy_bonus", 0)),
 		_format_indices(totals.get("hit_location_indices", {})),
-		int(totals.get("movement_steps", 0)),
-		int(totals.get("movement_accuracy_penalty", 0)),
 	])
 	lines.append("防御方：%s（%s）" % [defender_name, _faction_name(str(defender.get("faction", "")))])
 	_append_statuses(lines, "防御方状态", defender.get("statuses", []))
@@ -29,11 +27,10 @@ static func format_attack(result: Dictionary) -> String:
 	])
 
 	var hit_formula: Dictionary = result.get("hit_formula", {}) as Dictionary
-	lines.append("命中计算：距离 %d 格；距离档基础命中 %d + 攻击方附加 %d - 移动惩罚 %d - 防御方闪避 %d = 最终命中 %d（掷骰 %d）。" % [
+	lines.append("命中计算：距离 %d 格；距离档基础命中 %d + 攻击方附加 %d - 防御方闪避 %d = 最终命中 %d（掷骰 %d）。" % [
 		int(result.get("distance", 0)),
 		int(hit_formula.get("distance_base_accuracy", 0)),
 		int(hit_formula.get("attacker_accuracy_bonus", 0)),
-		int(hit_formula.get("movement_penalty", 0)),
 		int(hit_formula.get("defender_evasion", 0)),
 		int(hit_formula.get("final_hit_chance", result.get("hit_chance", 0))),
 		int(hit_formula.get("roll", result.get("roll", 0))),

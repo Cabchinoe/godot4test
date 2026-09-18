@@ -21,10 +21,12 @@
 
 ### 2.1 战场敌人
 
-- **母版**：1024×1024 PNG，纯 `#00FF00` 绿幕；镜头严格 90° 俯视正交，不要等距、3/4 透视、地面、投影、文字、Logo 或黑边。
-- **运行时**：每个行为帧导出透明底 64×64 PNG；角色主体置中，至少留 6px 安全边距。初版交付 `idle` 1 帧 + `walk` 4 帧，统一以朝南/朝镜头下方的阅读方向绘制。
+- **唯一视角基准**：敌人必须以 `Art/characters/benny/benny_idle.png`、`benny_walk.png`、`benny_aim.png` 与 `benny_sprites.tres` 为唯一运行时视角、朝向、比例和锚点基准。敌人和贝妮必须像站在同一张战场平面上，不能使用严格 90° 顶视、等距视角或其他独立角度。
+- **镜头与构图**：采用与贝妮一致的正面偏 3/4 战场小人角度：脸部、胸前、双手与手持武器可见，脚部朝画布下方；不是立绘式大透视，也不是只看头顶的俯视图。敌人站姿、头身比例和占格高度必须与贝妮一致。
+- **母版**：1024×1024 PNG，纯 `#00FF00` 绿幕；无地面、投影、文字、Logo 或黑边。
+- **运行时**：每帧透明底 `64×80` PNG，角色底部锚点与贝妮一致，至少留 6px 安全边距。首批图集至少交付 `idle` 4 帧、`walk` 6 帧；如需瞄准动画则交付 `aim` 4 帧，帧数与 `benny_sprites.tres` 对齐。
 - **轮廓**：深海军蓝、湿混凝土灰、低饱和墨绿为主体；琥珀工程灯作功能点；敌对威胁只用小面积橙红；辉石单位才可使用紫青 / 冰青发光。
-- **技术检查**：去绿边、无半透明地面阴影、在 64px 下能从贝妮和其他敌人中一眼分辨；生成后必须检查脚、武器、肢体是否完整。
+- **技术检查**：去绿边、无半透明地面阴影；将敌人与贝妮帧并排叠放检查头高、脚底、武器高度和画面朝向。生成后必须检查脚、武器、肢体是否完整。
 
 ### 2.2 容器与家具
 
@@ -88,77 +90,90 @@ no isometric, no three-quarter perspective, no cinematic lighting, no border
 2. 补给箱关闭 / 开启 / 搜空三态在同一 TileMap cell 中无跳动。
 3. 医疗柜等大容器的动态障碍 footprint 与视觉 footprint 一致后，才允许配置到关卡。
 4. 生成文件导入后，更新 `Art/tilesets/urban_night/manifest.json`、相关 atlas 与对应 TileSet。
-5. 将新敌人帧打成 `SpriteFrames` 后，在 64px 战场截图中验证颜色对比与可读性。
+5. 将新敌人帧打成 `SpriteFrames` 后，与贝妮 `64×80` 帧并排放入战场截图，验证脚底锚点、朝向、比例、颜色对比和可读性。
 
 ## 6. 可直接交给外部 AI 的重制提示词
 
-### 6.1 通用技术前缀与负面约束
+### 6.1 通用材质前缀与负面约束
 
 每条提示词都应保留下列技术要求，并把输出先作为 1024×1024 母版保存：
 
 ```text
-Original tactical-anime 2D game asset for an original urban-night extraction game.
-Strict 90-degree top-down orthographic camera, directly overhead, crisp readable silhouette,
+Original tactical-anime 2D game asset for an original urban-night extraction game,
+crisp readable silhouette,
 restrained navy, slate, wet concrete gray and muted olive palette, subtle amber practical lights,
 small red accents only for hostile danger, cyan-violet glow only on pyroxene technology.
 Flat exact #00FF00 chroma-key background, one centered subject, no text, no logo, no watermark,
 no ground plane, no cast shadow, no reflection, no border.
-Negative prompt: isometric, perspective view, three-quarter camera, cinematic scene, character portrait,
-front view, side view, floor, backdrop, dramatic cast shadow, photorealism, 3D render, UI text.
+Negative prompt: isometric, cinematic scene, floor, backdrop, dramatic cast shadow,
+photorealism, 3D render, UI text.
 ```
 
-### 6.2 敌人图集
+### 6.2 敌人专用视角前缀
 
-生成每个敌人的 `idle` 母版与 `walk` 动作参考；最终导出透明底 64×64，`walk` 为 4 帧，所有帧共享相同锚点和占格。
+每个敌人提示词必须额外附带以下段落；生成时应同时提供贝妮运行时帧作为视觉参考。
+
+```text
+Match the exact runtime battle-sprite camera, facing direction, character scale, bottom anchor,
+and front three-quarter chibi-proportioned presentation of the supplied Benny sprite-sheet reference.
+Use a 64x80 per-frame target: face, chest, hands, and held weapon remain visible;
+feet point toward the bottom of the frame. The enemy must look like it stands beside Benny
+on the same tactical battlefield. Do not use strict overhead top-down, isometric, side view,
+or a different camera angle.
+```
+
+### 6.3 敌人图集
+
+生成每个敌人的 `idle`、`walk` 与可选 `aim` 动作参考；最终导出透明底 `64×80`，`idle` 为 4 帧、`walk` 为 6 帧、`aim` 为 4 帧，所有帧共享贝妮同款锚点和占格。
 
 **街区掠夺兵（`raider_infantry`）**
 
 ```text
-[Use the common technical prefix.]
-Top-down combat sprite of a street raider infantryman: worn rain poncho, pieced-together chest armor,
+[Use the common material prefix and the enemy camera prefix.]
+Battle sprite of a street raider infantryman: worn rain poncho, pieced-together chest armor,
 short compact carbine held across the torso, rectangular scavenger backpack with loose utility straps,
 wide shoulders and clear carbine silhouette, navy-gray clothing, faded orange-red armband.
-Single full body, centered, designed to read at 64 pixels.
+Single full body, centered, designed to read beside Benny at 64x80 pixels.
 ```
 
 **斥候掠夺者（`raider_scout`）**
 
 ```text
-[Use the common technical prefix.]
-Top-down combat sprite of a fast raider scout: narrow hooded rain cape, improvised respirator mask,
+[Use the common material prefix and the enemy camera prefix.]
+Battle sprite of a fast raider scout: narrow hooded rain cape, improvised respirator mask,
 folding SMG, small signal flare pouch on thigh, slim forward-leaning silhouette,
 muted olive-gray cloth with thin cold-cyan reflective strip, no bulky shield or backpack.
-Single full body, centered, designed to read at 64 pixels.
+Single full body, centered, designed to read beside Benny at 64x80 pixels.
 ```
 
 **护盾掠夺者（`raider_bulwark`）**
 
 ```text
-[Use the common technical prefix.]
-Top-down combat sprite of a heavy raider bulwark: large salvaged rectangular riot shield,
+[Use the common material prefix and the enemy camera prefix.]
+Battle sprite of a heavy raider bulwark: large salvaged rectangular riot shield,
 thick patchwork armor, short shotgun tucked behind the shield, short broad body,
 charcoal gray materials with weathered amber-yellow safety stripe, clear shield-first silhouette.
-Single full body, centered, designed to read at 64 pixels.
+Single full body, centered, designed to read beside Benny at 64x80 pixels.
 ```
 
 **辉石猎犬（`pyroxene_hound`）**
 
 ```text
-[Use the common technical prefix.]
-Top-down combat sprite of a four-legged pyroxene hound: low mechanical beast,
+[Use the common material prefix and the enemy camera prefix.]
+Battle sprite of a four-legged pyroxene hound: low mechanical beast,
 graphite armor plates split by small cyan-violet crystal growths, cutting foreclaws,
 low stance, long spine with asymmetric crystal cluster, no human anatomy.
-Single creature, centered, designed to read at 64 pixels.
+Single creature, centered, designed to read beside Benny at 64x80 pixels.
 ```
 
 **晶涌哨戒机（`pyroxene_sentry`）**
 
 ```text
-[Use the common technical prefix.]
-Top-down combat sprite of a compact pyroxene sentry machine: triangular three-leg chassis,
+[Use the common material prefix and the enemy camera prefix.]
+Battle sprite of a compact pyroxene sentry machine: triangular three-leg chassis,
 single circular sensor eye, side-mounted energy emitter, cyan-violet crystal cooling fins,
 small amber maintenance indicator, readable mechanical silhouette, no text.
-Single machine, centered, designed to read at 64 pixels.
+Single machine, centered, designed to read beside Benny at 64x80 pixels.
 ```
 
 ### 6.3 容器与丢弃物
@@ -166,7 +181,7 @@ Single machine, centered, designed to read at 64 pixels.
 **补给箱三态（关闭 / 开启 / 搜空）**
 
 ```text
-[Use the common technical prefix.]
+[Use the common material prefix. Add a strict top-down orthographic camera for this container.]
 Create a matched set of three strict top-down 64x64 supply crate states:
 1) closed hard military supply crate with dark slate metal, muted olive panels and a small amber seal;
 2) the exact same crate open, lid hinged back, showing a few generic dark supply modules;
@@ -177,7 +192,7 @@ All three states must have identical camera, footprint, scale and anchor.
 **医疗柜三态（关闭 / 开启 / 搜空）**
 
 ```text
-[Use the common technical prefix.]
+[Use the common material prefix. Add a strict top-down orthographic camera for this container.]
 Create a matched set of three strict top-down 128x128 field medical locker states:
 dark green battered metal cabinet, two-by-two tile footprint, subtle worn medical cross marking with no text.
 1) doors closed; 2) doors open, showing 2 or 3 dark shelves and generic medical cases;
@@ -188,7 +203,7 @@ All states must keep exactly the same 128x128 footprint, scale and anchor.
 **垃圾桶三态（关闭 / 开启 / 搜空）**
 
 ```text
-[Use the common technical prefix.]
+[Use the common material prefix. Add a strict top-down orthographic camera for this container.]
 Create a matched set of three strict top-down 64x64 metal trash bin states:
 dark gray wet urban trash bin with hinged lid and small rain stains.
 1) lid closed; 2) lid open with a few muted junk bags visible;
@@ -199,7 +214,7 @@ No loose trash on the ground. Identical camera, footprint, scale and anchor.
 **售货机三态（完整 / 撬开 / 搜空）**
 
 ```text
-[Use the common technical prefix.]
+[Use the common material prefix. Add a strict top-down orthographic camera for this container.]
 Create a matched set of three strict top-down 64x64 compact vending machine states:
 old dark teal vending machine, no readable brand or text, small amber maintenance light.
 1) sealed intact front; 2) pried-open door and broken pickup flap, a few generic supplies visible;

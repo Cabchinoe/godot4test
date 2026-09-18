@@ -63,6 +63,11 @@ func _ready():
 	hover_sprite.visible = false
 	hover_sprite2.visible = false
 
+	if ItemDB.get_all_items().is_empty():
+		ItemDB.load_from_dir("res://conf/items")
+	if EnemyDB.get_all_ids().is_empty():
+		EnemyDB.load_from_file("res://conf/enemies.json")
+
 	level_manager = LevelManager.new()
 	level_manager.add_level(1, ground_layer, obstacle_layer, hud_layer_1, 0)
 	level_manager.add_level(2, ground_layer_2, obstacle_layer_2, hud_layer_2, -16)
@@ -113,6 +118,9 @@ func _ready():
 	for enemy in enemy_spawner.spawn_batch([
 		{"id": "infantry", "grid": Vector2i(5, 3), "level": 1},
 		{"id": "raider_scout", "grid": Vector2i(7, 5), "level": 1},
+		{"id": "raider_bulwark", "grid": Vector2i(9, 3), "level": 1},
+		{"id": "pyroxene_hound", "grid": Vector2i(3, 7), "level": 1},
+		{"id": "pyroxene_sentry", "grid": Vector2i(10, 7), "level": 1},
 	]):
 		enemy.defeated.connect(_on_unit_defeated)
 	enemy_ai = EnemyAI.new(bullet_range, combat_resolver)
@@ -610,6 +618,7 @@ func _show_container_action_menu(container: BattleContainer, screen_position: Ve
 	_pending_container = container
 	var in_range := container.can_be_searched_by(player, bullet_range)
 	var has_loot := container.has_remaining_loot(inventory)
+	container.set_depleted(not has_loot and container.has_seeded_loot())
 	var ap_cost := container.get_search_ap_cost()
 	var enough_ap := player.action_points >= ap_cost
 	var enabled := in_range and has_loot and enough_ap
@@ -651,6 +660,7 @@ func _search_container(container: BattleContainer) -> void:
 		return
 	if not container.has_remaining_loot(inventory):
 		return
+	container.set_depleted(false)
 	var search_result := container.begin_search(player, bullet_range)
 	if search_result.is_empty():
 		return
@@ -726,9 +736,13 @@ func _on_temporary_container_changed(container_id: String) -> void:
 		return
 	for node in get_tree().get_nodes_in_group("battle_containers"):
 		var container := node as BattleContainer
-		if container == null or not container.is_ground_pile or container.get_temporary_container_id() != container_id:
+		if container == null or container.get_temporary_container_id() != container_id:
 			continue
 		if container.has_remaining_loot(inventory):
+			container.set_depleted(false)
+			return
+		if not container.is_ground_pile:
+			container.set_depleted(true)
 			return
 		WarehouseService.clear_temporary_container(inventory, container_id, false)
 		container.queue_free()
@@ -744,23 +758,52 @@ func _spawn_map_containers() -> void:
 			"level": 1,
 			"open_ap_cost": 1,
 			"capacity": 8,
-			"columns": 4,
-			"loot": ["material_metal_01", "consumable_dried_medicine_02"],
-			"closed_texture_path": "res://Art/tilesets/urban_night/props/containers/supply_crate_closed_a.png",
-			"opened_texture_path": "res://Art/tilesets/urban_night/props/containers/supply_crate_open_a.png",
-		},
-		{
-			"resource_id": "map_supply_crate_02",
-			"display_name": "废车旁补给箱",
-			"grid": Vector2i(8, 7),
-			"level": 1,
-			"open_ap_cost": 2,
-			"capacity": 8,
-			"columns": 4,
-			"loot": ["material_filter_cotton_01", "consumable_compressed_ration_04"],
-			"closed_texture_path": "res://Art/tilesets/urban_night/props/containers/supply_crate_closed_a.png",
-			"opened_texture_path": "res://Art/tilesets/urban_night/props/containers/supply_crate_open_a.png",
-		},
+				"columns": 4,
+				"loot": ["material_metal_01", "consumable_dried_medicine_02"],
+				"closed_texture_path": "res://Art/tilesets/urban_night/props/containers/supply_crate_closed_b.png",
+				"opened_texture_path": "res://Art/tilesets/urban_night/props/containers/supply_crate_open_b.png",
+				"empty_texture_path": "res://Art/tilesets/urban_night/props/containers/supply_crate_empty_b.png",
+			},
+			{
+				"resource_id": "map_medical_locker_01",
+				"display_name": "废车旁医疗柜",
+				"grid": Vector2i(8, 7),
+				"level": 1,
+				"open_ap_cost": 2,
+				"capacity": 8,
+				"columns": 4,
+				"loot": ["consumable_medkit_01", "consumable_sterile_bandage_04"],
+				"closed_texture_path": "res://Art/tilesets/urban_night/props/containers/medical_locker_closed_b.png",
+				"opened_texture_path": "res://Art/tilesets/urban_night/props/containers/medical_locker_open_b.png",
+				"empty_texture_path": "res://Art/tilesets/urban_night/props/containers/medical_locker_empty_b.png",
+			},
+			{
+				"resource_id": "map_trash_bin_01",
+				"display_name": "路边垃圾桶",
+				"grid": Vector2i(1, 8),
+				"level": 1,
+				"open_ap_cost": 1,
+				"capacity": 4,
+				"columns": 2,
+				"can_walk": true,
+				"loot": ["material_frayed_fiber_00", "material_metal_01"],
+				"closed_texture_path": "res://Art/tilesets/urban_night/props/containers/trash_bin_closed_b.png",
+				"opened_texture_path": "res://Art/tilesets/urban_night/props/containers/trash_bin_open_b.png",
+				"empty_texture_path": "res://Art/tilesets/urban_night/props/containers/trash_bin_empty_b.png",
+			},
+			{
+				"resource_id": "map_vending_machine_01",
+				"display_name": "破损售货机",
+				"grid": Vector2i(9, 5),
+				"level": 1,
+				"open_ap_cost": 2,
+				"capacity": 4,
+				"columns": 2,
+				"loot": ["consumable_compressed_ration_04", "consumable_adrenaline_01"],
+				"closed_texture_path": "res://Art/tilesets/urban_night/props/containers/vending_machine_closed_b.png",
+				"opened_texture_path": "res://Art/tilesets/urban_night/props/containers/vending_machine_breached_b.png",
+				"empty_texture_path": "res://Art/tilesets/urban_night/props/containers/vending_machine_empty_b.png",
+			},
 	])
 
 func _on_unit_defeated(unit: Unit) -> void:

@@ -15,9 +15,10 @@
 		{"id": "bleeding", "chance": 12, "locations": ["body", "limb"]},
 		{"id": "fractured", "chance": 4, "locations": ["limb"]}
 	],
-	"sprite_frames_path": "res://Unit/eagle_soldier_sprites.tres",
+	"sprite_frame_size": [64, 80],
+	"sprite_frames_path": "res://Art/characters/enemies/raider_infantry/raider_infantry_sprites.tres",
 	"art_key": "raider_infantry",
-	"art_status": "placeholder",
+	"art_status": "ready",
 	"drop_container": {
 		"display_name": "掠夺兵战利品箱",
 		"open_ap_cost": 1,
@@ -42,9 +43,10 @@
 		{"id": "bleeding", "chance": 10, "locations": ["body", "limb"]},
 		{"id": "fractured", "chance": 10, "locations": ["limb"]}
 	],
-	"sprite_frames_path": "res://Unit/eagle_soldier_sprites.tres",
+	"sprite_frame_size": [64, 80],
+	"sprite_frames_path": "res://Art/characters/enemies/raider_scout/raider_scout_sprites.tres",
 	"art_key": "raider_scout",
-	"art_status": "placeholder",
+	"art_status": "ready",
 	"drop_container": {
 		"display_name": "斥候战利品箱",
 		"open_ap_cost": 1,
@@ -68,9 +70,10 @@
 	"unprotected_debuffs": [
 		{"id": "bleeding", "chance": 16, "locations": ["body", "limb"]}
 	],
-	"sprite_frames_path": "res://Unit/eagle_soldier_sprites.tres",
+	"sprite_frame_size": [64, 80],
+	"sprite_frames_path": "res://Art/characters/enemies/raider_bulwark/raider_bulwark_sprites.tres",
 	"art_key": "raider_bulwark",
-	"art_status": "placeholder",
+	"art_status": "ready",
 	"drop_container": {
 		"display_name": "护盾兵战利品箱",
 		"open_ap_cost": 2,
@@ -95,9 +98,10 @@
 		{"id": "bleeding", "chance": 45, "locations": ["body", "limb"]},
 		{"id": "fractured", "chance": 16, "locations": ["limb"]}
 	],
-	"sprite_frames_path": "res://Unit/eagle_soldier_sprites.tres",
+	"sprite_frame_size": [64, 80],
+	"sprite_frames_path": "res://Art/characters/enemies/pyroxene_hound/pyroxene_hound_sprites.tres",
 	"art_key": "pyroxene_hound",
-	"art_status": "placeholder",
+	"art_status": "ready",
 	"drop_container": {
 		"display_name": "晶兽遗骸箱",
 		"open_ap_cost": 1,
@@ -121,9 +125,10 @@
 	"unprotected_debuffs": [
 		{"id": "fractured", "chance": 14, "locations": ["limb"]}
 	],
-	"sprite_frames_path": "res://Unit/eagle_soldier_sprites.tres",
+	"sprite_frame_size": [64, 80],
+	"sprite_frames_path": "res://Art/characters/enemies/pyroxene_sentry/pyroxene_sentry_sprites.tres",
 	"art_key": "pyroxene_sentry",
-	"art_status": "placeholder",
+	"art_status": "ready",
 	"drop_container": {
 		"display_name": "哨戒机残骸箱",
 		"open_ap_cost": 2,

@@ -122,7 +122,6 @@ func _get_modifier_name(modifier: String) -> String:
 	return {
 		"attack_range": "攻击距离",
 		"attack_power": "攻击力",
-		"move_fire_accuracy": "移动射击精度",
 		"accuracy": "命中率",
 		"pyroxene_resistance": "辉石抗性",
 	}.get(modifier, modifier)

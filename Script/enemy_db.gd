@@ -23,8 +23,13 @@ func load_from_file(path: String) -> void:
 	print("EnemyDB: loaded ", _enemies.size(), " enemies")
 
 func _validate_entry(entry: Dictionary) -> bool:
-	if not entry.has("id") or not entry.has("name") or not entry.has("ap_max") or not entry.has("sprite_frames_path"):
+	if not entry.has("id") or not entry.has("name") or not entry.has("ap_max"):
 		print("EnemyDB: entry missing required fields: ", entry)
+		return false
+	var has_sprite_frames := not str(entry.get("sprite_frames_path", "")).is_empty()
+	var has_animation_sheets := entry.get("animation_sheets", {}) is Dictionary and not (entry.get("animation_sheets", {}) as Dictionary).is_empty()
+	if not has_sprite_frames and not has_animation_sheets:
+		print("EnemyDB: entry missing sprite_frames_path or animation_sheets: ", entry)
 		return false
 	return true
 

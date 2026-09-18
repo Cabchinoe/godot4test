@@ -86,10 +86,8 @@ func resolve_attack(attacker: Unit, defender: Unit) -> Dictionary:
 		)
 	)
 	var distance_profile := attacker.get_attack_distance_profile(distance)
-	var movement_penalty := attacker.get_movement_attack_accuracy_penalty()
 	var hit_chance := clampi(
 		int(distance_profile.get("accuracy", attacker.get_attack_accuracy()))
-			- movement_penalty
 			- defender.get_effective_evasion(),
 		20,
 		95
@@ -100,12 +98,10 @@ func resolve_attack(attacker: Unit, defender: Unit) -> Dictionary:
 	result["hit_chance"] = hit_chance
 	result["distance"] = distance
 	result["distance_damage_multiplier"] = float(distance_profile.get("damage_multiplier", 1.0))
-	result["movement_accuracy_penalty"] = movement_penalty
 	result["roll"] = hit_roll
 	result["hit_formula"] = {
 		"distance_base_accuracy": distance_base_accuracy,
 		"attacker_accuracy_bonus": accuracy_bonus,
-		"movement_penalty": movement_penalty,
 		"defender_evasion": defender.get_effective_evasion(),
 		"final_hit_chance": hit_chance,
 		"roll": hit_roll,

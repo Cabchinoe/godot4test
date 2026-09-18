@@ -1,8 +1,9 @@
 class_name BattleContainerSpawner
 extends RefCounted
 
-const DEFAULT_CLOSED_TEXTURE := "res://Art/tilesets/urban_night/props/containers/supply_crate_closed_a.png"
-const DEFAULT_OPENED_TEXTURE := "res://Art/tilesets/urban_night/props/containers/supply_crate_open_a.png"
+const DEFAULT_CLOSED_TEXTURE := "res://Art/tilesets/urban_night/props/containers/supply_crate_closed_b.png"
+const DEFAULT_OPENED_TEXTURE := "res://Art/tilesets/urban_night/props/containers/supply_crate_open_b.png"
+const DEFAULT_EMPTY_TEXTURE := "res://Art/tilesets/urban_night/props/containers/supply_crate_empty_b.png"
 const GROUND_PILE_TEXTURE := "res://Art/tilesets/urban_night/props/containers/dropped_loot_pile_a.png"
 
 var level_manager: LevelManager
@@ -60,6 +61,7 @@ func spawn_enemy_drop(enemy: Unit) -> BattleContainer:
 	data["can_walk"] = true
 	data["closed_texture_path"] = str(data.get("closed_texture_path", DEFAULT_CLOSED_TEXTURE))
 	data["opened_texture_path"] = str(data.get("opened_texture_path", DEFAULT_OPENED_TEXTURE))
+	data["empty_texture_path"] = str(data.get("empty_texture_path", DEFAULT_EMPTY_TEXTURE))
 	return spawn(data)
 
 
@@ -78,4 +80,5 @@ func spawn_ground_pile(grid: Vector2i, level: int, resource_id: String) -> Battl
 		"allow_occupied": true,
 		"closed_texture_path": GROUND_PILE_TEXTURE,
 		"opened_texture_path": GROUND_PILE_TEXTURE,
+		"empty_texture_path": GROUND_PILE_TEXTURE,
 	})

@@ -12,9 +12,9 @@ func spawn(id: String, grid: Vector2i, level: int) -> Unit:
 	if data.is_empty():
 		return null
 
-	var sprite_frames: SpriteFrames = load(data["sprite_frames_path"])
+	var sprite_frames := _load_sprite_frames(data)
 	if sprite_frames == null:
-		push_warning("EnemySpawner: failed to load sprite_frames: %s" % data["sprite_frames_path"])
+		push_warning("EnemySpawner: failed to load animation for %s" % id)
 		return null
 
 	var enemy := Unit.new()
@@ -22,13 +22,14 @@ func spawn(id: String, grid: Vector2i, level: int) -> Unit:
 
 	var sprite := AnimatedSprite2D.new()
 	sprite.name = "Sprite2D"
-	sprite.offset = Vector2(32, 32)
+	var frame_size := _get_frame_size(data)
+	sprite.offset = Vector2(frame_size.x * 0.5, frame_size.y * 0.5)
 	enemy.add_child(sprite)
 
 	enemies_container.add_child(enemy)
 	enemy.init_unit(data["name"], "enemy", int(data["ap_max"]), level_manager, level)
 	enemy.configure_combat(data)
-	enemy.configure_appearance(sprite_frames, &"walk", &"walk", &"walk")
+	enemy.configure_appearance(sprite_frames, &"idle", &"walk", &"aim")
 	enemy.grid_pos = grid
 	_align_to_grid(enemy)
 	return enemy
@@ -74,3 +75,18 @@ func _align_to_grid(unit: Unit) -> void:
 
 func _key(grid: Vector2i, level: int) -> String:
 	return "%d_%d_%d" % [grid.x, grid.y, level]
+
+
+func _load_sprite_frames(data: Dictionary) -> SpriteFrames:
+	var animation_sheets: Variant = data.get("animation_sheets", {})
+	if animation_sheets is Dictionary and not (animation_sheets as Dictionary).is_empty():
+		return EnemySpriteFramesFactory.build(animation_sheets as Dictionary, _get_frame_size(data))
+	var sprite_frames_path := str(data.get("sprite_frames_path", ""))
+	return load(sprite_frames_path) as SpriteFrames if not sprite_frames_path.is_empty() else null
+
+
+func _get_frame_size(data: Dictionary) -> Vector2i:
+	var value: Variant = data.get("sprite_frame_size", [64, 80])
+	if value is Array and (value as Array).size() >= 2:
+		return Vector2i(maxi(1, int(value[0])), maxi(1, int(value[1])))
+	return Vector2i(64, 80)

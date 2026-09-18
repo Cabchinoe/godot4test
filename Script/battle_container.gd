@@ -15,12 +15,14 @@ var capacity: int = 8
 var columns: int = 4
 var loot_item_ids: Array[String] = []
 var is_opened: bool = false
+var is_depleted: bool = false
 var is_ground_pile: bool = false
 var requires_attack_range: bool = true
 var can_walk: bool = false
 var interaction_radius: float = 42.0
 var closed_texture: Texture2D
 var opened_texture: Texture2D
+var empty_texture: Texture2D
 var _loot_seeded: bool = false
 var _sprite: Sprite2D
 
@@ -45,8 +47,10 @@ func configure(data: Dictionary) -> void:
 		loot_item_ids.append(str(item_id))
 	var closed_path := str(data.get("closed_texture_path", ""))
 	var opened_path := str(data.get("opened_texture_path", ""))
+	var empty_path := str(data.get("empty_texture_path", ""))
 	closed_texture = _load_texture(closed_path, FALLBACK_CLOSED_TEXTURE)
 	opened_texture = _load_texture(opened_path, FALLBACK_OPENED_TEXTURE)
+	empty_texture = _load_texture(empty_path, FALLBACK_OPENED_TEXTURE)
 	_refresh_visual()
 
 
@@ -105,6 +109,15 @@ func has_seeded_loot() -> bool:
 
 func mark_loot_seeded() -> void:
 	_loot_seeded = true
+	is_depleted = false
+	_refresh_visual()
+
+
+func set_depleted(depleted: bool) -> void:
+	if is_depleted == depleted:
+		return
+	is_depleted = depleted
+	_refresh_visual()
 
 
 func has_remaining_loot(inventory: InventorySaveData) -> bool:
@@ -122,7 +135,12 @@ func _refresh_visual() -> void:
 		_sprite = Sprite2D.new()
 		_sprite.name = "Sprite2D"
 		add_child(_sprite)
-	_sprite.texture = opened_texture if is_opened else closed_texture
+	if is_depleted:
+		_sprite.texture = empty_texture
+	elif is_opened:
+		_sprite.texture = opened_texture
+	else:
+		_sprite.texture = closed_texture
 	_sprite.centered = true
 
 

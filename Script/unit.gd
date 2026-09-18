@@ -42,7 +42,6 @@ var move_timer: float = 0.0
 var move_interval: float = 0.15
 var is_moving: bool = false
 var action_points: int = 0
-var moved_steps_this_turn: int = 0
 
 
 func _ready() -> void:
@@ -157,7 +156,6 @@ func start_turn() -> void:
 	if is_defeated:
 		return
 	action_points = get_current_ap_limit()
-	moved_steps_this_turn = 0
 
 
 func get_current_ap_limit() -> int:
@@ -197,10 +195,6 @@ func get_attack_distance_profile(distance: int) -> Dictionary:
 	}
 
 
-func get_movement_attack_accuracy_penalty() -> int:
-	return 10 if moved_steps_this_turn >= 2 else 0
-
-
 func get_effective_evasion() -> int:
 	return clampi(base_evasion + get_status_modifier("evasion"), 0, 95)
 
@@ -233,8 +227,6 @@ func get_combat_log_snapshot() -> Dictionary:
 			"attack_power": get_attack_power(),
 			"accuracy_bonus": get_attack_accuracy(),
 			"hit_location_indices": get_hit_location_indices(),
-			"movement_steps": moved_steps_this_turn,
-			"movement_accuracy_penalty": get_movement_attack_accuracy_penalty(),
 		},
 		"statuses": effect_list,
 		"protection": {
@@ -420,7 +412,6 @@ func _step_to_next() -> void:
 	var next_node: Dictionary = move_path.pop_front()
 	grid_pos = next_node["grid"]
 	current_level = next_node["level"]
-	moved_steps_this_turn += 1
 
 	var ground := level_manager.get_layer(current_level, "ground")
 	var local := ground.map_to_local(grid_pos)

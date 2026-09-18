@@ -211,8 +211,6 @@ func get_combat_log_snapshot() -> Dictionary:
 		"attack_power": get_attack_power(),
 		"accuracy_bonus": get_attack_accuracy(),
 		"hit_location_indices": get_hit_location_indices(),
-		"movement_steps": moved_steps_this_turn,
-		"movement_accuracy_penalty": get_movement_attack_accuracy_penalty(),
 	}
 	snapshot["protection"] = {
 		"helmet": _get_equipment_protection_snapshot("helmet"),
