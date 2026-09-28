@@ -738,7 +738,7 @@ static func _ensure_loadout(inventory: InventorySaveData, player_data: PlayerSav
 			if not item.is_empty():
 				equipment[slot] = str(item.get("uid", ""))
 				_set_item_position(inventory, str(item.get("uid", "")), -1)
-	if not equipment.has("weapon"):
+	if not equipment.has("weapon") and not bool(loadout.get("loadout_lost", false)):
 		var weapon := _find_or_add_item(inventory, "weapon_benny_defender_9")
 		equipment["weapon"] = str(weapon.get("uid", ""))
 		_set_item_position(inventory, str(weapon.get("uid", "")), -1)
@@ -854,6 +854,44 @@ static func clear_all_temporary_containers(inventory: InventorySaveData, discard
 	for container_id in container_ids:
 		clear_temporary_container(inventory, str(container_id), discard_items)
 	_temporary_containers_by_inventory.erase(inventory.get_instance_id())
+
+
+static func discard_operator_loadout(inventory: InventorySaveData, operator_id: String, player_data: PlayerSaveData = null) -> void:
+	if inventory == null:
+		return
+	var loadout := get_loadout(inventory, operator_id)
+	var equipment: Dictionary = loadout.get("equipment", {})
+	var lost_uids: Dictionary = {}
+	for item_uid in equipment.values():
+		var uid := str(item_uid)
+		if not uid.is_empty():
+			lost_uids[uid] = true
+	var weapon_uid := str(equipment.get("weapon", ""))
+	var attachments: Dictionary = loadout.get("attachments", {})
+	if not weapon_uid.is_empty():
+		for attachment_uid in (attachments.get(weapon_uid, {}) as Dictionary).values():
+			var uid := str(attachment_uid)
+			if not uid.is_empty():
+				lost_uids[uid] = true
+	var backpack_uid := str(equipment.get("backpack", ""))
+	var all_backpack_items: Dictionary = loadout.get("backpack_items", {})
+	if not backpack_uid.is_empty():
+		for item_uid in (all_backpack_items.get(backpack_uid, {}) as Dictionary).values():
+			var uid := str(item_uid)
+			if not uid.is_empty():
+				lost_uids[uid] = true
+	var retained_items: Array[Dictionary] = []
+	for item in inventory.warehouse_items:
+		if not lost_uids.has(str(item.get("uid", ""))):
+			retained_items.append(item)
+	inventory.warehouse_items = retained_items
+	loadout["equipment"] = {}
+	loadout["attachments"] = {}
+	loadout["backpack_items"] = {}
+	loadout["loadout_lost"] = true
+	inventory.operator_loadouts[operator_id] = loadout
+	_touch(inventory)
+	_sync_player_equipment(inventory, player_data)
 
 
 static func _get_temporary_containers(inventory: InventorySaveData, create: bool = false) -> Dictionary:

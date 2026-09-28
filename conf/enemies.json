@@ -19,6 +19,18 @@
 	"sprite_frames_path": "res://Art/characters/enemies/raider_infantry/raider_infantry_sprites.tres",
 	"art_key": "raider_infantry",
 	"art_status": "ready",
+	"ai": {
+		"perception": {
+			"mode": "path_ap",
+			"range": 6,
+			"allow_cross_level": true
+		},
+		"retreat": {
+			"enabled": true,
+			"hp_ratio_threshold": 0.20,
+			"trigger_chance": 0.50
+		}
+	},
 	"drop_container": {
 		"display_name": "掠夺兵战利品箱",
 		"open_ap_cost": 1,
@@ -47,6 +59,18 @@
 	"sprite_frames_path": "res://Art/characters/enemies/raider_scout/raider_scout_sprites.tres",
 	"art_key": "raider_scout",
 	"art_status": "ready",
+	"ai": {
+		"perception": {
+			"mode": "chebyshev",
+			"range": 5,
+			"allow_cross_level": false
+		},
+		"retreat": {
+			"enabled": true,
+			"hp_ratio_threshold": 0.20,
+			"trigger_chance": 0.50
+		}
+	},
 	"drop_container": {
 		"display_name": "斥候战利品箱",
 		"open_ap_cost": 1,
@@ -74,6 +98,16 @@
 	"sprite_frames_path": "res://Art/characters/enemies/raider_bulwark/raider_bulwark_sprites.tres",
 	"art_key": "raider_bulwark",
 	"art_status": "ready",
+	"ai": {
+		"perception": {
+			"mode": "path_ap",
+			"range": 5,
+			"allow_cross_level": true
+		},
+		"retreat": {
+			"enabled": false
+		}
+	},
 	"drop_container": {
 		"display_name": "护盾兵战利品箱",
 		"open_ap_cost": 2,
@@ -102,6 +136,16 @@
 	"sprite_frames_path": "res://Art/characters/enemies/pyroxene_hound/pyroxene_hound_sprites.tres",
 	"art_key": "pyroxene_hound",
 	"art_status": "ready",
+	"ai": {
+		"perception": {
+			"mode": "manhattan",
+			"range": 6,
+			"allow_cross_level": false
+		},
+		"retreat": {
+			"enabled": false
+		}
+	},
 	"drop_container": {
 		"display_name": "晶兽遗骸箱",
 		"open_ap_cost": 1,
@@ -129,6 +173,16 @@
 	"sprite_frames_path": "res://Art/characters/enemies/pyroxene_sentry/pyroxene_sentry_sprites.tres",
 	"art_key": "pyroxene_sentry",
 	"art_status": "ready",
+	"ai": {
+		"perception": {
+			"mode": "chebyshev",
+			"range": 7,
+			"allow_cross_level": true
+		},
+		"retreat": {
+			"enabled": false
+		}
+	},
 	"drop_container": {
 		"display_name": "哨戒机残骸箱",
 		"open_ap_cost": 2,

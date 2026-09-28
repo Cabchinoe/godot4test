@@ -22,6 +22,8 @@ const BATTLE_LOADOUT_PANEL_SCRIPT := preload("res://Script/inventory/ui/battle_l
 const BATTLE_COMBAT_RESOLVER_SCRIPT := preload("res://Script/battle_combat_resolver.gd")
 const BATTLE_CONTAINER_SPAWNER_SCRIPT := preload("res://Script/battle_container_spawner.gd")
 const BATTLE_CONTAINER_ACTION_MENU_SCRIPT := preload("res://Script/ui/battle_container_action_menu.gd")
+const SIGNAL_FLARE_SPRITES := preload("res://Art/tilesets/urban_night/props/markers/signal_flare/signal_flare_sprites.tres")
+const LEVEL_CONFIG_PATH := "res://conf/levels/beginner_urban.json"
 
 const DRAG_THRESHOLD: float = 5.0
 const MOVE_RANGE_SOURCE_ID: int = 0
@@ -59,6 +61,16 @@ var _pending_container: BattleContainer
 var _pending_containers: Array[BattleContainer] = []
 var _context_search_container: BattleContainer
 var _context_search_candidates: Array[BattleContainer] = []
+var battle_config: Dictionary = {}
+var force_evacuation_button: Button
+var evacuation_confirmation: ConfirmationDialog
+var failure_overlay: Control
+var failure_reason_label: Label
+var _battle_finished := false
+var evacuation_grid := Vector2i(-1, -1)
+var evacuation_level := 1
+var evacuation_marker: AnimatedSprite2D
+var evacuation_pending := false
 
 
 func _ready():
@@ -69,6 +81,7 @@ func _ready():
 		ItemDB.load_from_dir("res://conf/items")
 	if EnemyDB.get_all_ids().is_empty():
 		EnemyDB.load_from_file("res://conf/enemies.json")
+	battle_config = _load_level_config()
 
 	level_manager = LevelManager.new()
 	level_manager.add_level(1, ground_layer, obstacle_layer, hud_layer_1, 0)
@@ -96,14 +109,17 @@ func _ready():
 	player.defeated.connect(_on_unit_defeated)
 	player.damaged.connect(_on_player_damaged)
 	_configure_hud()
+	_setup_evacuation_controls()
+	_setup_failure_overlay()
 	print("Player start grid: ", player.grid_pos, " level: ", player.current_level, " world: ", player.global_position)
 
 	bullet_range = BulletRange.new(level_manager)
 	combat_resolver = BATTLE_COMBAT_RESOLVER_SCRIPT.new()
 	container_spawner = BATTLE_CONTAINER_SPAWNER_SCRIPT.new(level_manager)
 	_spawn_map_containers()
+	_spawn_evacuation_point()
 
-	turn_controller = TurnController.new(10)
+	turn_controller = TurnController.new(_get_max_turns())
 	turn_controller.turn_started.connect(_on_turn_started)
 	turn_controller.game_over.connect(_on_game_over)
 	turn_controller.phase_changed.connect(_on_phase_changed)
@@ -117,13 +133,7 @@ func _ready():
 	context_menu.popup_hide.connect(_on_context_menu_hide)
 
 	enemy_spawner = EnemySpawner.new(level_manager, enemies_container)
-	for enemy in enemy_spawner.spawn_batch([
-		{"id": "infantry", "grid": Vector2i(5, 3), "level": 1},
-		{"id": "raider_scout", "grid": Vector2i(7, 5), "level": 1},
-		{"id": "raider_bulwark", "grid": Vector2i(9, 3), "level": 1},
-		{"id": "pyroxene_hound", "grid": Vector2i(3, 7), "level": 1},
-		{"id": "pyroxene_sentry", "grid": Vector2i(10, 7), "level": 1},
-	]):
+	for enemy in enemy_spawner.spawn_batch(_get_enemy_spawn_entries()):
 		enemy.defeated.connect(_on_unit_defeated)
 	enemy_ai = EnemyAI.new(bullet_range, combat_resolver)
 
@@ -133,8 +143,238 @@ func _exit_tree() -> void:
 	if player_save_provider:
 		SaveManager.unregister_provider(player_save_provider)
 
+
+func _load_level_config() -> Dictionary:
+	if not FileAccess.file_exists(LEVEL_CONFIG_PATH):
+		push_error("Battlefield: missing level config %s" % LEVEL_CONFIG_PATH)
+		return {}
+	var file := FileAccess.open(LEVEL_CONFIG_PATH, FileAccess.READ)
+	if file == null:
+		push_error("Battlefield: failed to read level config %s" % LEVEL_CONFIG_PATH)
+		return {}
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not (parsed is Dictionary):
+		push_error("Battlefield: invalid level config %s" % LEVEL_CONFIG_PATH)
+		return {}
+	return (parsed as Dictionary).duplicate(true)
+
+
+func _get_max_turns() -> int:
+	return maxi(1, int(battle_config.get("max_turns", 10)))
+
+
+func _spawn_evacuation_point() -> void:
+	var evacuation_data: Variant = battle_config.get("evacuation", {})
+	if not (evacuation_data is Dictionary):
+		push_warning("Battlefield: missing evacuation config")
+		return
+	var data := evacuation_data as Dictionary
+	var grid := _to_grid(data.get("grid", []))
+	var level := maxi(1, int(data.get("level", 1)))
+	if grid.x < 0 or grid.y < 0 or not player.pathfinder.is_walkable(grid, level, player):
+		push_warning("Battlefield: invalid evacuation grid %s lv%d" % [grid, level])
+		return
+	var obstacle := level_manager.get_layer(level, "obstacle")
+	var ground := level_manager.get_layer(level, "ground")
+	if obstacle == null or ground == null:
+		push_warning("Battlefield: missing layer for evacuation point")
+		return
+	evacuation_grid = grid
+	evacuation_level = level
+	evacuation_marker = AnimatedSprite2D.new()
+	evacuation_marker.name = "EvacuationSignalFlare"
+	evacuation_marker.sprite_frames = SIGNAL_FLARE_SPRITES
+	evacuation_marker.animation = &"signal_flare"
+	evacuation_marker.scale = Vector2(1.0 / 32.0, 1.0 / 32.0)
+	evacuation_marker.position = ground.map_to_local(grid)
+	evacuation_marker.z_as_relative = true
+	evacuation_marker.add_to_group("evacuation_point")
+	obstacle.add_child(evacuation_marker)
+	evacuation_marker.play()
+	print("[Evacuation] placed at %s lv%d" % [evacuation_grid, evacuation_level])
+
+
+func _get_container_entries() -> Array:
+	var result: Array = []
+	var entries: Variant = battle_config.get("containers", [])
+	if not (entries is Array):
+		return result
+	for entry_variant in entries:
+		if not (entry_variant is Dictionary):
+			continue
+		var entry := (entry_variant as Dictionary).duplicate(true)
+		var grid := _to_grid(entry.get("grid", []))
+		if grid == Vector2i.ZERO:
+			push_warning("Battlefield: skipped container with invalid grid")
+			continue
+		entry["grid"] = grid
+		entry["level"] = maxi(1, int(entry.get("level", 1)))
+		result.append(entry)
+	return result
+
+
+func _get_enemy_spawn_entries() -> Array:
+	var result: Array = []
+	var groups: Variant = battle_config.get("enemy_groups", [])
+	if not (groups is Array):
+		return result
+	for group_variant in groups:
+		if not (group_variant is Dictionary):
+			continue
+		var group := group_variant as Dictionary
+		var enemy_id := str(group.get("id", ""))
+		var spawns: Variant = group.get("spawns", [])
+		if enemy_id.is_empty() or not (spawns is Array):
+			push_warning("Battlefield: skipped invalid enemy group")
+			continue
+		var count := maxi(0, int(group.get("count", (spawns as Array).size())))
+		if count > (spawns as Array).size():
+			push_warning("Battlefield: enemy group %s count exceeds configured spawn points" % enemy_id)
+		for index in mini(count, (spawns as Array).size()):
+			var spawn_variant: Variant = (spawns as Array)[index]
+			if not (spawn_variant is Dictionary):
+				continue
+			var spawn := spawn_variant as Dictionary
+			var grid := _to_grid(spawn.get("grid", []))
+			if grid == Vector2i.ZERO:
+				push_warning("Battlefield: skipped %s with invalid grid" % enemy_id)
+				continue
+			result.append({
+				"id": enemy_id,
+				"grid": grid,
+				"level": maxi(1, int(spawn.get("level", 1))),
+			})
+	return result
+
+
+func _to_grid(value: Variant) -> Vector2i:
+	if value is Array and (value as Array).size() >= 2:
+		var coordinates := value as Array
+		return Vector2i(int(coordinates[0]), int(coordinates[1]))
+	return Vector2i.ZERO
+
+
+func _setup_evacuation_controls() -> void:
+	force_evacuation_button = Button.new()
+	force_evacuation_button.name = "ForceEvacuationButton"
+	force_evacuation_button.text = "强制撤离"
+	force_evacuation_button.anchor_left = 1.0
+	force_evacuation_button.anchor_right = 1.0
+	force_evacuation_button.offset_left = -210.0
+	force_evacuation_button.offset_top = 13.0
+	force_evacuation_button.offset_right = -28.0
+	force_evacuation_button.offset_bottom = 52.0
+	end_turn_button.get_parent().add_child(force_evacuation_button)
+	force_evacuation_button.pressed.connect(_on_force_evacuation_pressed)
+
+	evacuation_confirmation = ConfirmationDialog.new()
+	evacuation_confirmation.title = "确认强制撤离"
+	evacuation_confirmation.dialog_text = "强制撤离将按撤离失败处理，并永久失去所有已装备、配件和背包内物品。确认继续？"
+	evacuation_confirmation.ok_button_text = "确认撤离"
+	evacuation_confirmation.cancel_button_text = "取消"
+	$UILayer/UIRoot.add_child(evacuation_confirmation)
+	evacuation_confirmation.confirmed.connect(_on_force_evacuation_confirmed)
+
+
+func _setup_failure_overlay() -> void:
+	failure_overlay = Control.new()
+	failure_overlay.name = "FailureOverlay"
+	failure_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	failure_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	failure_overlay.visible = false
+	$UILayer/UIRoot.add_child(failure_overlay)
+
+	var dimmer := ColorRect.new()
+	dimmer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dimmer.color = Color(0.01, 0.015, 0.025, 0.88)
+	failure_overlay.add_child(dimmer)
+
+	var panel := PanelContainer.new()
+	panel.anchor_left = 0.5
+	panel.anchor_top = 0.5
+	panel.anchor_right = 0.5
+	panel.anchor_bottom = 0.5
+	panel.offset_left = -270.0
+	panel.offset_top = -170.0
+	panel.offset_right = 270.0
+	panel.offset_bottom = 170.0
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.035, 0.075, 0.105, 0.98)
+	panel_style.border_color = Color(0.88, 0.28, 0.24, 1.0)
+	panel_style.set_border_width_all(2)
+	panel_style.corner_radius_top_left = 10
+	panel_style.corner_radius_top_right = 10
+	panel_style.corner_radius_bottom_left = 10
+	panel_style.corner_radius_bottom_right = 10
+	panel.add_theme_stylebox_override("panel", panel_style)
+	failure_overlay.add_child(panel)
+
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 18)
+	panel.add_child(content)
+	var title := Label.new()
+	title.text = "撤离失败"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 36)
+	title.add_theme_color_override("font_color", Color(1.0, 0.38, 0.32, 1.0))
+	content.add_child(title)
+	failure_reason_label = Label.new()
+	failure_reason_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	failure_reason_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	failure_reason_label.add_theme_font_size_override("font_size", 19)
+	content.add_child(failure_reason_label)
+	var return_button := Button.new()
+	return_button.text = "返回指挥中心"
+	return_button.custom_minimum_size = Vector2(190, 48)
+	return_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	return_button.pressed.connect(_on_return_to_command_center_pressed)
+	content.add_child(return_button)
+
+
+func _on_force_evacuation_pressed() -> void:
+	if _battle_finished:
+		return
+	evacuation_confirmation.popup_centered()
+
+
+func _on_force_evacuation_confirmed() -> void:
+	_end_battle_as_failure("已执行强制撤离。")
+
+
+func _end_battle_as_failure(reason: String) -> void:
+	if _battle_finished:
+		return
+	_battle_finished = true
+	_change_state(State.IDLE)
+	_hide_all_battle_panels()
+	end_turn_button.disabled = true
+	if force_evacuation_button:
+		force_evacuation_button.disabled = true
+	if turn_controller and not turn_controller.is_game_over:
+		turn_controller.end_game()
+	if inventory:
+		WarehouseService.clear_all_temporary_containers(inventory, true)
+		WarehouseService.discard_operator_loadout(inventory, WarehouseService.OPERATOR_ID, SaveManager.current_data.player)
+		player.sync_equipment_from_save(SaveManager.current_data.player)
+		player.sync_battle_equipment(inventory)
+	_record_battle_result("failure", reason)
+	if not SaveManager.save_current_or_create():
+		push_warning("Battlefield: failed to save evacuation failure result")
+	failure_reason_label.text = "%s\n已遗失所有随身物资。" % reason
+	failure_overlay.visible = true
+
+
+func _on_return_to_command_center_pressed() -> void:
+	get_tree().change_scene_to_file("res://CommandCenter.tscn")
+
 func _on_turn_started(_turn: int):
 	_log_turn_events(combat_resolver.begin_turn(player))
+	if evacuation_pending:
+		if not player.is_defeated and _is_player_at_evacuation_point():
+			_end_battle_as_success()
+			return
+		evacuation_pending = false
+		print("[Evacuation] 已中断：干员未停留在撤离点。")
 	_update_hud()
 	_update_player_animation()
 
@@ -154,8 +394,7 @@ func _update_player_animation() -> void:
 		player.play_idle()
 
 func _on_game_over():
-	_change_state(State.IDLE)
-	end_turn_button.disabled = true
+	_end_battle_as_failure("行动时限耗尽，未能在规定回合内撤离。")
 
 func _on_phase_changed(phase):
 	if phase == TurnController.Phase.ENEMY_PHASE:
@@ -194,6 +433,11 @@ func _update_skip_input() -> void:
 		_set_all_units_move_interval(DEFAULT_MOVE_INTERVAL)
 
 func _on_end_turn_pressed():
+	if _battle_finished:
+		return
+	evacuation_pending = _is_player_at_evacuation_point()
+	if evacuation_pending:
+		print("[Evacuation] 撤离倒计时开始：撑到下一个玩家回合。")
 	_change_state(State.IDLE)
 	_hide_all_battle_panels()
 	turn_controller.end_turn()
@@ -867,65 +1111,12 @@ func _on_temporary_container_changed(container_id: String) -> void:
 		return
 
 func _spawn_map_containers() -> void:
-	for container in container_spawner.spawn_batch([
-		{
-			"resource_id": "map_supply_crate_01",
-			"display_name": "街角补给箱",
-			"grid": Vector2i(3, 5),
-			"level": 1,
-			"open_ap_cost": 1,
-			"capacity": 8,
-				"columns": 4,
-				"loot": ["material_metal_01", "consumable_dried_medicine_02"],
-				"closed_texture_path": "res://Art/tilesets/urban_night/props/containers/supply_crate_closed_b.png",
-				"opened_texture_path": "res://Art/tilesets/urban_night/props/containers/supply_crate_open_b.png",
-				"empty_texture_path": "res://Art/tilesets/urban_night/props/containers/supply_crate_empty_b.png",
-			},
-			{
-				"resource_id": "map_medical_locker_01",
-				"display_name": "废车旁医疗柜",
-				"grid": Vector2i(8, 7),
-				"level": 1,
-				"open_ap_cost": 2,
-				"capacity": 8,
-				"columns": 4,
-				"loot": ["consumable_medkit_01", "consumable_sterile_bandage_04"],
-				"closed_texture_path": "res://Art/tilesets/urban_night/props/containers/medical_locker_closed_b.png",
-				"opened_texture_path": "res://Art/tilesets/urban_night/props/containers/medical_locker_open_b.png",
-				"empty_texture_path": "res://Art/tilesets/urban_night/props/containers/medical_locker_empty_b.png",
-			},
-			{
-				"resource_id": "map_trash_bin_01",
-				"display_name": "路边垃圾桶",
-				"grid": Vector2i(1, 8),
-				"level": 1,
-				"open_ap_cost": 1,
-				"capacity": 4,
-				"columns": 2,
-				"loot": ["material_frayed_fiber_00", "material_metal_01"],
-				"closed_texture_path": "res://Art/tilesets/urban_night/props/containers/trash_bin_closed_b.png",
-				"opened_texture_path": "res://Art/tilesets/urban_night/props/containers/trash_bin_open_b.png",
-				"empty_texture_path": "res://Art/tilesets/urban_night/props/containers/trash_bin_empty_b.png",
-			},
-			{
-				"resource_id": "map_vending_machine_01",
-				"display_name": "破损售货机",
-				"grid": Vector2i(9, 5),
-				"level": 1,
-				"open_ap_cost": 2,
-				"capacity": 4,
-				"columns": 2,
-				"loot": ["consumable_compressed_ration_04", "consumable_adrenaline_01"],
-				"closed_texture_path": "res://Art/tilesets/urban_night/props/containers/vending_machine_closed_b.png",
-				"opened_texture_path": "res://Art/tilesets/urban_night/props/containers/vending_machine_breached_b.png",
-				"empty_texture_path": "res://Art/tilesets/urban_night/props/containers/vending_machine_empty_b.png",
-			},
-	]):
+	for container in container_spawner.spawn_batch(_get_container_entries()):
 		_reorder_containers_at_grid(container.grid_pos, container.current_level)
 
 func _on_unit_defeated(unit: Unit) -> void:
 	if unit == player:
-		turn_controller.end_game()
+		_end_battle_as_failure("干员生命归零，撤离失败。")
 		return
 	if unit.faction != "enemy":
 		return
@@ -937,9 +1128,61 @@ func _on_unit_defeated(unit: Unit) -> void:
 			_reorder_containers_at_grid(drop.grid_pos, drop.current_level)
 	unit.queue_free()
 
-func _on_player_damaged(_result: Dictionary) -> void:
+func _on_player_damaged(result: Dictionary) -> void:
+	if evacuation_pending and int(result.get("damage", 0)) > 0:
+		evacuation_pending = false
+		print("[Evacuation] 撤离倒计时中断：干员受到伤害。")
 	if turn_controller:
 		_update_hud()
+
+
+func _is_player_at_evacuation_point() -> bool:
+	return evacuation_grid.x >= 0 and player.grid_pos == evacuation_grid and player.current_level == evacuation_level
+
+
+func _end_battle_as_success() -> void:
+	if _battle_finished:
+		return
+	_battle_finished = true
+	_change_state(State.IDLE)
+	_hide_all_battle_panels()
+	end_turn_button.disabled = true
+	if force_evacuation_button:
+		force_evacuation_button.disabled = true
+	if turn_controller and not turn_controller.is_game_over:
+		turn_controller.end_game()
+	var extracted_items := _get_carried_item_count()
+	_record_battle_result("success", "已在撤离点停留至下一个玩家回合。", extracted_items)
+	if not SaveManager.save_current_or_create():
+		push_warning("Battlefield: failed to save successful evacuation result")
+	get_tree().change_scene_to_file("res://CommandCenter.tscn")
+
+
+func _get_carried_item_count() -> int:
+	if inventory == null:
+		return 0
+	var count := 0
+	var weapon_uid := WarehouseService.get_equipped_uid(inventory, "weapon", WarehouseService.OPERATOR_ID)
+	for slot in WarehouseService.EQUIPMENT_SLOTS:
+		if not WarehouseService.get_equipped_uid(inventory, slot, WarehouseService.OPERATOR_ID).is_empty():
+			count += 1
+	if not weapon_uid.is_empty():
+		count += WarehouseService.get_weapon_attachments(inventory, weapon_uid, WarehouseService.OPERATOR_ID).size()
+	var backpack_uid := WarehouseService.get_equipped_uid(inventory, "backpack", WarehouseService.OPERATOR_ID)
+	if not backpack_uid.is_empty():
+		count += WarehouseService.get_backpack_item_count(inventory, backpack_uid)
+	return count
+
+
+func _record_battle_result(outcome: String, reason: String, extracted_items: int = 0) -> void:
+	print("[BattleResult] ", {
+		"timestamp": Time.get_datetime_string_from_system(),
+		"level_id": str(battle_config.get("id", "unknown")),
+		"outcome": outcome,
+		"reason": reason,
+		"turn": turn_controller.current_turn if turn_controller else 0,
+		"extracted_items": extracted_items,
+	})
 
 func _log_turn_events(events: Array[Dictionary]) -> void:
 	for event in events:

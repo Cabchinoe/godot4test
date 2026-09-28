@@ -32,6 +32,7 @@ var body_armor: int = 0
 var head_per_hit_absorb: int = 0
 var body_per_hit_absorb: int = 0
 var loot_container_data: Dictionary = {}
+var ai_config: Dictionary = {}
 var is_defeated: bool = false
 var status_effects: Array = []
 
@@ -150,6 +151,7 @@ func configure_combat(data: Dictionary) -> void:
 	head_per_hit_absorb = maxi(0, int(data.get("head_per_hit_absorb", head_armor)))
 	body_per_hit_absorb = maxi(0, int(data.get("body_per_hit_absorb", body_armor)))
 	loot_container_data = (data.get("drop_container", {}) as Dictionary).duplicate(true)
+	ai_config = (data.get("ai", {}) as Dictionary).duplicate(true)
 
 
 func start_turn() -> void:

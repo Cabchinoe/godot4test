@@ -15,21 +15,19 @@ run/main_scene="res://Boot.tscn"
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
 
-[display]
-
-[display/window]
-
-size/viewport_width=1920
-size/viewport_height=1080
-size/window_width_override=1920
-size/window_height_override=1080
-stretch/mode="canvas_items"
-
 [autoload]
 
 ItemDB="*res://Script/item/item_db.gd"
 SaveManager="*res://Script/save/save_manager.gd"
 EnemyDB="*res://Script/enemy_db.gd"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/window_width_override=1920
+window/size/window_height_override=1080
+window/stretch/mode="canvas_items"
 
 [physics]
 

@@ -1,0 +1,127 @@
+{
+  "id": "beginner_urban",
+  "display_name": "新手街区：补给回收",
+  "max_turns": 20,
+  "evacuation": {
+    "grid": [23, 5],
+    "level": 1
+  },
+  "enemy_groups": [
+    {
+      "id": "infantry",
+      "count": 2,
+      "spawns": [
+        {"grid": [5, 3], "level": 1},
+        {"grid": [9, 3], "level": 1}
+      ]
+    },
+    {
+      "id": "raider_scout",
+      "count": 1,
+      "spawns": [
+        {"grid": [7, 5], "level": 1}
+      ]
+    }
+  ],
+  "containers": [
+    {
+      "resource_id": "map_supply_crate_01",
+      "display_name": "街角补给箱",
+      "grid": [3, 5],
+      "level": 1,
+      "open_ap_cost": 1,
+      "capacity": 8,
+      "columns": 4,
+      "loot_table": "newbie_supply_crate",
+      "loot": ["material_metal_01", "material_textile_thread_01"],
+      "closed_texture_path": "res://Art/tilesets/urban_night/props/containers/supply_crate_closed_b.png",
+      "opened_texture_path": "res://Art/tilesets/urban_night/props/containers/supply_crate_open_b.png",
+      "empty_texture_path": "res://Art/tilesets/urban_night/props/containers/supply_crate_empty_b.png"
+    },
+    {
+      "resource_id": "map_medical_locker_01",
+      "display_name": "废车旁医疗柜",
+      "grid": [8, 7],
+      "level": 1,
+      "open_ap_cost": 2,
+      "capacity": 8,
+      "columns": 4,
+      "loot_table": "newbie_medical_cache",
+      "loot": ["material_herbal_residue_00", "material_grayleaf_herb_01"],
+      "closed_texture_path": "res://Art/tilesets/urban_night/props/containers/medical_locker_closed_b.png",
+      "opened_texture_path": "res://Art/tilesets/urban_night/props/containers/medical_locker_open_b.png",
+      "empty_texture_path": "res://Art/tilesets/urban_night/props/containers/medical_locker_empty_b.png"
+    },
+    {
+      "resource_id": "map_trash_bin_01",
+      "display_name": "路边垃圾桶",
+      "grid": [1, 8],
+      "level": 1,
+      "open_ap_cost": 1,
+      "capacity": 4,
+      "columns": 2,
+      "loot_table": "newbie_scrap",
+      "loot": ["material_frayed_fiber_00", "material_spoiled_crop_00"],
+      "closed_texture_path": "res://Art/tilesets/urban_night/props/containers/trash_bin_closed_b.png",
+      "opened_texture_path": "res://Art/tilesets/urban_night/props/containers/trash_bin_open_b.png",
+      "empty_texture_path": "res://Art/tilesets/urban_night/props/containers/trash_bin_empty_b.png"
+    },
+    {
+      "resource_id": "map_vending_machine_01",
+      "display_name": "破损售货机",
+      "grid": [9, 5],
+      "level": 1,
+      "open_ap_cost": 2,
+      "capacity": 4,
+      "columns": 2,
+      "loot_table": "newbie_vending_machine",
+      "loot": ["material_seed_pack_01", "material_filter_cotton_01"],
+      "closed_texture_path": "res://Art/tilesets/urban_night/props/containers/vending_machine_closed_b.png",
+      "opened_texture_path": "res://Art/tilesets/urban_night/props/containers/vending_machine_breached_b.png",
+      "empty_texture_path": "res://Art/tilesets/urban_night/props/containers/vending_machine_empty_b.png"
+    }
+  ],
+  "loot_tables": {
+    "newbie_supply_crate": {
+      "status": "proposal_only",
+      "rolls": 2,
+      "entries": [
+        {"item_id": "material_metal_01", "weight": 30},
+        {"item_id": "material_textile_thread_01", "weight": 25},
+        {"item_id": "material_filter_cotton_01", "weight": 20},
+        {"item_id": "material_seed_pack_01", "weight": 15},
+        {"item_id": "material_grayleaf_herb_01", "weight": 10}
+      ]
+    },
+    "newbie_medical_cache": {
+      "status": "proposal_only",
+      "rolls": 2,
+      "entries": [
+        {"item_id": "material_herbal_residue_00", "weight": 45},
+        {"item_id": "material_grayleaf_herb_01", "weight": 35},
+        {"item_id": "material_filter_cotton_01", "weight": 20}
+      ]
+    },
+    "newbie_scrap": {
+      "status": "proposal_only",
+      "rolls": 2,
+      "entries": [
+        {"item_id": "material_frayed_fiber_00", "weight": 35},
+        {"item_id": "material_spoiled_crop_00", "weight": 25},
+        {"item_id": "material_damaged_armor_plate_00", "weight": 15},
+        {"item_id": "material_soiled_filter_00", "weight": 15},
+        {"item_id": "material_metal_01", "weight": 10}
+      ]
+    },
+    "newbie_vending_machine": {
+      "status": "proposal_only",
+      "rolls": 2,
+      "entries": [
+        {"item_id": "material_seed_pack_01", "weight": 35},
+        {"item_id": "material_filter_cotton_01", "weight": 30},
+        {"item_id": "material_spoiled_crop_00", "weight": 20},
+        {"item_id": "material_textile_thread_01", "weight": 15}
+      ]
+    }
+  }
+}

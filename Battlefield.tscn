@@ -1,4 +1,4 @@
-[gd_scene format=4 uid="uid://b83f46a11b15c"]
+[gd_scene format=4 uid="uid://djeb0cuoeaeet"]
 
 [ext_resource type="Texture2D" uid="uid://sp3tlnxhv8ne" path="res://HUD/moverange.png" id="3_7mycd"]
 [ext_resource type="Texture2D" uid="uid://bw4rsh5lmnq8f" path="res://HUD/attack_range.png" id="6_attack"]
@@ -12,6 +12,7 @@
 [ext_resource type="Resource" uid="uid://cwals6ovb5j3y" path="res://conf/characters/benny.tres" id="character_benny"]
 [ext_resource type="Script" uid="uid://bw2uywjhr23ni" path="res://Script/benny.gd" id="script_benny"]
 [ext_resource type="Script" uid="uid://jv68itladubh" path="res://Script/ui/battle_context_menu.gd" id="script_context_menu"]
+[ext_resource type="Script" uid="uid://bkpl2eys4kgy3" path="res://Script/battlefield.gd" id="script_main"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_82xsv"]
 texture = ExtResource("7_ycdy4")
@@ -287,8 +288,9 @@ texture_region_size = Vector2i(60, 60)
 tile_size = Vector2i(64, 64)
 sources/0 = SubResource("TileSetAtlasSource_272bh")
 
-[node name="Main" type="Node2D" unique_id=33713993]
+[node name="Battlefield" type="Node2D" unique_id=33713993]
 y_sort_enabled = true
+script = ExtResource("script_main")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1044951325]
 
@@ -351,9 +353,12 @@ layer = 10
 
 [node name="UIRoot" type="Control" parent="UILayer" unique_id=617480245]
 layout_mode = 3
-anchors_preset = 10
+anchors_preset = 15
 anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 
 [node name="StatusBar" type="Control" parent="UILayer/UIRoot" unique_id=751288848]
 layout_mode = 1
