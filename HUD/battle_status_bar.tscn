@@ -1,0 +1,79 @@
+[gd_scene load_steps=2 format=4]
+
+[ext_resource type="Script" path="res://Script/ui/battle_status_bar.gd" id="1_statusbar"]
+
+[node name="BattleStatusBar" type="Control"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 68.0
+grow_horizontal = 2
+script = ExtResource("1_statusbar")
+
+[node name="APLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 28.0
+offset_top = 12.0
+offset_right = 200.0
+offset_bottom = 48.0
+text = "AP  5 / 5"
+vertical_alignment = 1
+
+[node name="HPLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 218.0
+offset_top = 17.0
+offset_right = 395.0
+offset_bottom = 47.0
+text = "HP  90 / 90"
+
+[node name="HelmetLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 413.0
+offset_top = 17.0
+offset_right = 590.0
+offset_bottom = 47.0
+text = "头盔 0 / 0"
+
+[node name="ArmorLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 600.0
+offset_top = 17.0
+offset_right = 777.0
+offset_bottom = 47.0
+text = "护甲 0 / 0"
+
+[node name="TurnLabel" type="Label" parent="."]
+layout_mode = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -126.0
+offset_top = 14.0
+offset_right = 28.0
+offset_bottom = 49.0
+grow_horizontal = 2
+text = "回合 1/10"
+vertical_alignment = 1
+
+[node name="EndTurnButton" type="Button" parent="."]
+layout_mode = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 42.0
+offset_top = 13.0
+offset_right = 146.0
+offset_bottom = 52.0
+grow_horizontal = 2
+text = "结束回合"
+
+[node name="ForceEvacuationButton" type="Button" parent="."]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -210.0
+offset_top = 13.0
+offset_right = -28.0
+offset_bottom = 52.0
+grow_horizontal = 2
+text = "强制撤离"
+visible = false

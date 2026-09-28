@@ -11,10 +11,7 @@ extends Node2D
 @onready var hover_sprite: Line2D = $HUD/CoverSprite
 @onready var hover_sprite2: Line2D = $HUD/CoverSprite2
 @onready var camera: Camera2D = $Camera2D
-@onready var ap_label: Label = $UILayer/UIRoot/StatusBar/APLabel
-@onready var hp_label: Label = $UILayer/UIRoot/StatusBar/HPLabel
-@onready var turn_label: Label = $UILayer/UIRoot/StatusBar/TurnLabel
-@onready var end_turn_button: Button = $UILayer/UIRoot/StatusBar/EndTurnButton
+@onready var status_bar: BattleStatusBar = $UILayer/UIRoot/StatusBar
 @onready var context_menu: BattleContextMenu = $UILayer/UIRoot/ContextMenu
 @onready var enemies_container: Node2D = $Enemies
 
@@ -62,7 +59,6 @@ var _pending_containers: Array[BattleContainer] = []
 var _context_search_container: BattleContainer
 var _context_search_candidates: Array[BattleContainer] = []
 var battle_config: Dictionary = {}
-var force_evacuation_button: Button
 var evacuation_confirmation: ConfirmationDialog
 var failure_overlay: Control
 var failure_reason_label: Label
@@ -108,7 +104,6 @@ func _ready():
 	container_action_menu.search_requested.connect(_on_container_search_requested)
 	player.defeated.connect(_on_unit_defeated)
 	player.damaged.connect(_on_player_damaged)
-	_configure_hud()
 	_setup_evacuation_controls()
 	_setup_failure_overlay()
 	print("Player start grid: ", player.grid_pos, " level: ", player.current_level, " world: ", player.global_position)
@@ -123,9 +118,11 @@ func _ready():
 	turn_controller.turn_started.connect(_on_turn_started)
 	turn_controller.game_over.connect(_on_game_over)
 	turn_controller.phase_changed.connect(_on_phase_changed)
+	status_bar.bind(player, turn_controller)
 	turn_controller.start_game()
 
-	end_turn_button.pressed.connect(_on_end_turn_pressed)
+	status_bar.end_turn_pressed.connect(_on_end_turn_pressed)
+	status_bar.force_evacuation_pressed.connect(_on_force_evacuation_pressed)
 	context_menu.attack_requested.connect(_on_attack_requested)
 	context_menu.search_requested.connect(_on_context_menu_search_requested)
 	context_menu.end_turn_requested.connect(_on_end_turn_pressed)
@@ -255,18 +252,6 @@ func _to_grid(value: Variant) -> Vector2i:
 
 
 func _setup_evacuation_controls() -> void:
-	force_evacuation_button = Button.new()
-	force_evacuation_button.name = "ForceEvacuationButton"
-	force_evacuation_button.text = "强制撤离"
-	force_evacuation_button.anchor_left = 1.0
-	force_evacuation_button.anchor_right = 1.0
-	force_evacuation_button.offset_left = -210.0
-	force_evacuation_button.offset_top = 13.0
-	force_evacuation_button.offset_right = -28.0
-	force_evacuation_button.offset_bottom = 52.0
-	end_turn_button.get_parent().add_child(force_evacuation_button)
-	force_evacuation_button.pressed.connect(_on_force_evacuation_pressed)
-
 	evacuation_confirmation = ConfirmationDialog.new()
 	evacuation_confirmation.title = "确认强制撤离"
 	evacuation_confirmation.dialog_text = "强制撤离将按撤离失败处理，并永久失去所有已装备、配件和背包内物品。确认继续？"
@@ -347,9 +332,7 @@ func _end_battle_as_failure(reason: String) -> void:
 	_battle_finished = true
 	_change_state(State.IDLE)
 	_hide_all_battle_panels()
-	end_turn_button.disabled = true
-	if force_evacuation_button:
-		force_evacuation_button.disabled = true
+	status_bar.set_actions_enabled(false)
 	if turn_controller and not turn_controller.is_game_over:
 		turn_controller.end_game()
 	if inventory:
@@ -375,7 +358,7 @@ func _on_turn_started(_turn: int):
 			return
 		evacuation_pending = false
 		print("[Evacuation] 已中断：干员未停留在撤离点。")
-	_update_hud()
+	status_bar.refresh()
 	_update_player_animation()
 
 func _on_player_movement_finished() -> void:
@@ -412,7 +395,7 @@ func _run_enemy_phase() -> void:
 		if e.is_defeated:
 			continue
 		await enemy_ai.run_turn(e)
-		_update_hud()
+		status_bar.refresh()
 
 func _set_all_units_move_interval(interval: float) -> void:
 	for u in get_tree().get_nodes_in_group("units"):
@@ -512,7 +495,7 @@ func _on_consumable_use_requested(source: ItemLocation, item_uid: String) -> voi
 		str(use_data.get("name", "物品")),
 		"：" + detail if not detail.is_empty() else "",
 	])
-	_update_hud()
+	status_bar.refresh()
 
 func _on_context_menu_hide():
 	_context_search_container = null
@@ -677,7 +660,7 @@ func _handle_left_click():
 			var result := combat_resolver.resolve_attack(player, target)
 			print(BattleCombatLogFormatter.format_attack(result))
 			print("[攻击结算 JSON] ", result)
-			_update_hud()
+			status_bar.refresh()
 			_change_state(State.IDLE)
 		return
 
@@ -695,7 +678,7 @@ func _handle_left_click():
 				var steps = path.size() - 1
 				if player.spend_ap(steps):
 					player.set_move_path(path)
-					_update_hud()
+					status_bar.refresh()
 					_clear_all_highlights()
 					hover_sprite.visible = false
 					hover_sprite.clear_points()
@@ -1039,7 +1022,7 @@ func _search_container(container: BattleContainer) -> void:
 		message = "%s 已搜空，仅查看。" % container.display_name
 	battle_loadout_panel.refresh_after_battle_action(message)
 	_reorder_containers_at_grid(container.grid_pos, container.current_level)
-	_update_hud()
+	status_bar.refresh()
 
 
 func _on_discard_requested(source: ItemLocation, item_uid: String) -> void:
@@ -1133,7 +1116,7 @@ func _on_player_damaged(result: Dictionary) -> void:
 		evacuation_pending = false
 		print("[Evacuation] 撤离倒计时中断：干员受到伤害。")
 	if turn_controller:
-		_update_hud()
+		status_bar.refresh()
 
 
 func _is_player_at_evacuation_point() -> bool:
@@ -1146,9 +1129,7 @@ func _end_battle_as_success() -> void:
 	_battle_finished = true
 	_change_state(State.IDLE)
 	_hide_all_battle_panels()
-	end_turn_button.disabled = true
-	if force_evacuation_button:
-		force_evacuation_button.disabled = true
+	status_bar.set_actions_enabled(false)
 	if turn_controller and not turn_controller.is_game_over:
 		turn_controller.end_game()
 	var extracted_items := _get_carried_item_count()
@@ -1245,30 +1226,3 @@ func _clear_all_highlights():
 		if hud:
 			hud.clear()
 
-func _update_hud():
-	ap_label.text = "AP  %d / %d" % [player.action_points, player.ap_max]
-	hp_label.text = "HP  %d / %d" % [player.current_hp, player.max_hp]
-	hp_label.add_theme_color_override("font_color", _get_hp_color(player.current_hp, player.max_hp))
-	turn_label.text = "回合 %d/%d" % [turn_controller.current_turn, turn_controller.max_turns]
-
-
-func _configure_hud() -> void:
-	var font := SystemFont.new()
-	font.font_names = PackedStringArray(["PingFang SC", "Hiragino Sans GB", "Arial"])
-	for label in [ap_label, hp_label, turn_label]:
-		label.add_theme_font_override("font", font)
-	ap_label.add_theme_font_size_override("font_size", 24)
-	ap_label.add_theme_color_override("font_color", Color(0.36, 0.93, 1.0, 1.0))
-	hp_label.add_theme_font_size_override("font_size", 18)
-	hp_label.add_theme_color_override("font_color", Color(0.5, 0.96, 0.63, 1.0))
-	turn_label.add_theme_font_size_override("font_size", 24)
-	turn_label.add_theme_color_override("font_color", Color(0.92, 0.76, 0.39, 1.0))
-
-
-func _get_hp_color(current_hp: int, max_hp: int) -> Color:
-	var ratio := float(current_hp) / float(maxi(1, max_hp))
-	if ratio <= 0.3:
-		return Color(1.0, 0.32, 0.34, 1.0)
-	if ratio <= 0.6:
-		return Color(1.0, 0.78, 0.28, 1.0)
-	return Color(0.5, 0.96, 0.63, 1.0)

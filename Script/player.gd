@@ -272,6 +272,13 @@ func _get_equipped_attachment_data() -> Array[Dictionary]:
 	return result
 
 
+func get_protection_status() -> Dictionary:
+	return {
+		"helmet": _get_equipment_protection_snapshot("helmet"),
+		"armor": _get_equipment_protection_snapshot("armor"),
+	}
+
+
 func _get_equipment_protection_snapshot(slot: String) -> Dictionary:
 	if _battle_inventory == null:
 		return {}
@@ -281,6 +288,7 @@ func _get_equipment_protection_snapshot(slot: String) -> Dictionary:
 	var armor_state := WarehouseService.get_armor_state(item)
 	return {
 		"name": str((item_data as Dictionary).get("name", "未装备")) if item_data is Dictionary else "未装备",
+		"equipped": not item_uid.is_empty(),
 		"current_armor": int(armor_state.get("current_armor", 0)),
 		"max_armor": int(armor_state.get("max_armor", 0)),
 		"per_hit_absorb": int(armor_state.get("per_hit_absorb", 0)),
