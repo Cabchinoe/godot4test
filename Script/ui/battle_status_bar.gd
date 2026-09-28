@@ -24,6 +24,12 @@ var _turn_controller: TurnController
 var _protection_labels: Array[Dictionary] = []
 
 
+static func mount(parent: Control) -> BattleStatusBar:
+	var bar: BattleStatusBar = preload("res://HUD/battle_status_bar.tscn").instantiate()
+	parent.add_child(bar)
+	return bar
+
+
 func _ready() -> void:
 	for entry in PROTECTION_SLOTS:
 		var slot_label := get_node_or_null(entry["label"]) as Label
@@ -33,7 +39,7 @@ func _ready() -> void:
 				"title": str(entry["title"]),
 				"label": slot_label,
 			})
-	_configure_fonts()
+	_apply_theme()
 	force_evacuation_button.visible = show_force_evacuation_button
 	end_turn_button.pressed.connect(func() -> void: end_turn_pressed.emit())
 	force_evacuation_button.pressed.connect(func() -> void: force_evacuation_pressed.emit())
@@ -117,27 +123,13 @@ func _apply_protection_label(label: Label, data: Variant, title: String) -> void
 
 
 func _get_ratio_color(current: int, maximum: int) -> Color:
-	var ratio := float(current) / float(maxi(1, maximum))
-	if ratio <= 0.3:
-		return Color(1.0, 0.32, 0.34, 1.0)
-	if ratio <= 0.6:
-		return Color(1.0, 0.78, 0.28, 1.0)
-	return Color(0.5, 0.96, 0.63, 1.0)
+	return BattleHudTheme.ratio_color(current, maximum)
 
 
-func _configure_fonts() -> void:
-	var font := SystemFont.new()
-	font.font_names = PackedStringArray(["PingFang SC", "Hiragino Sans GB", "Arial"])
-	var labels: Array[Label] = [ap_label, hp_label, turn_label]
+func _apply_theme() -> void:
+	theme = BattleHudTheme.get_theme()
+	ap_label.set_theme_type_variation(&"BattleApLabel")
+	hp_label.set_theme_type_variation(&"BattleStatLabel")
+	turn_label.set_theme_type_variation(&"BattleTurnLabel")
 	for entry in _protection_labels:
-		labels.append(entry["label"])
-	for label in labels:
-		label.add_theme_font_override("font", font)
-	ap_label.add_theme_font_size_override("font_size", 24)
-	ap_label.add_theme_color_override("font_color", Color(0.36, 0.93, 1.0, 1.0))
-	hp_label.add_theme_font_size_override("font_size", 18)
-	hp_label.add_theme_color_override("font_color", Color(0.5, 0.96, 0.63, 1.0))
-	for entry in _protection_labels:
-		(entry["label"] as Label).add_theme_font_size_override("font_size", 18)
-	turn_label.add_theme_font_size_override("font_size", 24)
-	turn_label.add_theme_color_override("font_color", Color(0.92, 0.76, 0.39, 1.0))
+		(entry["label"] as Label).set_theme_type_variation(&"BattleStatLabel")

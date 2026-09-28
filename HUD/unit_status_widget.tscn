@@ -1,0 +1,32 @@
+[gd_scene load_steps=2 format=4]
+
+[ext_resource type="Script" path="res://Script/ui/unit_status_widget.gd" id="1_widget"]
+
+[node name="UnitStatusWidget" type="PanelContainer"]
+offset_right = 220.0
+offset_bottom = 150.0
+theme_variation = "BattlePanel"
+visible = false
+script = ExtResource("1_widget")
+
+[node name="Content" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Header" type="HBoxContainer" parent="Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="Content/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "单位"
+
+[node name="CloseButton" type="Button" parent="Content/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(44, 24)
+text = "收起"
+
+[node name="Rows" type="VBoxContainer" parent="Content"]
+layout_mode = 2
+theme_override_constants/separation = 2

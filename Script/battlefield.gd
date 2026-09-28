@@ -36,6 +36,8 @@ var container_spawner: BattleContainerSpawner
 enum State { IDLE, MOVE_STATE, MENU_STATE, ATTACK_STATE }
 var current_state: int = State.IDLE
 var enemy_spawner: EnemySpawner
+var status_widget: UnitStatusWidget
+var unit_intel: UnitIntelTracker
 var enemy_ai: EnemyAI
 var player_save_provider: PlayerSaveProvider
 var inventory: InventorySaveData
@@ -119,6 +121,11 @@ func _ready():
 	turn_controller.game_over.connect(_on_game_over)
 	turn_controller.phase_changed.connect(_on_phase_changed)
 	status_bar.bind(player, turn_controller)
+	unit_intel = UnitIntelTracker.new()
+	unit_intel.register_unit(player)
+	unit_intel.mark_revealed(player)
+	status_widget = UnitStatusWidget.mount($UILayer/UIRoot)
+	status_widget.set_intel_tracker(unit_intel)
 	turn_controller.start_game()
 
 	status_bar.end_turn_pressed.connect(_on_end_turn_pressed)
@@ -132,6 +139,7 @@ func _ready():
 	enemy_spawner = EnemySpawner.new(level_manager, enemies_container)
 	for enemy in enemy_spawner.spawn_batch(_get_enemy_spawn_entries()):
 		enemy.defeated.connect(_on_unit_defeated)
+		unit_intel.register_unit(enemy)
 	enemy_ai = EnemyAI.new(bullet_range, combat_resolver)
 
 func _exit_tree() -> void:
@@ -351,6 +359,8 @@ func _on_return_to_command_center_pressed() -> void:
 	get_tree().change_scene_to_file("res://CommandCenter.tscn")
 
 func _on_turn_started(_turn: int):
+	if not _battle_finished:
+		status_bar.set_actions_enabled(true)
 	_log_turn_events(combat_resolver.begin_turn(player))
 	if evacuation_pending:
 		if not player.is_defeated and _is_player_at_evacuation_point():
@@ -418,15 +428,25 @@ func _update_skip_input() -> void:
 func _on_end_turn_pressed():
 	if _battle_finished:
 		return
+	if turn_controller.current_phase != TurnController.Phase.PLAYER_PHASE:
+		return
+	# 防抖：立即禁用按钮，直到下一个玩家回合开始才恢复
+	status_bar.set_actions_enabled(false)
 	evacuation_pending = _is_player_at_evacuation_point()
 	if evacuation_pending:
 		print("[Evacuation] 撤离倒计时开始：撑到下一个玩家回合。")
 	_change_state(State.IDLE)
 	_hide_all_battle_panels()
+	if player.is_moving:
+		await player.movement_finished
+		if _battle_finished or turn_controller.is_game_over:
+			return
 	turn_controller.end_turn()
 
 
 func _hide_all_battle_panels() -> void:
+	if status_widget:
+		status_widget.hide_panel()
 	if context_menu.visible:
 		context_menu.hide()
 	if container_action_menu and container_action_menu.visible:
@@ -505,6 +525,8 @@ func _on_context_menu_hide():
 
 func _change_state(new_state: int):
 	current_state = new_state
+	if new_state != State.IDLE and status_widget:
+		status_widget.hide_panel()
 	reachable_cells = []
 	attack_cells = []
 	attack_unit_cells = []
@@ -660,6 +682,8 @@ func _handle_left_click():
 			var result := combat_resolver.resolve_attack(player, target)
 			print(BattleCombatLogFormatter.format_attack(result))
 			print("[攻击结算 JSON] ", result)
+			if bool(result.get("hit", false)):
+				unit_intel.mark_revealed(target)
 			status_bar.refresh()
 			_change_state(State.IDLE)
 		return
@@ -692,6 +716,11 @@ func _handle_left_click():
 		return
 
 	if current_state == State.IDLE:
+		var clicked_enemy := _get_enemy_at_world(mouse_world)
+		if clicked_enemy:
+			status_widget.show_for(clicked_enemy)
+			return
+		status_widget.hide_panel()
 		if _is_same_node(click_node, player_node):
 			battle_loadout_panel.hide_panel()
 			_change_state(State.MOVE_STATE)
@@ -832,6 +861,28 @@ func _collect_targetable_cells() -> Array:
 		if not e.is_defeated:
 			cells.append({"grid": e.grid_pos, "level": e.current_level})
 	return cells
+
+func _get_enemy_at_world(mouse_world: Vector2) -> Unit:
+	# 敌人占据的格子不可行走，_get_closest_walkable_node 会返回空，因此直接按世界坐标解析
+	for level in level_manager.get_all_levels():
+		var ground = level_manager.get_layer(level, "ground")
+		if ground == null:
+			continue
+		var grid := ground.local_to_map(ground.to_local(mouse_world))
+		var enemy := _get_enemy_at_node({"grid": grid, "level": level})
+		if enemy:
+			return enemy
+	# 容错：精灵上半身会超出格子顶部，命中失败时检查鼠标下方一格
+	for level in level_manager.get_all_levels():
+		var ground = level_manager.get_layer(level, "ground")
+		if ground == null:
+			continue
+		var grid := ground.local_to_map(ground.to_local(mouse_world)) + Vector2i(0, 1)
+		var enemy := _get_enemy_at_node({"grid": grid, "level": level})
+		if enemy:
+			return enemy
+	return null
+
 
 func _get_enemy_at_node(node: Dictionary) -> Unit:
 	if node.is_empty():
