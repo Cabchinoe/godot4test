@@ -15,6 +15,8 @@ func _init(camera: Camera2D) -> void:
 func focus_on(unit: Unit, duration: float = 0.42) -> void:
 	if _camera == null or unit == null or not is_instance_valid(unit):
 		return
+	if _camera.global_position.distance_to(unit.global_position) < 1.0:
+		return
 	_stop_active_tween()
 	_tween = _camera.create_tween()
 	_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)

@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=4]
+[gd_scene load_steps=3 format=4]
 
 [ext_resource type="Script" path="res://Script/ui/battle_status_bar.gd" id="1_statusbar"]
+[ext_resource type="Script" path="res://Script/ui/status_icon_strip.gd" id="2_strip"]
 
 [node name="BattleStatusBar" type="Control"]
 layout_mode = 1
@@ -19,6 +20,18 @@ offset_bottom = 48.0
 text = "AP  5 / 5"
 vertical_alignment = 1
 
+[node name="APDelta" type="Label" parent="."]
+layout_mode = 0
+offset_left = 104.0
+offset_top = 44.0
+offset_right = 192.0
+offset_bottom = 68.0
+theme_override_colors/font_outline_color = Color(0.03, 0.06, 0.1, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+visible = false
+
 [node name="HPLabel" type="Label" parent="."]
 layout_mode = 0
 offset_left = 218.0
@@ -26,6 +39,18 @@ offset_top = 17.0
 offset_right = 395.0
 offset_bottom = 47.0
 text = "HP  90 / 90"
+
+[node name="HPDelta" type="Label" parent="."]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 44.0
+offset_right = 392.0
+offset_bottom = 68.0
+theme_override_colors/font_outline_color = Color(0.12, 0.02, 0.05, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+visible = false
 
 [node name="HelmetLabel" type="Label" parent="."]
 layout_mode = 0
@@ -42,6 +67,33 @@ offset_top = 17.0
 offset_right = 777.0
 offset_bottom = 47.0
 text = "护甲 0 / 0"
+
+[node name="StatusIcons" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 790.0
+offset_top = 20.0
+offset_right = 900.0
+offset_bottom = 48.0
+theme_override_constants/separation = 2
+script = ExtResource("2_strip")
+
+[node name="EvacuationBadge" type="Label" parent="."]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -500.0
+offset_top = 18.0
+offset_right = -226.0
+offset_bottom = 50.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(1, 0.77, 0.36, 1)
+theme_override_colors/font_outline_color = Color(0.12, 0.06, 0.02, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 17
+horizontal_alignment = 2
+vertical_alignment = 1
+text = "撤离倒计时：撑过本回合"
+visible = false
 
 [node name="TurnLabel" type="Label" parent="."]
 layout_mode = 0

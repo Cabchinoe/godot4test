@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=4]
+[gd_scene load_steps=3 format=4]
 
 [ext_resource type="Script" path="res://Script/ui/unit_status_widget.gd" id="1_widget"]
+[ext_resource type="Script" path="res://Script/ui/status_icon_strip.gd" id="2_strip"]
 
 [node name="UnitStatusWidget" type="PanelContainer"]
 offset_right = 220.0
@@ -21,6 +22,12 @@ theme_override_constants/separation = 8
 layout_mode = 2
 size_flags_horizontal = 3
 text = "单位"
+
+[node name="StatusIcons" type="HBoxContainer" parent="Content/Header"]
+custom_minimum_size = Vector2(60, 28)
+layout_mode = 2
+theme_override_constants/separation = 2
+script = ExtResource("2_strip")
 
 [node name="CloseButton" type="Button" parent="Content/Header"]
 layout_mode = 2

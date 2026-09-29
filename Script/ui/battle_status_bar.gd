@@ -9,7 +9,11 @@ signal force_evacuation_pressed
 @export var show_force_evacuation_button := false
 
 @onready var ap_label: Label = $APLabel
+@onready var ap_delta: Label = $APDelta
 @onready var hp_label: Label = $HPLabel
+@onready var hp_delta: Label = $HPDelta
+@onready var status_icons: StatusIconStrip = $StatusIcons
+@onready var evacuation_badge: Label = $EvacuationBadge
 @onready var turn_label: Label = $TurnLabel
 @onready var end_turn_button: Button = $EndTurnButton
 @onready var force_evacuation_button: Button = $ForceEvacuationButton
@@ -22,6 +26,9 @@ const PROTECTION_SLOTS: Array[Dictionary] = [
 var _unit: Unit
 var _turn_controller: TurnController
 var _protection_labels: Array[Dictionary] = []
+var _last_hp := -1
+var _last_ap := -1
+var _delta_tweens: Dictionary = {}
 
 
 static func mount(parent: Control) -> BattleStatusBar:
@@ -53,6 +60,8 @@ func bind(unit: Unit, turn_controller: TurnController) -> void:
 		if _unit.has_signal("profile_changed"):
 			_unit.connect("profile_changed", refresh)
 		_unit.damaged.connect(_on_unit_damaged)
+		_unit.status_effects_changed.connect(_on_status_effects_changed)
+		_unit.status_effect_applied.connect(_on_status_applied)
 	if _turn_controller:
 		_turn_controller.turn_started.connect(_on_turn_started)
 	refresh()
@@ -64,16 +73,23 @@ func unbind() -> void:
 			_unit.disconnect("profile_changed", refresh)
 		if _unit.damaged.is_connected(_on_unit_damaged):
 			_unit.damaged.disconnect(_on_unit_damaged)
+		if _unit.status_effects_changed.is_connected(_on_status_effects_changed):
+			_unit.status_effects_changed.disconnect(_on_status_effects_changed)
+		if _unit.status_effect_applied.is_connected(_on_status_applied):
+			_unit.status_effect_applied.disconnect(_on_status_applied)
 	if _turn_controller and _turn_controller.turn_started.is_connected(_on_turn_started):
 		_turn_controller.turn_started.disconnect(_on_turn_started)
 	_unit = null
 	_turn_controller = null
+	_last_hp = -1
+	_last_ap = -1
 
 
 func refresh() -> void:
 	_refresh_unit_stats()
 	_refresh_turn()
 	_refresh_protection()
+	_refresh_statuses()
 
 
 func set_actions_enabled(enabled: bool) -> void:
@@ -81,8 +97,21 @@ func set_actions_enabled(enabled: bool) -> void:
 	force_evacuation_button.disabled = not enabled
 
 
+func set_evacuation_pending(value: bool) -> void:
+	evacuation_badge.visible = value
+
+
 func _on_unit_damaged(_result: Dictionary) -> void:
 	refresh()
+
+
+func _on_status_effects_changed() -> void:
+	refresh()
+
+
+func _on_status_applied(effect: Dictionary) -> void:
+	refresh()
+	status_icons.pulse(str(effect.get("id", "")))
 
 
 func _on_turn_started(_turn: int) -> void:
@@ -92,9 +121,37 @@ func _on_turn_started(_turn: int) -> void:
 func _refresh_unit_stats() -> void:
 	if _unit == null:
 		return
+	var current_ap := _unit.action_points
+	var current_hp := _unit.current_hp
+	if _last_ap >= 0 and current_ap != _last_ap:
+		_show_delta(ap_delta, current_ap - _last_ap, Color(0.35, 0.93, 1.0, 1.0), Color(1.0, 0.76, 0.28, 1.0))
+	if _last_hp >= 0 and current_hp != _last_hp:
+		_show_delta(hp_delta, current_hp - _last_hp, Color(0.5, 0.96, 0.63, 1.0), Color(1.0, 0.32, 0.37, 1.0))
+	_last_ap = current_ap
+	_last_hp = current_hp
 	ap_label.text = "AP  %d / %d" % [_unit.action_points, _unit.ap_max]
 	hp_label.text = "HP  %d / %d" % [_unit.current_hp, _unit.max_hp]
 	hp_label.add_theme_color_override("font_color", _get_ratio_color(_unit.current_hp, _unit.max_hp))
+
+
+func _show_delta(label: Label, delta: int, positive_color: Color, negative_color: Color = Color.WHITE) -> void:
+	if delta == 0:
+		return
+	var key := label.get_instance_id()
+	var existing := _delta_tweens.get(key) as Tween
+	if existing and existing.is_valid() and existing.is_running():
+		existing.kill()
+	label.text = "%+d" % delta
+	label.add_theme_color_override("font_color", positive_color if delta > 0 else negative_color)
+	label.position.y = 44.0
+	label.modulate.a = 1.0
+	label.visible = true
+	var tween := create_tween()
+	_delta_tweens[key] = tween
+	tween.set_parallel(true)
+	tween.tween_property(label, "position", Vector2(label.position.x, 31.0), 0.45).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(label, "modulate:a", 0.0, 0.45)
+	tween.finished.connect(func() -> void: label.visible = false)
 
 
 func _refresh_turn() -> void:
@@ -109,6 +166,10 @@ func _refresh_protection() -> void:
 		protection = _unit.get_protection_status()
 	for entry in _protection_labels:
 		_apply_protection_label(entry["label"], protection.get(entry["slot"], {}), entry["title"])
+
+
+func _refresh_statuses() -> void:
+	status_icons.set_effects(_unit.get_status_effects() if _unit else [])
 
 
 func _apply_protection_label(label: Label, data: Variant, title: String) -> void:

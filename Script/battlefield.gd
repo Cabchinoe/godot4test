@@ -20,6 +20,7 @@ const BATTLE_COMBAT_RESOLVER_SCRIPT := preload("res://Script/battle_combat_resol
 const BATTLE_CUT_IN_SCENE := preload("res://HUD/battle_cut_in.tscn")
 const BATTLE_PRESENTATION_SCRIPT := preload("res://Script/battle/battle_presentation.gd")
 const BATTLE_CAMERA_SCRIPT := preload("res://Script/battle/battle_camera.gd")
+const TURN_TRANSITION_SCENE := preload("res://HUD/turn_transition.tscn")
 const BATTLE_CONTAINER_SPAWNER_SCRIPT := preload("res://Script/battle_container_spawner.gd")
 const BATTLE_CONTAINER_ACTION_MENU_SCRIPT := preload("res://Script/ui/battle_container_action_menu.gd")
 const SIGNAL_FLARE_SPRITES := preload("res://Art/tilesets/urban_night/props/markers/signal_flare/signal_flare_sprites.tres")
@@ -38,6 +39,7 @@ var combat_resolver: BattleCombatResolver
 var battle_cut_in: BattleCutIn
 var battle_presentation: BattlePresentation
 var battle_camera: BattleCamera
+var turn_transition: TurnTransition
 var container_spawner: BattleContainerSpawner
 enum State { IDLE, MOVE_STATE, MENU_STATE, ATTACK_STATE }
 var current_state: int = State.IDLE
@@ -80,6 +82,9 @@ var evacuation_pending := false
 var _pending_defeats: Array[Unit] = []
 var enemy_move_markers_by_cell: Dictionary = {}
 var _is_playing_enemy_move := false
+var _is_resolving_turn_status := false
+var injury_flash: ColorRect
+var _injury_flash_tween: Tween
 
 
 func _ready():
@@ -119,6 +124,7 @@ func _ready():
 	player.damaged.connect(_on_player_damaged)
 	_setup_evacuation_controls()
 	_setup_failure_overlay()
+	_setup_injury_feedback()
 	print("Player start grid: ", player.grid_pos, " level: ", player.current_level, " world: ", player.global_position)
 
 	bullet_range = BulletRange.new(level_manager)
@@ -127,6 +133,8 @@ func _ready():
 	add_child(battle_cut_in)
 	battle_presentation = BATTLE_PRESENTATION_SCRIPT.new(combat_resolver, battle_cut_in)
 	battle_camera = BATTLE_CAMERA_SCRIPT.new(camera)
+	turn_transition = TURN_TRANSITION_SCENE.instantiate()
+	add_child(turn_transition)
 	container_spawner = BATTLE_CONTAINER_SPAWNER_SCRIPT.new(level_manager)
 	_spawn_map_containers()
 	_spawn_evacuation_point()
@@ -141,7 +149,6 @@ func _ready():
 	unit_intel.mark_revealed(player)
 	status_widget = UnitStatusWidget.mount($UILayer/UIRoot)
 	status_widget.set_intel_tracker(unit_intel)
-	turn_controller.start_game()
 
 	status_bar.end_turn_pressed.connect(_on_end_turn_pressed)
 	status_bar.force_evacuation_pressed.connect(_on_force_evacuation_pressed)
@@ -157,6 +164,7 @@ func _ready():
 		unit_intel.register_unit(enemy)
 	enemy_ai = EnemyAI.new(bullet_range, combat_resolver)
 	enemy_ai.set_battle_presentation(battle_presentation)
+	turn_controller.start_game()
 
 func _exit_tree() -> void:
 	if inventory:
@@ -374,21 +382,95 @@ func _end_battle_as_failure(reason: String) -> void:
 func _on_return_to_command_center_pressed() -> void:
 	get_tree().change_scene_to_file("res://CommandCenter.tscn")
 
-func _on_turn_started(_turn: int):
-	if not _battle_finished:
-		status_bar.set_actions_enabled(true)
-	_log_turn_events(combat_resolver.begin_turn(player))
+func _on_turn_started(turn: int):
+	if _battle_finished:
+		return
+	status_bar.set_actions_enabled(false)
+	if turn_transition:
+		await turn_transition.play_player(turn, turn_controller.max_turns, evacuation_pending)
+	await _resolve_turn_status_feedback(player)
+	_finalize_deferred_defeats()
+	if _battle_finished:
+		return
 	if evacuation_pending:
 		if not player.is_defeated and _is_player_at_evacuation_point():
 			_end_battle_as_success()
 			return
 		evacuation_pending = false
+		status_bar.set_evacuation_pending(false)
 		print("[Evacuation] 已中断：干员未停留在撤离点。")
 	status_bar.refresh()
 	_update_player_animation()
+	if not _battle_finished:
+		status_bar.set_actions_enabled(true)
 
 func _on_player_movement_finished() -> void:
 	_update_player_animation()
+
+
+func _setup_injury_feedback() -> void:
+	injury_flash = ColorRect.new()
+	injury_flash.name = "InjuryFlash"
+	injury_flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	injury_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	injury_flash.color = Color(0.92, 0.05, 0.08, 0.0)
+	injury_flash.z_index = 20
+	$UILayer/UIRoot.add_child(injury_flash)
+
+
+func _resolve_turn_status_feedback(unit: Unit) -> void:
+	if unit == null or unit.is_defeated:
+		return
+	_is_resolving_turn_status = true
+	var events := combat_resolver.begin_turn(unit)
+	_log_turn_events(events)
+	var had_injury_damage := false
+	for event in events:
+		if str(event.get("kind", "")) != "injury_damage":
+			continue
+		var damage := int(event.get("damage", 0))
+		if damage <= 0:
+			continue
+		had_injury_damage = true
+		var effect_id := str(event.get("effect_id", ""))
+		if unit == player:
+			status_bar.status_icons.pulse(effect_id)
+			_flash_player_injury()
+		_show_injury_damage(unit, damage, str(event.get("effect", "流血")))
+	if had_injury_damage:
+		await get_tree().create_timer(0.58).timeout
+	_is_resolving_turn_status = false
+
+
+func _flash_player_injury() -> void:
+	if injury_flash == null:
+		return
+	if _injury_flash_tween and _injury_flash_tween.is_valid() and _injury_flash_tween.is_running():
+		_injury_flash_tween.kill()
+	injury_flash.color = Color(0.92, 0.05, 0.08, 0.0)
+	_injury_flash_tween = create_tween()
+	_injury_flash_tween.tween_property(injury_flash, "color:a", 0.3, 0.12)
+	_injury_flash_tween.tween_property(injury_flash, "color:a", 0.0, 0.38)
+
+
+func _show_injury_damage(unit: Unit, damage: int, effect_name: String) -> void:
+	if unit == null or not is_instance_valid(unit):
+		return
+	var label := Label.new()
+	label.text = "%s -%d" % [effect_name, damage]
+	label.add_theme_font_size_override("font_size", 26)
+	label.add_theme_color_override("font_color", Color(1.0, 0.32, 0.37, 1.0))
+	label.add_theme_color_override("font_outline_color", Color(0.12, 0.02, 0.05, 1.0))
+	label.add_theme_constant_override("outline_size", 6)
+	label.z_index = 30
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(label)
+	label.global_position = unit.global_position + Vector2(-24, -54)
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "global_position", label.global_position + Vector2(0, -34), 0.58).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(label, "modulate:a", 0.0, 0.58)
+	tween.finished.connect(label.queue_free)
 
 # 状态机 → 动画：取消选中停所有；选中：攻击→aim，AP>0→walk，否则→idle
 func _update_player_animation() -> void:
@@ -407,6 +489,11 @@ func _on_game_over():
 
 func _on_phase_changed(phase):
 	if phase == TurnController.Phase.ENEMY_PHASE:
+		status_bar.set_actions_enabled(false)
+		if turn_transition:
+			await turn_transition.play_enemy(evacuation_pending)
+		if _battle_finished or turn_controller.is_game_over:
+			return
 		await _run_enemy_phase()
 		turn_controller.end_enemy_phase()
 	else:
@@ -417,7 +504,14 @@ func _run_enemy_phase() -> void:
 	for e in get_tree().get_nodes_in_group("enemy"):
 		if e.is_defeated:
 			continue
-		_log_turn_events(combat_resolver.begin_turn(e))
+		if _has_pending_injury_damage(e) and battle_camera:
+			await battle_camera.focus_on(e)
+		await _resolve_turn_status_feedback(e)
+		_finalize_deferred_defeats()
+		if _battle_finished:
+			if battle_camera:
+				await battle_camera.release()
+			return
 		if e.is_defeated:
 			continue
 		var plan := enemy_ai.decide_turn(e)
@@ -430,6 +524,14 @@ func _run_enemy_phase() -> void:
 		status_bar.refresh()
 	if battle_camera:
 		await battle_camera.release()
+
+
+func _has_pending_injury_damage(unit: Unit) -> bool:
+	for effect_variant in unit.get_status_effects():
+		var effect := effect_variant as BattleStatusEffect
+		if effect and effect.periodic_damage > 0:
+			return true
+	return false
 
 
 func _play_enemy_turn(enemy: Unit, plan: EnemyActionPlan) -> void:
@@ -564,6 +666,7 @@ func _on_end_turn_pressed():
 	# 防抖：立即禁用按钮，直到下一个玩家回合开始才恢复
 	status_bar.set_actions_enabled(false)
 	evacuation_pending = _is_player_at_evacuation_point()
+	status_bar.set_evacuation_pending(evacuation_pending)
 	if evacuation_pending:
 		print("[Evacuation] 撤离倒计时开始：撑到下一个玩家回合。")
 	_change_state(State.IDLE)
@@ -756,6 +859,8 @@ func _unhandled_input(event: InputEvent):
 	if _handle_camera_drag_input(event):
 		return
 	if battle_presentation and battle_presentation.is_busy():
+		return
+	if turn_transition and turn_transition.is_playing():
 		return
 	if turn_controller.current_phase != TurnController.Phase.PLAYER_PHASE:
 		return
@@ -1289,7 +1394,7 @@ func _on_unit_defeated(unit: Unit) -> void:
 	if unit.faction == "enemy":
 		unit.remove_from_group("enemy")
 	_pending_defeats.append(unit)
-	if battle_presentation == null or not battle_presentation.is_busy():
+	if (battle_presentation == null or not battle_presentation.is_busy()) and not _is_resolving_turn_status:
 		_finalize_deferred_defeats()
 
 
@@ -1313,9 +1418,6 @@ func _finalize_deferred_defeats() -> void:
 		unit.queue_free()
 
 func _on_player_damaged(result: Dictionary) -> void:
-	if evacuation_pending and int(result.get("damage", 0)) > 0:
-		evacuation_pending = false
-		print("[Evacuation] 撤离倒计时中断：干员受到伤害。")
 	if turn_controller:
 		status_bar.refresh()
 

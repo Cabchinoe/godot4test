@@ -37,6 +37,7 @@ func begin_turn(unit: Unit) -> Array[Dictionary]:
 			events.append({
 				"kind": "injury_damage",
 				"target": unit.unit_name,
+				"effect_id": effect.effect_id,
 				"effect": effect.display_name,
 				"damage": dealt,
 			})

@@ -7,6 +7,7 @@ signal grid_position_changed(grid: Vector2i, level: int)
 signal damaged(result: Dictionary)
 signal defeated(unit)
 signal status_effects_changed
+signal status_effect_applied(effect: Dictionary)
 
 @export var sprite_frames: SpriteFrames
 @export var animation_idle: StringName = &"idle"
@@ -309,11 +310,15 @@ func add_status(effect_id: String, source_name: String = "") -> Dictionary:
 		if effect and effect.effect_id == effect_id:
 			effect.add_application(definition, source_name)
 			status_effects_changed.emit()
-			return effect.to_dictionary()
+		var existing_effect_data := effect.to_dictionary()
+		status_effect_applied.emit(existing_effect_data)
+		return existing_effect_data
 	var new_effect := BattleStatusEffect.new(definition, source_name)
 	status_effects.append(new_effect)
 	status_effects_changed.emit()
-	return new_effect.to_dictionary()
+	var new_effect_data := new_effect.to_dictionary()
+	status_effect_applied.emit(new_effect_data)
+	return new_effect_data
 
 
 func remove_status(effect_id: String) -> bool:

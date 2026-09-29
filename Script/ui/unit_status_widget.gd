@@ -13,6 +13,7 @@ const ROW_DEFS: Array[Array] = [
 ]
 
 @onready var _name_label: Label = $Content/Header/NameLabel
+@onready var _status_icons: StatusIconStrip = $Content/Header/StatusIcons
 @onready var _close_button: Button = $Content/Header/CloseButton
 @onready var _rows_container: VBoxContainer = $Content/Rows
 
@@ -55,6 +56,8 @@ func show_for(unit: Unit) -> void:
 	_unit = unit
 	_unit.damaged.connect(_on_unit_damaged)
 	_unit.defeated.connect(_on_unit_defeated)
+	_unit.status_effects_changed.connect(_on_status_effects_changed)
+	_unit.status_effect_applied.connect(_on_status_applied)
 	visible = true
 	refresh()
 
@@ -76,6 +79,8 @@ func refresh() -> void:
 		return
 	_name_label.text = _unit.unit_name
 	var revealed := _intel == null or _intel.is_revealed(_unit)
+	_status_icons.visible = revealed
+	_status_icons.set_effects(_unit.get_status_effects() if revealed else [])
 	var protection := _get_protection_data()
 	_rows["hp"].text = ("%d / %d" % [_unit.current_hp, _unit.max_hp]) if revealed else HIDDEN_RATIO
 	_rows["head_armor"].text = _armor_text("helmet", _unit.head_armor, protection, revealed)
@@ -136,6 +141,10 @@ func _detach_unit() -> void:
 		_unit.damaged.disconnect(_on_unit_damaged)
 	if _unit.defeated.is_connected(_on_unit_defeated):
 		_unit.defeated.disconnect(_on_unit_defeated)
+	if _unit.status_effects_changed.is_connected(_on_status_effects_changed):
+		_unit.status_effects_changed.disconnect(_on_status_effects_changed)
+	if _unit.status_effect_applied.is_connected(_on_status_applied):
+		_unit.status_effect_applied.disconnect(_on_status_applied)
 
 
 func _on_unit_damaged(_result: Dictionary) -> void:
@@ -144,6 +153,16 @@ func _on_unit_damaged(_result: Dictionary) -> void:
 
 func _on_unit_defeated(_unit_param: Unit) -> void:
 	hide_panel()
+
+
+func _on_status_effects_changed() -> void:
+	refresh()
+
+
+func _on_status_applied(effect: Dictionary) -> void:
+	refresh()
+	if _status_icons.visible:
+		_status_icons.pulse(str(effect.get("id", "")))
 
 
 func _on_intel_changed(unit: Unit) -> void:

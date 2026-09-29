@@ -202,20 +202,20 @@ func resolve_binding(cue: StringName, context: Dictionary) -> String   # 读 sfx
 
 ### P3 回合切换演出（0.5 天，依赖 P1）
 
-- [ ] `HUD/turn_transition.tscn` + `Script/battle/turn_transition.gd`（CanvasLayer 20，与遮罩互斥）：
+- [x] `HUD/turn_transition.tscn` + `Script/battle/turn_transition.gd`（CanvasLayer 20，与遮罩互斥）：
   - 玩家变体：青蓝斜向擦除 + 「第 N / M 回合 · 玩家行动」，0.2 s 擦入 → 0.5 s 停留 → 0.3 s 擦出。
   - 敌方变体：橙红横向条带 + 「敌方行动」，约 0.8 s。
-- [ ] 接入 `_on_turn_started()` 与 `_on_phase_changed(ENEMY_PHASE)`；敌方横幅擦出后立刻开始第一次镜头聚焦。
-- [ ] 撤离倒计时行：`evacuation_pending` 时横幅追加「撤离倒计时：撑过本回合」。
-- [ ] 音效接入点（D8）：`turn_player` / `turn_enemy` 两个 cue 走 `BattleSfx.play()`（空实现）。
+- [x] 接入 `_on_turn_started()` 与 `_on_phase_changed(ENEMY_PHASE)`；敌方横幅擦出后立刻开始第一次镜头聚焦。
+- [x] 撤离倒计时行：`evacuation_pending` 时横幅追加「撤离倒计时：撑过本回合」。
+- [x] 音效接入点（D8）：`turn_player` / `turn_enemy` 两个 cue 走 `BattleSfx.play()`（空实现）。
 
 **验收**：回合切换有 1 s 左右过场；玩家 / 敌方观感明确区分；不造成输入卡死。
 
 ### P4 数值反馈收尾（0.5 天，可并行）
 
-- [ ] `BattleStatusBar.set_value_with_delta()`：0.18 s 弹跳 + `-N` 角标；受击红闪；护甲 / 头盔归零置灰 + 「破」标记；`refresh()` 语义不变。
-- [ ] 单位头顶状态图标（流血 / 骨折 + 层数角标）：回合开始 `combat_resolver.begin_turn()` 的 `injury_damage` / `status_heal` 事件驱动图标脉冲与状态栏刷新（不做战场飘字）。
-- [ ] 撤离倒计时角标（状态栏右侧；受击中断抖红一次）。
+- [ ] `BattleStatusBar.set_value_with_delta()`：HP / AP 差值角标、主角屏幕红闪已实现；护甲 / 头盔归零置灰 + 「破」标记待完成；`refresh()` 语义不变。
+- [x] 单位头顶状态图标（流血 / 骨折 + 层数角标）：状态新增或叠加时脉冲；状态栏与单位面板同步刷新（不做战场飘字）。
+- [x] 撤离倒计时角标（状态栏右侧；受击不再中断撤离，保留至下回合结算）。
 
 **验收**：掉血 / 掉 AP / 流血都有可见来源；状态来源不再需要看日志。
 
