@@ -25,7 +25,11 @@ var _stage_origin := Vector2.ZERO
 
 func _ready() -> void:
 	_config = _load_json(PRESENTATION_CONFIG_PATH)
-	_sfx = BattleSfx.new(bool(_config.get("debug_sfx", false)))
+	_sfx = BattleSfx.new(
+		bool(_config.get("debug_sfx", false)),
+		self,
+		StringName(str(_config.get("audio_bus", "SFX")))
+	)
 	_root.visible = false
 	_stage_origin = _stage.position
 	_portrait_layouts = {
@@ -46,7 +50,7 @@ func begin_session(attacker: Unit) -> void:
 	_defender_portrait.modulate.a = 0.0
 	_root.modulate.a = 0.0
 	_root.visible = true
-	_sfx.play(&"cutin_in", _sfx_context())
+	_sfx.play(&"battle_cutin_in", _sfx_context())
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_property(_root, "modulate:a", 1.0, _seconds("session_in_seconds", 0.2))
@@ -95,7 +99,7 @@ func finish_round() -> void:
 func end_session() -> void:
 	if not _root.visible:
 		return
-	_sfx.play(&"cutin_out", _sfx_context())
+	_sfx.play(&"battle_cutin_out", _sfx_context())
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_property(_root, "modulate:a", 0.0, _seconds("session_out_seconds", 0.18))

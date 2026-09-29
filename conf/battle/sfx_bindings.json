@@ -1,12 +1,14 @@
 {
   "default": {
-    "cutin_in": "",
+    "turn_in": "sfx_turn_in",
+    "turn_out": "sfx_turn_out",
+    "battle_cutin_in": "",
+    "battle_cutin_out": "",
     "attack_fire": "",
     "hit_armor": "",
     "hit_flesh": "",
     "miss": "",
-    "unit_down": "",
-    "cutin_out": ""
+    "unit_down": ""
   },
   "units": {},
   "weapons": {}

@@ -15,7 +15,11 @@ var _is_playing := false
 
 func _ready() -> void:
 	_config = _load_config()
-	_sfx = BattleSfx.new(bool(_config.get("debug_sfx", false)))
+	_sfx = BattleSfx.new(
+		bool(_config.get("debug_sfx", false)),
+		self,
+		StringName(str(_config.get("audio_bus", "SFX")))
+	)
 	_root.visible = false
 
 
@@ -28,7 +32,7 @@ func play_player(turn: int, max_turns: int, evacuation_pending: bool) -> void:
 	if evacuation_pending:
 		_subtitle.text += " · 撤离倒计时：撑过本回合"
 	_band.color = Color(0.05, 0.46, 0.64, 0.94)
-	await _play(Vector2(-1.0, -0.24), 0.2, 0.5, 0.3, &"turn_player")
+	await _play(Vector2(-1.0, -0.24), 0.2, 0.5, 0.3, &"turn_in")
 	_is_playing = false
 
 
@@ -41,7 +45,7 @@ func play_enemy(evacuation_pending: bool) -> void:
 	if evacuation_pending:
 		_subtitle.text += " · 撤离倒计时：撑过本回合"
 	_band.color = Color(0.66, 0.2, 0.14, 0.94)
-	await _play(Vector2(1.0, 0.0), 0.18, 0.34, 0.28, &"turn_enemy")
+	await _play(Vector2(1.0, 0.0), 0.18, 0.34, 0.28, &"turn_out")
 	_is_playing = false
 
 
