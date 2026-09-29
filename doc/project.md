@@ -53,7 +53,7 @@ Boot.tscn ──► MainMenu.tscn ──► CommandCenter.tscn（前哨指挥台
 | `Boot.tscn` | `Script/boot.gd` | 启动场景：加载 `ItemDB`（`conf/items`）与 `EnemyDB`（`conf/enemies.json`），再跳转主菜单 |
 | `MainMenu.tscn` | `Script/main_menu.gd` | 主菜单：随机背景、开始新游戏、继续游戏、存读档界面 |
 | `CommandCenter.tscn` | `Script/command_center.gd` | 前哨指挥台：本地时间、信用点/辉石碎片展示、卡片入口。战斗、仓库、交易行已接入；温室／工厂／特勤处卡片已预留但未接场景 |
-| `Battlefield.tscn` | `Script/battlefield.gd` | 战场场景：回合制战棋、行动点、敌方阶段、战术装备面板 |
+| `Battlefield.tscn` | `Script/battlefield.gd` | 战场场景：回合制战棋、行动点、战斗遮罩、敌方行动演出、撤离结算 |
 | `Base.tscn` | `Script/base.gd` | 旧版基地场景，保留移动与存读档入口 |
 | `Warehouse.tscn` | `Script/inventory/warehouse.gd` | 仓库工作台：容器拖拽、装备与武器配件 |
 | `TradingPost.tscn` | `Script/trading_post.gd` | 交易行：仅售 Lv1 基础品，用于补缺防卡关 |
@@ -85,7 +85,10 @@ Battlefield (Node2D, y_sort_enabled = true, Script/battlefield.gd)
 		├── ContextMenu          ← 右键行动菜单（attack / end turn / properties）
 		├── BattleLoadoutPanel   ← 运行时挂载的战术装备面板
 		├── EvacuationSignalFlare ← 挂在 Ground10/obstacle 的绿色信号弹动画
-		└── FailureOverlay       ← 运行时挂载的撤离失败遮罩与返回指挥中心按钮
+		├── FailureOverlay       ← 运行时挂载的撤离失败遮罩与返回指挥中心按钮
+		└── SuccessOverlay       ← 运行时挂载的撤离成功结算与返回指挥中心按钮
+├── BattleCutIn (CanvasLayer, layer = 20)      ← 攻击遮罩、伤害读数与舞台抖动
+└── TurnTransition (CanvasLayer, layer = 20)   ← 玩家/敌方回合横幅
 ```
 
 - **高亮绘制**：移动范围写入各层 `HUD` 的 `moverange.png`（源 id 0）；攻击范围写入 `attack_range.png`（源 id 1，`(0,0)` 灰 = 范围内无可攻击目标，`(1,0)` 绿 = 可攻击）；路径预览与瞄准线由 `Line2D` 实时绘制。
@@ -99,7 +102,9 @@ Battlefield (Node2D, y_sort_enabled = true, Script/battlefield.gd)
 
 | 脚本 | 职责 |
 |---|---|
-| `Script/battlefield.gd` | 战场主控：状态机、行动菜单、高亮与路径、AP 结算、存档同步、敌方阶段调度 |
+| `Script/battlefield.gd` | 战场主控：状态机、行动菜单、高亮与路径、表现编排接入、撤离与结果结算 |
+| `Script/battle/battle_presentation.gd` / `battle_cut_in.gd` / `battle_sfx.gd` | 攻击演出编排、全屏遮罩与空音效接入点；攻击在遮罩开火帧提交结算 |
+| `Script/battle/enemy_action_plan.gd` / `battle_camera.gd` / `turn_transition.gd` | 敌方行动计划、敌方回合镜头聚焦与回合横幅演出 |
 | `conf/levels/beginner_urban.json` | 新手街区关卡配置：回合上限、敌人编组、可搜索容器与待实现的加权掉落表 |
 | `Script/ai/battlefield_perception.gd` | 可复用战场感知：路径 AP、曼哈顿或切比雪夫三选一，支持跨层开关 |
 | `Script/ai/battlefield_tactics.gd` | 可复用战场行为：随机巡逻、进入开火位、回撤与躲避当前枪线 |
@@ -195,11 +200,12 @@ get_neighbors:
 2. **预览**：悬停可达格时实时 `find_path` 并以绿色 `Line2D` 绘制路径。
 3. **移动**：点击可达格 → 按 `路径节点数 - 1` 扣除 AP → 角色逐格移动（默认 0.15 秒/格），移动结束后按剩余 AP 重算范围。
 4. **行动菜单**：右键主角 → `MENU_STATE`，弹出「攻击 / 结束回合 / 属性」；攻击条目显示武器 AP 消耗，AP 不足时数字变红且不可点击。
-5. **攻击**：进入 `ATTACK_STATE` 后由 `BulletRange` 计算射程内格子并绘制弹道，点击目标扣除武器 `attack_cost`。**当前仅完成弹道计算与打印，伤害与命中结算尚未接入。**
-6. **敌方阶段**：结束回合按钮（或菜单项）→ `TurnController.end_turn()` → 敌方阶段对每个 `enemy` 单位调用 `start_turn()` 并由 `EnemyAI` 逐个追击、近身；敌方阶段按住空格键可加速移动动画。敌人由 `EnemySpawner` 在战场 `_ready` 时按规则生成。
-7. **撤离失败**：干员生命归零、回合耗尽或确认强制撤离都会清空已装备、武器配件与背包内物资，保存后显示「返回指挥中心」。
-8. **正常撤离**：进入关卡配置的单格撤离点并结束回合；若在下一个玩家回合开始时仍位于该格且倒计时期间未受生命伤害，则保留物资、输出结算日志并返回指挥中心。
-7. **回合上限**：达到 `TurnController.max_turns`（当前 10）触发 `game_over`，冻结战斗输入。
+5. **攻击**：进入 `ATTACK_STATE` 后由 `BulletRange` 计算射程内格子并绘制弹道；扣除武器 `attack_cost` 后进入全屏攻击遮罩，`roll_attack()` 预先冻结命中/部位/原始伤害，遮罩开火帧执行 `apply_attack()`。
+6. **敌方阶段**：敌方横幅结束后，逐个敌人生成行动计划；有实际行动才镜头聚焦。移动前按 0.3 秒逐格预绘橙红高亮，随后逐格移动并在离开时清除高亮；连续攻击复用同一遮罩会话。
+7. **伤口反馈**：流血在单位自身回合横幅退出后结算；主角显示战场飘字、状态栏图标脉冲和全屏红闪，敌人先镜头聚焦再显示战场飘字。流血/骨折只显示在主角状态栏与敌人跟随面板。
+8. **撤离失败**：干员生命归零、回合耗尽或确认强制撤离都会清空已装备、武器配件与背包内物资，保存后显示失败结算弹窗。
+9. **正常撤离**：进入单格撤离点并结束回合，状态栏显示撤离倒计时；下一个玩家回合横幅结束后先结算伤口，仍存活且位于撤离点则保留物资、保存并显示成功结算弹窗。
+10. **回合上限**：达到 `TurnController.max_turns`（当前 10）触发 `game_over`，冻结战斗输入。
 
 ### 行动点（AP）
 
@@ -290,7 +296,7 @@ get_neighbors:
 
 ### 待开发
 
-- **战区搜打撤**：撤离点与时限、战利品容器、战场结算（当前攻击仅算弹道，无伤害、命中与撤离判定）。
+- **战区搜打撤**：战斗与撤离核心流程已接入；后续扩展关卡、敌人、战利品与结果统计内容。
 - **基地生产**：温室种植、工厂二合棋盘、居民援助订单、特勤处（`CommandCenter` 卡片已预留）。
 - **战斗深化**：距离档位与命中率/伤害、护甲耐久消耗、战术道具 `battle_effect_id` 效果。
 - **剧情与表现**：对话系统与立绘表情差分（`benny_face_<emotion>_01.png`）、贝妮战斗像素重制。

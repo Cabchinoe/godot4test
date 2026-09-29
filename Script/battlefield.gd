@@ -74,6 +74,8 @@ var battle_config: Dictionary = {}
 var evacuation_confirmation: ConfirmationDialog
 var failure_overlay: Control
 var failure_reason_label: Label
+var success_overlay: Control
+var success_summary_label: Label
 var _battle_finished := false
 var evacuation_grid := Vector2i(-1, -1)
 var evacuation_level := 1
@@ -124,6 +126,7 @@ func _ready():
 	player.damaged.connect(_on_player_damaged)
 	_setup_evacuation_controls()
 	_setup_failure_overlay()
+	_setup_success_overlay()
 	_setup_injury_feedback()
 	print("Player start grid: ", player.grid_pos, " level: ", player.current_level, " world: ", player.global_position)
 
@@ -340,6 +343,58 @@ func _setup_failure_overlay() -> void:
 	failure_reason_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	failure_reason_label.add_theme_font_size_override("font_size", 19)
 	content.add_child(failure_reason_label)
+	var return_button := Button.new()
+	return_button.text = "返回指挥中心"
+	return_button.custom_minimum_size = Vector2(190, 48)
+	return_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	return_button.pressed.connect(_on_return_to_command_center_pressed)
+	content.add_child(return_button)
+
+
+func _setup_success_overlay() -> void:
+	success_overlay = Control.new()
+	success_overlay.name = "SuccessOverlay"
+	success_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	success_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	success_overlay.visible = false
+	$UILayer/UIRoot.add_child(success_overlay)
+
+	var dimmer := ColorRect.new()
+	dimmer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dimmer.color = Color(0.01, 0.04, 0.05, 0.88)
+	success_overlay.add_child(dimmer)
+
+	var panel := PanelContainer.new()
+	panel.anchor_left = 0.5
+	panel.anchor_top = 0.5
+	panel.anchor_right = 0.5
+	panel.anchor_bottom = 0.5
+	panel.offset_left = -270.0
+	panel.offset_top = -170.0
+	panel.offset_right = 270.0
+	panel.offset_bottom = 170.0
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.035, 0.095, 0.105, 0.98)
+	panel_style.border_color = Color(0.34, 0.92, 0.7, 1.0)
+	panel_style.set_border_width_all(2)
+	panel_style.set_corner_radius_all(10)
+	panel.add_theme_stylebox_override("panel", panel_style)
+	success_overlay.add_child(panel)
+
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 18)
+	panel.add_child(content)
+	var title := Label.new()
+	title.text = "撤离成功"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 36)
+	title.add_theme_color_override("font_color", Color(0.4, 1.0, 0.74, 1.0))
+	content.add_child(title)
+	success_summary_label = Label.new()
+	success_summary_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	success_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	success_summary_label.add_theme_font_size_override("font_size", 19)
+	content.add_child(success_summary_label)
 	var return_button := Button.new()
 	return_button.text = "返回指挥中心"
 	return_button.custom_minimum_size = Vector2(190, 48)
@@ -1439,7 +1494,8 @@ func _end_battle_as_success() -> void:
 	_record_battle_result("success", "已在撤离点停留至下一个玩家回合。", extracted_items)
 	if not SaveManager.save_current_or_create():
 		push_warning("Battlefield: failed to save successful evacuation result")
-	get_tree().change_scene_to_file("res://CommandCenter.tscn")
+	success_summary_label.text = "已确认撤离，随身物资已保留。\n本次带出物品：%d 件" % extracted_items
+	success_overlay.visible = true
 
 
 func _get_carried_item_count() -> int:
