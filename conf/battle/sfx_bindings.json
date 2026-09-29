@@ -1,0 +1,13 @@
+{
+  "default": {
+    "cutin_in": "",
+    "attack_fire": "",
+    "hit_armor": "",
+    "hit_flesh": "",
+    "miss": "",
+    "unit_down": "",
+    "cutin_out": ""
+  },
+  "units": {},
+  "weapons": {}
+}

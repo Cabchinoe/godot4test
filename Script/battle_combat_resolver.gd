@@ -10,7 +10,10 @@ const LOCATION_MULTIPLIERS := {
 var _rng := RandomNumberGenerator.new()
 
 
-func _init() -> void:
+func _init(random_seed: int = -1) -> void:
+	if random_seed >= 0:
+		_rng.seed = random_seed
+		return
 	_rng.randomize()
 
 
@@ -55,7 +58,7 @@ func begin_turn(unit: Unit) -> Array[Dictionary]:
 	return events
 
 
-func resolve_attack(attacker: Unit, defender: Unit) -> Dictionary:
+func roll_attack(attacker: Unit, defender: Unit) -> Dictionary:
 	var result := {
 		"attacker": attacker.unit_name if attacker else "",
 		"defender": defender.unit_name if defender else "",
@@ -118,6 +121,28 @@ func resolve_attack(attacker: Unit, defender: Unit) -> Dictionary:
 		1,
 		roundi(float(distance_damage) * multiplier)
 	)
+	result["location"] = location
+	result["raw_damage"] = raw_damage
+	result["damage_formula"] = {
+		"attack_power_total": attack_power,
+		"distance_multiplier": float(distance_profile.get("damage_multiplier", 1.0)),
+		"damage_after_distance": distance_damage,
+		"location": location,
+		"location_multiplier": multiplier,
+		"raw_damage": raw_damage,
+	}
+	return result
+
+
+func apply_attack(attacker: Unit, defender: Unit, roll: Dictionary) -> Dictionary:
+	var result := roll.duplicate(true)
+	if attacker == null or defender == null or attacker.is_defeated or defender.is_defeated:
+		return result
+	if not bool(result.get("hit", false)):
+		return result
+
+	var location := str(result.get("location", ""))
+	var raw_damage := maxi(0, int(result.get("raw_damage", 0)))
 	var protection := defender.absorb_damage_at_location(location, raw_damage)
 	var final_damage := raw_damage - int(protection.get("absorbed", 0))
 	var dealt := defender.receive_damage(final_damage, {
@@ -128,34 +153,30 @@ func resolve_attack(attacker: Unit, defender: Unit) -> Dictionary:
 		"absorbed": int(protection.get("absorbed", 0)),
 	})
 
-	result["location"] = location
-	result["raw_damage"] = raw_damage
 	result["damage"] = dealt
 	result["absorbed"] = int(protection.get("absorbed", 0))
 	result["remaining_armor"] = int(protection.get("remaining_armor", 0))
 	result["defeated"] = defender.is_defeated
 	result["protection"] = protection.duplicate(true)
-	result["damage_formula"] = {
-		"attack_power_total": attack_power,
-		"distance_multiplier": float(distance_profile.get("damage_multiplier", 1.0)),
-		"damage_after_distance": distance_damage,
-		"location": location,
-		"location_multiplier": multiplier,
-		"raw_damage": raw_damage,
-		"absorbed": int(protection.get("absorbed", 0)),
-		"final_hp_damage": dealt,
-		"remaining_armor": int(protection.get("remaining_armor", 0)),
-	}
+	var damage_formula := (result.get("damage_formula", {}) as Dictionary).duplicate(true)
+	damage_formula["absorbed"] = int(protection.get("absorbed", 0))
+	damage_formula["final_hp_damage"] = dealt
+	damage_formula["remaining_armor"] = int(protection.get("remaining_armor", 0))
 
 	var unprotected_hit := not bool(protection.get("had_protection", false)) or (
 		bool(protection.get("depleted", false)) and dealt > 0
 	)
-	result["damage_formula"]["unprotected_hit"] = unprotected_hit
+	damage_formula["unprotected_hit"] = unprotected_hit
+	result["damage_formula"] = damage_formula
 	if not defender.is_defeated and dealt > 0 and unprotected_hit:
 		var injury_result := _apply_unprotected_debuffs(attacker, defender, location)
 		result["statuses"] = injury_result["applied"]
 		result["injury_checks"] = injury_result["checks"]
 	return result
+
+
+func resolve_attack(attacker: Unit, defender: Unit) -> Dictionary:
+	return apply_attack(attacker, defender, roll_attack(attacker, defender))
 
 
 func _roll_hit_location(indices: Dictionary) -> String:

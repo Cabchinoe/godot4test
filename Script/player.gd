@@ -20,6 +20,10 @@ func initialize_player(p_level_manager: LevelManager) -> void:
 		return
 	load_base_data()
 	super.init_unit(character_definition.display_name, "player", ap_max, p_level_manager, 1)
+	cutin_art_key = "benny"
+	cutin_art_path = "res://Art/characters/benny/benny_base_01.png"
+	cutin_art_height_ratio = 0.88
+	cutin_art_offset = Vector2(0, 8)
 	load_appearance()
 	current_hp = max_hp
 	_ensure_default_loadout()

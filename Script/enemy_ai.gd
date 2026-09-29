@@ -7,6 +7,8 @@ var bullet_range: BulletRange
 var combat_resolver: BattleCombatResolver
 var perception
 var tactics
+var battle_presentation: BattlePresentation
+var _presentation_session_open := false
 var _random := RandomNumberGenerator.new()
 
 
@@ -16,6 +18,10 @@ func _init(p_bullet_range: BulletRange, p_combat_resolver: BattleCombatResolver)
 	perception = BATTLEFIELD_PERCEPTION_SCRIPT.new()
 	tactics = BATTLEFIELD_TACTICS_SCRIPT.new(bullet_range)
 	_random.randomize()
+
+
+func set_battle_presentation(presentation: BattlePresentation) -> void:
+	battle_presentation = presentation
 
 
 func run_turn(enemy: Unit) -> void:
@@ -34,8 +40,16 @@ func run_turn(enemy: Unit) -> void:
 		if attack_path.is_empty():
 			return
 		await tactics.move_along_path(enemy, attack_path, enemy.action_points)
-	while _try_attack(enemy, target):
-		pass
+	_presentation_session_open = battle_presentation != null and enemy.action_points >= enemy.get_attack_cost() and _can_attack(enemy, target)
+	if _presentation_session_open:
+		await battle_presentation.begin_session(enemy)
+	while true:
+		var continue_attacking := await _try_attack(enemy, target)
+		if not continue_attacking:
+			break
+	if _presentation_session_open:
+		await battle_presentation.end_session()
+	_presentation_session_open = false
 
 
 func _should_retreat(enemy: Unit) -> bool:
@@ -73,7 +87,11 @@ func _try_attack(enemy: Unit, target: Unit) -> bool:
 		return false
 	if not enemy.spend_ap(enemy.get_attack_cost()):
 		return false
-	var result := combat_resolver.resolve_attack(enemy, target)
+	var result: Dictionary
+	if battle_presentation and _presentation_session_open:
+		result = await battle_presentation.play_attack_round(enemy, target)
+	else:
+		result = combat_resolver.resolve_attack(enemy, target)
 	print(BattleCombatLogFormatter.format_attack(result))
 	print("[敌方攻击 JSON] ", result)
 	return not enemy.is_defeated and not target.is_defeated

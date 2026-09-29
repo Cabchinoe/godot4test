@@ -17,6 +17,8 @@ extends Node2D
 
 const BATTLE_LOADOUT_PANEL_SCRIPT := preload("res://Script/inventory/ui/battle_loadout_panel.gd")
 const BATTLE_COMBAT_RESOLVER_SCRIPT := preload("res://Script/battle_combat_resolver.gd")
+const BATTLE_CUT_IN_SCENE := preload("res://HUD/battle_cut_in.tscn")
+const BATTLE_PRESENTATION_SCRIPT := preload("res://Script/battle/battle_presentation.gd")
 const BATTLE_CONTAINER_SPAWNER_SCRIPT := preload("res://Script/battle_container_spawner.gd")
 const BATTLE_CONTAINER_ACTION_MENU_SCRIPT := preload("res://Script/ui/battle_container_action_menu.gd")
 const SIGNAL_FLARE_SPRITES := preload("res://Art/tilesets/urban_night/props/markers/signal_flare/signal_flare_sprites.tres")
@@ -32,6 +34,8 @@ var level_manager: LevelManager
 var turn_controller: TurnController
 var bullet_range: BulletRange
 var combat_resolver: BattleCombatResolver
+var battle_cut_in: BattleCutIn
+var battle_presentation: BattlePresentation
 var container_spawner: BattleContainerSpawner
 enum State { IDLE, MOVE_STATE, MENU_STATE, ATTACK_STATE }
 var current_state: int = State.IDLE
@@ -69,6 +73,7 @@ var evacuation_grid := Vector2i(-1, -1)
 var evacuation_level := 1
 var evacuation_marker: AnimatedSprite2D
 var evacuation_pending := false
+var _pending_defeats: Array[Unit] = []
 
 
 func _ready():
@@ -112,6 +117,9 @@ func _ready():
 
 	bullet_range = BulletRange.new(level_manager)
 	combat_resolver = BATTLE_COMBAT_RESOLVER_SCRIPT.new()
+	battle_cut_in = BATTLE_CUT_IN_SCENE.instantiate()
+	add_child(battle_cut_in)
+	battle_presentation = BATTLE_PRESENTATION_SCRIPT.new(combat_resolver, battle_cut_in)
 	container_spawner = BATTLE_CONTAINER_SPAWNER_SCRIPT.new(level_manager)
 	_spawn_map_containers()
 	_spawn_evacuation_point()
@@ -141,6 +149,7 @@ func _ready():
 		enemy.defeated.connect(_on_unit_defeated)
 		unit_intel.register_unit(enemy)
 	enemy_ai = EnemyAI.new(bullet_range, combat_resolver)
+	enemy_ai.set_battle_presentation(battle_presentation)
 
 func _exit_tree() -> void:
 	if inventory:
@@ -405,6 +414,9 @@ func _run_enemy_phase() -> void:
 		if e.is_defeated:
 			continue
 		await enemy_ai.run_turn(e)
+		_finalize_deferred_defeats()
+		if _battle_finished:
+			return
 		status_bar.refresh()
 
 func _set_all_units_move_interval(interval: float) -> void:
@@ -624,6 +636,8 @@ func _unhandled_input(event: InputEvent):
 	# 相机拖拽不受回合阶段限制；被拖拽消费的事件不再进入玩家阶段交互
 	if _handle_camera_drag_input(event):
 		return
+	if battle_presentation and battle_presentation.is_busy():
+		return
 	if turn_controller.current_phase != TurnController.Phase.PLAYER_PHASE:
 		return
 	if player.is_moving:
@@ -679,12 +693,13 @@ func _handle_left_click():
 		var attack_click_node = _get_closest_attack_node(mouse_world)
 		var target := _get_enemy_at_node(attack_click_node)
 		if _is_in_attack_cells(attack_click_node) and target and player.spend_ap(player.get_attack_cost()):
-			var result := combat_resolver.resolve_attack(player, target)
+			var result := await battle_presentation.play_attack(player, target)
 			print(BattleCombatLogFormatter.format_attack(result))
 			print("[攻击结算 JSON] ", result)
 			if bool(result.get("hit", false)):
 				unit_intel.mark_revealed(target)
 			status_bar.refresh()
+			_finalize_deferred_defeats()
 			_change_state(State.IDLE)
 		return
 
@@ -1149,18 +1164,34 @@ func _spawn_map_containers() -> void:
 		_reorder_containers_at_grid(container.grid_pos, container.current_level)
 
 func _on_unit_defeated(unit: Unit) -> void:
-	if unit == player:
-		_end_battle_as_failure("干员生命归零，撤离失败。")
+	if unit == null or _pending_defeats.has(unit):
 		return
-	if unit.faction != "enemy":
-		return
-	unit.remove_from_group("enemy")
 	unit.remove_from_group("units")
-	if container_spawner:
-		var drop := container_spawner.spawn_enemy_drop(unit)
-		if drop:
-			_reorder_containers_at_grid(drop.grid_pos, drop.current_level)
-	unit.queue_free()
+	if unit.faction == "enemy":
+		unit.remove_from_group("enemy")
+	_pending_defeats.append(unit)
+	if battle_presentation == null or not battle_presentation.is_busy():
+		_finalize_deferred_defeats()
+
+
+func _finalize_deferred_defeats() -> void:
+	if _pending_defeats.is_empty():
+		return
+	var defeats := _pending_defeats.duplicate()
+	_pending_defeats.clear()
+	for unit in defeats:
+		if unit == null or not is_instance_valid(unit):
+			continue
+		if unit == player:
+			_end_battle_as_failure("干员生命归零，撤离失败。")
+			return
+		if unit.faction != "enemy":
+			continue
+		if container_spawner:
+			var drop := container_spawner.spawn_enemy_drop(unit)
+			if drop:
+				_reorder_containers_at_grid(drop.grid_pos, drop.current_level)
+		unit.queue_free()
 
 func _on_player_damaged(result: Dictionary) -> void:
 	if evacuation_pending and int(result.get("damage", 0)) > 0:
@@ -1276,4 +1307,3 @@ func _clear_all_highlights():
 		var hud = level_manager.get_layer(level, "hud")
 		if hud:
 			hud.clear()
-

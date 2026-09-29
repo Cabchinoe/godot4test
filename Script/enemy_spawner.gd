@@ -29,6 +29,8 @@ func spawn(id: String, grid: Vector2i, level: int) -> Unit:
 	enemies_container.add_child(enemy)
 	enemy.init_unit(data["name"], "enemy", int(data["ap_max"]), level_manager, level)
 	enemy.configure_combat(data)
+	enemy.cutin_art_key = str(data.get("art_key", ""))
+	_configure_cutin_art(enemy, data.get("cutin_art", {}))
 	enemy.configure_appearance(sprite_frames, &"idle", &"walk", &"aim")
 	enemy.grid_pos = grid
 	_align_to_grid(enemy)
@@ -90,3 +92,15 @@ func _get_frame_size(data: Dictionary) -> Vector2i:
 	if value is Array and (value as Array).size() >= 2:
 		return Vector2i(maxi(1, int(value[0])), maxi(1, int(value[1])))
 	return Vector2i(64, 80)
+
+
+func _configure_cutin_art(enemy: Unit, value: Variant) -> void:
+	if not (value is Dictionary):
+		return
+	var art: Dictionary = value as Dictionary
+	enemy.cutin_art_path = str(art.get("path", ""))
+	enemy.cutin_art_height_ratio = clampf(float(art.get("height_ratio", 0.76)), 0.2, 1.0)
+	var offset: Variant = art.get("offset", [])
+	if offset is Array and (offset as Array).size() >= 2:
+		enemy.cutin_art_offset = Vector2(float((offset as Array)[0]), float((offset as Array)[1]))
+	enemy.cutin_art_flip = bool(art.get("flip", false))

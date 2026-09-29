@@ -33,6 +33,11 @@ var head_per_hit_absorb: int = 0
 var body_per_hit_absorb: int = 0
 var loot_container_data: Dictionary = {}
 var ai_config: Dictionary = {}
+var cutin_art_key: String = ""
+var cutin_art_path: String = ""
+var cutin_art_height_ratio: float = 0.76
+var cutin_art_offset := Vector2.ZERO
+var cutin_art_flip := false
 var is_defeated: bool = false
 var status_effects: Array = []
 

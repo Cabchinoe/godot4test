@@ -18,6 +18,12 @@
 	"sprite_frame_size": [64, 80],
 	"sprite_frames_path": "res://Art/characters/enemies/raider_infantry/raider_infantry_sprites.tres",
 	"art_key": "raider_infantry",
+	"cutin_art": {
+		"path": "res://Art/source/urban_night/enemies/masters/raider_infantry_idle_master.png",
+		"height_ratio": 0.76,
+		"offset": [0, 12],
+		"flip": false
+	},
 	"art_status": "ready",
 	"ai": {
 		"perception": {
@@ -58,6 +64,12 @@
 	"sprite_frame_size": [64, 80],
 	"sprite_frames_path": "res://Art/characters/enemies/raider_scout/raider_scout_sprites.tres",
 	"art_key": "raider_scout",
+	"cutin_art": {
+		"path": "res://Art/source/urban_night/enemies/masters/raider_scout_idle_master.png",
+		"height_ratio": 0.76,
+		"offset": [0, 12],
+		"flip": false
+	},
 	"art_status": "ready",
 	"ai": {
 		"perception": {
@@ -97,6 +109,12 @@
 	"sprite_frame_size": [64, 80],
 	"sprite_frames_path": "res://Art/characters/enemies/raider_bulwark/raider_bulwark_sprites.tres",
 	"art_key": "raider_bulwark",
+	"cutin_art": {
+		"path": "res://Art/source/urban_night/enemies/masters/raider_bulwark_idle_master.png",
+		"height_ratio": 0.8,
+		"offset": [0, 14],
+		"flip": false
+	},
 	"art_status": "ready",
 	"ai": {
 		"perception": {
@@ -135,6 +153,12 @@
 	"sprite_frame_size": [64, 80],
 	"sprite_frames_path": "res://Art/characters/enemies/pyroxene_hound/pyroxene_hound_sprites.tres",
 	"art_key": "pyroxene_hound",
+	"cutin_art": {
+		"path": "res://Art/source/urban_night/enemies/masters/pyroxene_hound_idle_master.png",
+		"height_ratio": 0.66,
+		"offset": [0, 30],
+		"flip": false
+	},
 	"art_status": "ready",
 	"ai": {
 		"perception": {
@@ -172,6 +196,12 @@
 	"sprite_frame_size": [64, 80],
 	"sprite_frames_path": "res://Art/characters/enemies/pyroxene_sentry/pyroxene_sentry_sprites.tres",
 	"art_key": "pyroxene_sentry",
+	"cutin_art": {
+		"path": "res://Art/source/urban_night/enemies/masters/pyroxene_sentry_idle_master.png",
+		"height_ratio": 0.68,
+		"offset": [0, 26],
+		"flip": false
+	},
 	"art_status": "ready",
 	"ai": {
 		"perception": {
