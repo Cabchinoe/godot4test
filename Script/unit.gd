@@ -2,6 +2,8 @@ class_name Unit
 extends Node2D
 
 signal movement_finished
+signal grid_position_will_change(grid: Vector2i, level: int)
+signal grid_position_changed(grid: Vector2i, level: int)
 signal damaged(result: Dictionary)
 signal defeated(unit)
 signal status_effects_changed
@@ -417,8 +419,10 @@ func _step_to_next() -> void:
 			movement_finished.emit()
 		return
 	var next_node: Dictionary = move_path.pop_front()
+	grid_position_will_change.emit(grid_pos, current_level)
 	grid_pos = next_node["grid"]
 	current_level = next_node["level"]
+	grid_position_changed.emit(grid_pos, current_level)
 
 	var ground := level_manager.get_layer(current_level, "ground")
 	var local := ground.map_to_local(grid_pos)

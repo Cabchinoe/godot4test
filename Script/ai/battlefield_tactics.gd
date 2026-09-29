@@ -11,18 +11,25 @@ func _init(p_bullet_range: BulletRange) -> void:
 
 
 func patrol(actor: Unit) -> void:
-	if actor == null or actor.is_defeated or actor.action_points <= 0:
+	var plan := plan_patrol(actor)
+	if plan.is_empty():
 		return
+	await execute_move(actor, plan["path"], int(plan["max_steps"]))
+
+
+func plan_patrol(actor: Unit) -> Dictionary:
+	if actor == null or actor.is_defeated or actor.action_points <= 0:
+		return {}
 	var patrol_budget := _random.randi_range(0, actor.action_points)
 	if patrol_budget <= 0:
-		return
+		return {}
 	var reachable := actor.pathfinder.bfs(actor.grid_pos, actor.current_level, patrol_budget, actor)
 	var candidates: Array[Dictionary] = []
 	for node in reachable:
 		if node["grid"] != actor.grid_pos or node["level"] != actor.current_level:
 			candidates.append(node)
 	if candidates.is_empty():
-		return
+		return {}
 	var destination: Dictionary = candidates[_random.randi_range(0, candidates.size() - 1)]
 	var path := actor.pathfinder.find_path(
 		actor.grid_pos,
@@ -31,7 +38,7 @@ func patrol(actor: Unit) -> void:
 		destination["level"],
 		actor
 	)
-	await move_along_path(actor, path, actor.action_points)
+	return {"path": path, "max_steps": actor.action_points}
 
 
 func find_attack_path(actor: Unit, target: Unit) -> Array[Dictionary]:
@@ -68,8 +75,15 @@ func find_attack_path(actor: Unit, target: Unit) -> Array[Dictionary]:
 
 
 func retreat(actor: Unit, threat: Unit) -> void:
-	if actor == null or threat == null or actor.is_defeated or actor.action_points <= 0:
+	var plan := plan_retreat(actor, threat)
+	if plan.is_empty():
 		return
+	await execute_move(actor, plan["path"], int(plan["max_steps"]))
+
+
+func plan_retreat(actor: Unit, threat: Unit) -> Dictionary:
+	if actor == null or threat == null or actor.is_defeated or actor.action_points <= 0:
+		return {}
 	var reachable := actor.pathfinder.bfs(actor.grid_pos, actor.current_level, actor.action_points, actor)
 	var safe_candidates: Array[Dictionary] = []
 	var all_candidates: Array[Dictionary] = []
@@ -96,16 +110,25 @@ func retreat(actor: Unit, threat: Unit) -> void:
 			safe_candidates.append(candidate)
 	var candidates := safe_candidates if not safe_candidates.is_empty() else all_candidates
 	if candidates.is_empty():
-		return
+		return {}
 	var selected := _select_farthest_candidate(candidates)
 	var selected_path: Array[Dictionary] = selected["path"]
-	await move_along_path(actor, selected_path, actor.action_points)
+	return {"path": selected_path, "max_steps": actor.action_points}
 
 
 func move_along_path(actor: Unit, path: Array[Dictionary], max_steps: int) -> int:
+	return await execute_move(actor, path, max_steps)
+
+
+func execute_move(actor: Unit, path: Array[Dictionary], max_steps: int) -> int:
 	if actor == null or actor.is_defeated or path.size() <= 1 or max_steps <= 0:
 		return 0
 	var steps := mini(max_steps, path.size() - 1)
+	for index in range(1, steps + 1):
+		var node: Dictionary = path[index]
+		if not actor.pathfinder.is_walkable(node["grid"], node["level"], actor):
+			print("[BattlefieldTactics] %s 的计划移动已跳过：目标格不可通行。" % actor.unit_name)
+			return 0
 	if steps <= 0 or not actor.spend_ap(steps):
 		return 0
 	var move_path: Array[Dictionary] = path.slice(0, steps + 1)

@@ -19,6 +19,7 @@ const BATTLE_LOADOUT_PANEL_SCRIPT := preload("res://Script/inventory/ui/battle_l
 const BATTLE_COMBAT_RESOLVER_SCRIPT := preload("res://Script/battle_combat_resolver.gd")
 const BATTLE_CUT_IN_SCENE := preload("res://HUD/battle_cut_in.tscn")
 const BATTLE_PRESENTATION_SCRIPT := preload("res://Script/battle/battle_presentation.gd")
+const BATTLE_CAMERA_SCRIPT := preload("res://Script/battle/battle_camera.gd")
 const BATTLE_CONTAINER_SPAWNER_SCRIPT := preload("res://Script/battle_container_spawner.gd")
 const BATTLE_CONTAINER_ACTION_MENU_SCRIPT := preload("res://Script/ui/battle_container_action_menu.gd")
 const SIGNAL_FLARE_SPRITES := preload("res://Art/tilesets/urban_night/props/markers/signal_flare/signal_flare_sprites.tres")
@@ -36,6 +37,7 @@ var bullet_range: BulletRange
 var combat_resolver: BattleCombatResolver
 var battle_cut_in: BattleCutIn
 var battle_presentation: BattlePresentation
+var battle_camera: BattleCamera
 var container_spawner: BattleContainerSpawner
 enum State { IDLE, MOVE_STATE, MENU_STATE, ATTACK_STATE }
 var current_state: int = State.IDLE
@@ -59,6 +61,8 @@ var pending_recalc_range: bool = false
 
 const DEFAULT_MOVE_INTERVAL: float = 0.3
 const FAST_MOVE_INTERVAL: float = 0.01
+const ENEMY_MOVE_INTERVAL: float = 0.3
+const ENEMY_MOVE_MARKER_SOURCE_ID := 2
 var skip_held: bool = false
 var _pending_container: BattleContainer
 var _pending_containers: Array[BattleContainer] = []
@@ -74,6 +78,8 @@ var evacuation_level := 1
 var evacuation_marker: AnimatedSprite2D
 var evacuation_pending := false
 var _pending_defeats: Array[Unit] = []
+var enemy_move_markers_by_cell: Dictionary = {}
+var _is_playing_enemy_move := false
 
 
 func _ready():
@@ -120,6 +126,7 @@ func _ready():
 	battle_cut_in = BATTLE_CUT_IN_SCENE.instantiate()
 	add_child(battle_cut_in)
 	battle_presentation = BATTLE_PRESENTATION_SCRIPT.new(combat_resolver, battle_cut_in)
+	battle_camera = BATTLE_CAMERA_SCRIPT.new(camera)
 	container_spawner = BATTLE_CONTAINER_SPAWNER_SCRIPT.new(level_manager)
 	_spawn_map_containers()
 	_spawn_evacuation_point()
@@ -413,17 +420,129 @@ func _run_enemy_phase() -> void:
 		_log_turn_events(combat_resolver.begin_turn(e))
 		if e.is_defeated:
 			continue
-		await enemy_ai.run_turn(e)
+		var plan := enemy_ai.decide_turn(e)
+		await _play_enemy_turn(e, plan)
 		_finalize_deferred_defeats()
 		if _battle_finished:
+			if battle_camera:
+				await battle_camera.release()
 			return
 		status_bar.refresh()
+	if battle_camera:
+		await battle_camera.release()
+
+
+func _play_enemy_turn(enemy: Unit, plan: EnemyActionPlan) -> void:
+	if enemy == null or plan == null or enemy.is_defeated:
+		return
+	if not _plan_has_visible_action(enemy, plan):
+		return
+	if battle_camera:
+		await battle_camera.focus_on(enemy)
+	for step in plan.steps:
+		if enemy.is_defeated or _battle_finished:
+			break
+		var kind := step.get("kind", &"") as StringName
+		if kind == &"move":
+			var path: Array[Dictionary] = step.get("path", [])
+			if path.size() > 1:
+				status_widget.set_read_only(true)
+				status_widget.show_for(enemy)
+				await _play_enemy_move(enemy, step)
+				status_widget.hide_panel()
+				status_widget.set_read_only(false)
+				continue
+		await enemy_ai.execute_step(enemy, step)
+	_clear_enemy_move_markers()
+	if status_widget:
+		status_widget.hide_panel()
+		status_widget.set_read_only(false)
+
+
+func _plan_has_visible_action(enemy: Unit, plan: EnemyActionPlan) -> bool:
+	for step in plan.steps:
+		var kind := step.get("kind", &"") as StringName
+		if kind == &"move" and (step.get("path", []) as Array).size() > 1:
+			return true
+		if kind == &"attack":
+			var target := step.get("target") as Unit
+			return enemy.action_points >= enemy.get_attack_cost() and target != null and not target.is_defeated
+	return false
+
+
+func _play_enemy_move(enemy: Unit, step: Dictionary) -> void:
+	if enemy == null or enemy.is_defeated:
+		return
+	var path: Array[Dictionary] = step.get("path", [])
+	if path.size() <= 1:
+		return
+	await _draw_enemy_move_path(path)
+	var original_interval := enemy.move_interval
+	enemy.move_interval = ENEMY_MOVE_INTERVAL
+	_is_playing_enemy_move = true
+	var on_grid_will_change := func(grid: Vector2i, level: int) -> void:
+		_hide_enemy_move_marker(grid, level)
+	var on_movement_finished := func() -> void:
+		_clear_enemy_move_markers()
+	enemy.grid_position_will_change.connect(on_grid_will_change)
+	enemy.movement_finished.connect(on_movement_finished)
+	await enemy_ai.execute_step(enemy, step)
+	if enemy.grid_position_will_change.is_connected(on_grid_will_change):
+		enemy.grid_position_will_change.disconnect(on_grid_will_change)
+	if enemy.movement_finished.is_connected(on_movement_finished):
+		enemy.movement_finished.disconnect(on_movement_finished)
+	enemy.move_interval = original_interval
+	_is_playing_enemy_move = false
+	_clear_enemy_move_markers()
+
+
+func _draw_enemy_move_path(path: Array[Dictionary]) -> void:
+	_clear_enemy_move_markers()
+	for node in path:
+		_show_enemy_move_marker(node["grid"], node["level"])
+		await get_tree().create_timer(ENEMY_MOVE_INTERVAL).timeout
+
+
+func _show_enemy_move_marker(grid: Vector2i, level: int) -> void:
+	var hud := level_manager.get_layer(level, "hud")
+	if hud == null:
+		return
+	var key := _enemy_move_marker_key(grid, level)
+	if enemy_move_markers_by_cell.has(key):
+		return
+	hud.set_cell(grid, ENEMY_MOVE_MARKER_SOURCE_ID, Vector2i.ZERO)
+	enemy_move_markers_by_cell[key] = {"grid": grid, "level": level}
+
+
+func _hide_enemy_move_marker(grid: Vector2i, level: int) -> void:
+	var key := _enemy_move_marker_key(grid, level)
+	var hud := level_manager.get_layer(level, "hud")
+	if hud:
+		hud.erase_cell(grid)
+	enemy_move_markers_by_cell.erase(key)
+
+
+func _clear_enemy_move_markers() -> void:
+	for marker_variant in enemy_move_markers_by_cell.values():
+		var marker: Dictionary = marker_variant as Dictionary
+		var level := int(marker.get("level", 0))
+		var grid := marker.get("grid", Vector2i.ZERO) as Vector2i
+		var hud := level_manager.get_layer(level, "hud")
+		if hud:
+			hud.erase_cell(grid)
+	enemy_move_markers_by_cell.clear()
+
+
+func _enemy_move_marker_key(grid: Vector2i, level: int) -> String:
+	return "%d_%d_%d" % [level, grid.x, grid.y]
 
 func _set_all_units_move_interval(interval: float) -> void:
 	for u in get_tree().get_nodes_in_group("units"):
 		u.move_interval = interval
 
 func _update_skip_input() -> void:
+	if _is_playing_enemy_move:
+		return
 	if turn_controller.current_phase != TurnController.Phase.ENEMY_PHASE:
 		if skip_held:
 			skip_held = false
@@ -1252,13 +1371,17 @@ func _log_turn_events(events: Array[Dictionary]) -> void:
 		print("[Status] ", event)
 
 func _draw_path(path: Array[Dictionary]):
-	hover_sprite.clear_points()
+	_draw_path_on(hover_sprite, path)
+
+
+func _draw_path_on(line: Line2D, path: Array[Dictionary]) -> void:
+	line.clear_points()
 	for node in path:
 		var ground = level_manager.get_layer(node["level"], "ground")
 		var cell_local = ground.map_to_local(node["grid"])
 		var cell_world = ground.to_global(cell_local)
 		var cover_local = hover_layer.to_local(cell_world)
-		hover_sprite.add_point(cover_local)
+		line.add_point(cover_local)
 
 func _get_closest_walkable_node(mouse_world: Vector2) -> Dictionary:
 	var best_node = {}

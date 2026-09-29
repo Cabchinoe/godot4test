@@ -8,7 +8,6 @@ var combat_resolver: BattleCombatResolver
 var perception
 var tactics
 var battle_presentation: BattlePresentation
-var _presentation_session_open := false
 var _random := RandomNumberGenerator.new()
 
 
@@ -25,31 +24,71 @@ func set_battle_presentation(presentation: BattlePresentation) -> void:
 
 
 func run_turn(enemy: Unit) -> void:
+	var plan := decide_turn(enemy)
+	await execute_plan(enemy, plan)
+
+
+func decide_turn(enemy: Unit) -> EnemyActionPlan:
+	var plan := EnemyActionPlan.new()
 	if enemy == null or enemy.is_defeated:
-		return
+		return plan
 	var target: Unit = perception.find_target(enemy)
 	if target == null:
-		await tactics.patrol(enemy)
-		return
+		var patrol: Dictionary = tactics.plan_patrol(enemy)
+		if not patrol.is_empty():
+			plan.add_move(patrol["path"], int(patrol["max_steps"]))
+		else:
+			plan.add_wait()
+		return plan
 	if _should_retreat(enemy):
 		print("[EnemyAI] %s 触发回撤。" % enemy.unit_name)
-		await tactics.retreat(enemy, target)
-		return
+		var retreat: Dictionary = tactics.plan_retreat(enemy, target)
+		if not retreat.is_empty():
+			plan.add_move(retreat["path"], int(retreat["max_steps"]))
+		else:
+			plan.add_wait()
+		return plan
 	if not _can_attack(enemy, target):
 		var attack_path: Array[Dictionary] = tactics.find_attack_path(enemy, target)
 		if attack_path.is_empty():
-			return
-		await tactics.move_along_path(enemy, attack_path, enemy.action_points)
-	_presentation_session_open = battle_presentation != null and enemy.action_points >= enemy.get_attack_cost() and _can_attack(enemy, target)
-	if _presentation_session_open:
+			plan.add_wait()
+			return plan
+		plan.add_move(attack_path, enemy.action_points)
+	plan.add_attack(target)
+	return plan
+
+
+func execute_plan(enemy: Unit, plan: EnemyActionPlan) -> void:
+	if enemy == null or plan == null or enemy.is_defeated:
+		return
+	for step in plan.steps:
+		await execute_step(enemy, step)
+
+
+func execute_step(enemy: Unit, step: Dictionary) -> void:
+	if enemy == null or enemy.is_defeated:
+		return
+	match step.get("kind", &""):
+		&"move":
+			var path: Array[Dictionary] = step.get("path", [])
+			await tactics.execute_move(enemy, path, int(step.get("max_steps", 0)))
+		&"attack":
+			var target := step.get("target") as Unit
+			await _execute_attack_sequence(enemy, target)
+
+
+func _execute_attack_sequence(enemy: Unit, target: Unit) -> void:
+	if enemy == null or target == null or target.is_defeated:
+		return
+	var presentation_session_open := battle_presentation != null and enemy.action_points >= enemy.get_attack_cost() and _can_attack(enemy, target)
+	if presentation_session_open:
 		await battle_presentation.begin_session(enemy)
 	while true:
-		var continue_attacking := await _try_attack(enemy, target)
+		var continue_attacking := await _try_attack(enemy, target, presentation_session_open)
 		if not continue_attacking:
 			break
-	if _presentation_session_open:
+	if presentation_session_open:
 		await battle_presentation.end_session()
-	_presentation_session_open = false
 
 
 func _should_retreat(enemy: Unit) -> bool:
@@ -80,7 +119,7 @@ func _can_attack(enemy: Unit, target: Unit) -> bool:
 	)
 
 
-func _try_attack(enemy: Unit, target: Unit) -> bool:
+func _try_attack(enemy: Unit, target: Unit, use_presentation: bool) -> bool:
 	if enemy == null or target == null or enemy.action_points < enemy.get_attack_cost() or target.is_defeated:
 		return false
 	if combat_resolver == null or not _can_attack(enemy, target):
@@ -88,7 +127,7 @@ func _try_attack(enemy: Unit, target: Unit) -> bool:
 	if not enemy.spend_ap(enemy.get_attack_cost()):
 		return false
 	var result: Dictionary
-	if battle_presentation and _presentation_session_open:
+	if battle_presentation and use_presentation:
 		result = await battle_presentation.play_attack_round(enemy, target)
 	else:
 		result = combat_resolver.resolve_attack(enemy, target)

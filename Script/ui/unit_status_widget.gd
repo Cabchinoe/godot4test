@@ -19,6 +19,7 @@ const ROW_DEFS: Array[Array] = [
 var _unit: Unit
 var _intel: UnitIntelTracker
 var _rows: Dictionary = {}
+var _read_only := false
 
 
 static func mount(parent: Control) -> UnitStatusWidget:
@@ -56,6 +57,11 @@ func show_for(unit: Unit) -> void:
 	_unit.defeated.connect(_on_unit_defeated)
 	visible = true
 	refresh()
+
+
+func set_read_only(value: bool) -> void:
+	_read_only = value
+	_close_button.visible = not _read_only
 
 
 func hide_panel() -> void:

@@ -1,6 +1,7 @@
 [gd_scene format=4 uid="uid://djeb0cuoeaeet"]
 
 [ext_resource type="Texture2D" uid="uid://sp3tlnxhv8ne" path="res://HUD/moverange.png" id="3_7mycd"]
+[ext_resource type="Texture2D" path="res://HUD/enemy_moverange.png" id="4_enemy_move"]
 [ext_resource type="Texture2D" uid="uid://bw4rsh5lmnq8f" path="res://HUD/attack_range.png" id="6_attack"]
 [ext_resource type="Texture2D" uid="uid://do2yos8kpyp7l" path="res://Art/tilesets/urban_night/atlases/structures/interior_walls_02.png" id="7_ycdy4"]
 [ext_resource type="Texture2D" uid="uid://brd8wb8sxe0m5" path="res://Art/tilesets/urban_night/atlases/ground/brick_paving_01.png" id="8_w48qg"]
@@ -231,6 +232,12 @@ separation = Vector2i(1, 1)
 texture_region_size = Vector2i(60, 60)
 0:0/0 = 0
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_enemy_move_1"]
+texture = ExtResource("4_enemy_move")
+separation = Vector2i(1, 1)
+texture_region_size = Vector2i(60, 60)
+0:0/0 = 0
+
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ycdy4"]
 texture = ExtResource("6_attack")
 margins = Vector2i(2, 2)
@@ -243,6 +250,7 @@ texture_region_size = Vector2i(60, 60)
 tile_size = Vector2i(64, 64)
 sources/0 = SubResource("TileSetAtlasSource_htxhm")
 sources/1 = SubResource("TileSetAtlasSource_ycdy4")
+sources/2 = SubResource("TileSetAtlasSource_enemy_move_1")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dg77c"]
 texture = ExtResource("9_vivmo")
@@ -266,6 +274,12 @@ separation = Vector2i(1, 1)
 texture_region_size = Vector2i(60, 60)
 0:0/0 = 0
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_enemy_move_2"]
+texture = ExtResource("4_enemy_move")
+separation = Vector2i(1, 1)
+texture_region_size = Vector2i(60, 60)
+0:0/0 = 0
+
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_vivmo"]
 texture = ExtResource("6_attack")
 margins = Vector2i(2, 2)
@@ -278,6 +292,7 @@ texture_region_size = Vector2i(60, 60)
 tile_size = Vector2i(64, 64)
 sources/0 = SubResource("TileSetAtlasSource_w48qg")
 sources/1 = SubResource("TileSetAtlasSource_vivmo")
+sources/2 = SubResource("TileSetAtlasSource_enemy_move_2")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_272bh"]
 texture = ExtResource("3_7mycd")
