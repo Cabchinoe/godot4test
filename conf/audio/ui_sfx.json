@@ -1,0 +1,33 @@
+{
+  "debug": false,
+  "audio_bus": "SFX",
+  "hover_cooldown_seconds": 0.06,
+  "cues": {
+    "ui_click": true,
+    "ui_hover": true,
+    "ui_open": true,
+    "ui_close": true,
+    "ui_confirm": true,
+    "ui_cancel": true,
+    "ui_error": true
+  },
+  "error_markers": [
+    "无法",
+    "不足",
+    "不能",
+    "不兼容",
+    "不可用",
+    "已满",
+    "不存在",
+    "未选择",
+    "未装备",
+    "没有可用",
+    "失败",
+    "请将"
+  ],
+  "silent_scripts": [
+    "res://Script/inventory/ui/inventory_slot.gd",
+    "res://Script/inventory/ui/operator_equipment_slot.gd",
+    "res://Script/inventory/ui/weapon_attachment_slot.gd"
+  ]
+}

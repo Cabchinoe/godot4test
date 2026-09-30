@@ -13,6 +13,9 @@ var _pending_slot_id: int = 0
 var read_only: bool = false
 
 func _ready() -> void:
+	UiSfx.attach_panel(self)
+	# 关闭按钮只保留面板的 ui_close,不再叠一层 ui_click
+	UiSfx.set_silent(close_btn)
 	confirm_dialog.confirmed.connect(_on_confirm_confirmed)
 	refresh_slots()
 

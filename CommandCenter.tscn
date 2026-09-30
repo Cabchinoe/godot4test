@@ -202,7 +202,6 @@ offset_right = -3.8400269
 offset_bottom = 6.5839996
 grow_horizontal = 2
 grow_vertical = 2
-tooltip_text = "前往交易行采购基础物资"
 mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(0.82, 0.94, 1, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
@@ -307,7 +306,6 @@ anchor_right = 0.319
 anchor_bottom = 0.334
 grow_horizontal = 2
 grow_vertical = 2
-tooltip_text = "进入战场"
 mouse_default_cursor_shape = 2
 
 [node name="GreenhouseCard" type="Panel" parent="." unique_id=1023544421]
@@ -392,7 +390,6 @@ anchor_right = 0.949
 anchor_bottom = 0.334
 grow_horizontal = 2
 grow_vertical = 2
-tooltip_text = "进入温室"
 mouse_default_cursor_shape = 2
 
 [node name="SpecialOpsCard" type="Panel" parent="." unique_id=130492171]
@@ -477,7 +474,6 @@ anchor_right = 0.645
 anchor_bottom = 0.594
 grow_horizontal = 2
 grow_vertical = 2
-tooltip_text = "进入特勤处"
 mouse_default_cursor_shape = 2
 
 [node name="WarehouseCard" type="Panel" parent="." unique_id=916172625]
@@ -562,7 +558,6 @@ anchor_right = 0.319
 anchor_bottom = 0.904
 grow_horizontal = 2
 grow_vertical = 2
-tooltip_text = "进入仓库"
 mouse_default_cursor_shape = 2
 
 [node name="FactoryCard" type="Panel" parent="." unique_id=1750423460]
@@ -647,7 +642,6 @@ anchor_right = 0.949
 anchor_bottom = 0.904
 grow_horizontal = 2
 grow_vertical = 2
-tooltip_text = "进入工厂"
 mouse_default_cursor_shape = 2
 
 [connection signal="pressed" from="TradeButton" to="." method="_on_trade_button_pressed"]

@@ -82,6 +82,8 @@ func _ready() -> void:
 	close_button.text = "收起"
 	close_button.custom_minimum_size = Vector2(72, 32)
 	close_button.pressed.connect(hide_panel)
+	# 收起按钮只保留面板的 ui_close,不再叠一层 ui_click
+	UiSfx.set_silent(close_button)
 	header.add_child(close_button)
 	var body := HBoxContainer.new()
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -120,6 +122,7 @@ func _ready() -> void:
 	get_parent().add_child(_discard_confirmation)
 	_discard_confirmation.confirmed.connect(_on_discard_confirmed)
 	visible = false
+	UiSfx.attach_panel(self)
 	_refresh()
 
 
@@ -197,7 +200,7 @@ func open_search_container(resource_id: String, resource_name: String, capacity:
 	_temporary_container_name = resource_name
 	WarehouseService.create_temporary_container(inventory, _temporary_container_id, capacity, columns)
 	show_for_operator()
-	_status_label.text = "正在搜索：%s" % resource_name
+	_set_status("正在搜索：%s" % resource_name)
 
 
 func close_temporary_container(discard_items: bool = false) -> void:
@@ -395,7 +398,7 @@ func _render_temporary() -> void:
 func _on_equipment_slot_activated(slot: String, item_uid: String) -> void:
 	if item_uid.is_empty():
 		_selected_uid = ""
-		_status_label.text = "已选择%s。" % _slot_name(slot)
+		_set_status("已选择%s。" % _slot_name(slot))
 		_refresh()
 		return
 	_select_item(item_uid, "%s已选择。" % _slot_name(slot))
@@ -404,7 +407,7 @@ func _on_equipment_slot_activated(slot: String, item_uid: String) -> void:
 func _on_backpack_slot_activated(position: int, item_uid: String, _backpack_uid: String) -> void:
 	if item_uid.is_empty():
 		_selected_uid = ""
-		_status_label.text = "背包格 %d 已选择。" % (position + 1)
+		_set_status("背包格 %d 已选择。" % (position + 1))
 		_refresh()
 		return
 	_select_item(item_uid, "背包格 %d 已选择。" % (position + 1))
@@ -413,7 +416,7 @@ func _on_backpack_slot_activated(position: int, item_uid: String, _backpack_uid:
 func _on_temporary_slot_activated(position: int, item_uid: String) -> void:
 	if item_uid.is_empty():
 		_selected_uid = ""
-		_status_label.text = "临时物资格 %d 已选择。" % (position + 1)
+		_set_status("临时物资格 %d 已选择。" % (position + 1))
 		_refresh()
 		return
 	_select_item(item_uid, "临时物资格 %d 已选择。" % (position + 1))
@@ -431,7 +434,7 @@ func _on_backpack_item_dropped(data: Dictionary, target_uid: String, target_posi
 		_try_transfer(_source_location(data), ItemLocation.weapon_attachment(target_uid, str(data.get("attachment_slot", ""))))
 		return
 	if str(data.get("kind", "")) == "weapon_attachment" and not target_uid.is_empty():
-		_status_label.text = "配件只能放入空背包格，不能与普通物品交换。"
+		_set_status("配件只能放入空背包格，不能与普通物品交换。")
 		return
 	var source := _source_location(data)
 	if source != null and source.container_id == ItemLocation.BACKPACK and source.owner_id == backpack_uid:
@@ -447,7 +450,7 @@ func _on_temporary_item_dropped(data: Dictionary, target_uid: String, target_pos
 		_try_transfer(_source_location(data), ItemLocation.weapon_attachment(target_uid, str(data.get("attachment_slot", ""))))
 		return
 	if str(data.get("kind", "")) == "weapon_attachment" and not target_uid.is_empty():
-		_status_label.text = "配件只能放入空物资格，不能与普通物品交换。"
+		_set_status("配件只能放入空物资格，不能与普通物品交换。")
 		return
 	var source := _source_location(data)
 	if source != null and source.container_id == ItemLocation.TEMPORARY and source.owner_id == _temporary_container_id:
@@ -463,13 +466,13 @@ func _on_equipment_item_dropped(slot: String, data: Dictionary) -> void:
 		return
 	if _is_attachment(data):
 		if slot != "weapon":
-			_status_label.text = "配件只能安装到武器。"
+			_set_status("配件只能安装到武器。")
 			return
 		var weapon_uid := WarehouseService.get_equipped_uid(inventory, "weapon", operator_id)
 		_try_transfer(source, ItemLocation.weapon_attachment(weapon_uid, str(data.get("attachment_slot", ""))))
 		return
 	if slot == "backpack" and not WarehouseService.get_equipped_uid(inventory, "backpack", operator_id).is_empty() and WarehouseService.get_backpack_item_count(inventory, WarehouseService.get_equipped_uid(inventory, "backpack", operator_id)) > 0:
-		_status_label.text = "战斗中不能替换装有物资的背包。"
+		_set_status("战斗中不能替换装有物资的背包。")
 		return
 	_try_transfer(source, ItemLocation.equipment(operator_id, slot))
 
@@ -520,6 +523,11 @@ func _on_item_use_requested() -> void:
 	_pending_consumable_uid = ""
 
 
+func _set_status(text: String) -> void:
+	_status_label.text = text
+	UiSfx.report_status(text)
+
+
 func refresh_after_battle_action(message: String) -> void:
 	_complete_transfer(message)
 
@@ -558,14 +566,14 @@ func _double_click_transfer(source: ItemLocation, source_container: String, item
 			if temporary_position >= 0 and _try_transfer(source, ItemLocation.temporary(_temporary_container_id, temporary_position), false):
 				_complete_transfer("物品已移入临时面板。")
 				return
-	_status_label.text = "没有可用的优先目标。"
+	_set_status("没有可用的优先目标。")
 
 
 func _try_transfer(source: ItemLocation, target: ItemLocation, refresh_after: bool = true) -> bool:
 	if source == null or target == null or source.matches(target):
 		return false
 	if target.container_id == ItemLocation.WEAPON_ATTACHMENT and _selected_weapon_uid.is_empty():
-		_status_label.text = "未装备可安装配件的武器。"
+		_set_status("未装备可安装配件的武器。")
 		return false
 	if WarehouseService.transfer_item(inventory, source, target, player_data):
 		if target.container_id == ItemLocation.WEAPON_ATTACHMENT:
@@ -575,7 +583,7 @@ func _try_transfer(source: ItemLocation, target: ItemLocation, refresh_after: bo
 		if refresh_after:
 			_complete_transfer("物品已转移。")
 		return true
-	_status_label.text = "无法转移：目标不兼容、空间不足或替换条件不满足。"
+	_set_status("无法转移：目标不兼容、空间不足或替换条件不满足。")
 	return false
 
 
@@ -585,7 +593,7 @@ func _complete_transfer(message: String) -> void:
 		player.sync_battle_equipment(inventory)
 	_selected_weapon_uid = WarehouseService.get_equipped_uid(inventory, "weapon", operator_id)
 	_attachment_target_slot = ""
-	_status_label.text = message
+	_set_status(message)
 	if not _temporary_container_id.is_empty():
 		temporary_container_changed.emit(_temporary_container_id)
 	_refresh()
@@ -597,7 +605,7 @@ func _select_item(item_uid: String, status_text: String) -> void:
 	if str(item_data.get("type", "")) == "WEAPON":
 		_selected_weapon_uid = item_uid
 		_attachment_target_slot = ""
-	_status_label.text = status_text
+	_set_status(status_text)
 	_refresh()
 
 
@@ -626,7 +634,7 @@ func _on_discard_zone_requested(data: Dictionary) -> void:
 	if source.container_id == ItemLocation.EQUIPMENT and source.slot_id == "backpack":
 		var backpack_uid := WarehouseService.get_equipped_uid(inventory, "backpack", operator_id)
 		if WarehouseService.get_backpack_item_count(inventory, backpack_uid) > 0:
-			_status_label.text = "背包内还有物品，不能直接丢弃背包。"
+			_set_status("背包内还有物品，不能直接丢弃背包。")
 			return
 	var item := WarehouseService.get_item_by_uid(inventory, str(data.get("uid", "")))
 	var item_data := _item_data(item)

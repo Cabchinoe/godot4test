@@ -8,7 +8,14 @@
     "hit_armor": "",
     "hit_flesh": "",
     "miss": "",
-    "unit_down": ""
+    "unit_down": "",
+    "ui_click": "sfx_ui_click",
+    "ui_hover": "sfx_ui_hover",
+    "ui_open": "sfx_ui_open",
+    "ui_close": "sfx_ui_close",
+    "ui_confirm": "sfx_ui_confirm",
+    "ui_cancel": "sfx_ui_cancel",
+    "ui_error": "sfx_ui_error"
   },
   "units": {},
   "weapons": {}

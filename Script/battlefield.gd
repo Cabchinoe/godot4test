@@ -549,7 +549,10 @@ func _on_phase_changed(phase):
 			await turn_transition.play_enemy(evacuation_pending)
 		if _battle_finished or turn_controller.is_game_over:
 			return
+		# 敌方回合里的单位面板是系统自动弹出,不是玩家操作,C 类 UI 音效整段静音
+		UiSfx.begin_system_ui(self)
 		await _run_enemy_phase()
+		UiSfx.end_system_ui()
 		turn_controller.end_enemy_phase()
 	else:
 		_set_all_units_move_interval(DEFAULT_MOVE_INTERVAL)

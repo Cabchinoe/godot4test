@@ -1,10 +1,11 @@
 # 音效资产清单(SFX Asset Manifest)
 
-> 版本 v1.3(2026-09-29)· 配套 `Script/battle/battle_sfx.gd` + `conf/battle/sfx_bindings.json`
+> 版本 v1.4(2026-09-30)· 配套 `Script/battle/battle_sfx.gd` + `conf/battle/sfx_bindings.json`
 > 全表 cue 命名严格沿用 `BattleSfx.play(cue, context)` 现有约定,后续接音频时无需改 GDScript。
 > v1.1 修订:A.1 已落盘(2 个 cue,源 mp3 → ffmpeg 切 wav);补 §6 实测经验(AI 音频模型对纯工业音效的输出特点 + 切片策略)。
 > v1.2 修订:**B 章节移除独立 cue**,回合过渡复用 A.1 的 `sfx_cutin_in` / `sfx_cutin_out`(横幅与遮罩共用一对反向 cue,语义一致且避免冗余);撤销已生成的 `sfx_turn_player/enemy/evacuation`;总 cue 数 92 → **89**;批次 1 从 26 → **23**;BattleSfx 接入真实播放(AudioStreamPlayer 池 + host 注入)。
 > v1.3 修订:**澄清语义分离**——A.1 的 `cutin_in/out` **仅服务回合横幅(`TurnTransition`)**,**不再**被战斗遮罩(`BattleCutIn`)调用;改名为 `turn_in/out`(cue key + 文件名同步);战斗遮罩另起 `battle_cutin_in/out` 两个 cue,目前留空待后续生成;总 cue 数 89 → **91**;批次 1 从 23 → **25**。
+> v1.4 修订:**C 类 UI 通用 7/7 全部落盘**——`ui_open` / `ui_close` 改走**程序合成**(numpy 分层合成 → ffmpeg 编 MP3),一次出 4 个变体(wood / wood2 / latch / soft),经 `audios_understand` 试听评审 + 人工试听后选定 **soft(布幕/皮绒)** 版;`conf/battle/sfx_bindings.json` 的 `ui_open` / `ui_close` 已回填;新增 §6.5 合成配方与验证闭环;已落盘 2 → **9**。**并新增 autoload `UiSfx`,把 C 类 7 个 cue 全量接线到所有场景**(按钮/悬停/面板开关/对话框确认取消/失败文案),详见 §C 与 §4.1。
 
 ---
 
@@ -13,13 +14,14 @@
 | 项 | 值 |
 |---|---|
 | 总 cue 数 | **91** |
-| 已落盘 | **2**(A.1 turn_in/out) |
+| 已落盘 | **9**(A.1 turn_in/out 2 个 + C 类 UI 7 个) |
 | 分类数 | **11**(A、C~L) |
 | 命名风格 | `sfx_<scene>_<verb>` / `bgm_<scene>` / `amb_<scene>` |
 | 采样规格(目标) | SFX 48kHz/16bit 单声道;BGM 48kHz/24bit 立体声;时长 ≤2.5s(SFX)/60~120s(BGM)/10~30s(loop 环境音) |
 | **实际落盘格式** | **MP3 (libmp3lame) 96kbps 单声道**(本机 ffmpeg 8.1 编了 `libmp3lame` / `libopus` 但**没编 `libvorbis`**;MP3 兼容性最广、QuickTime/Win Media/几乎所有播放器直接放;Godot 4 原生支持 `.mp3` import) |
 | 文件位置 | `res://Art/audio/sfx/`、`res://Art/audio/bgm/`、`res://Art/audio/amb/` |
 | 绑定方式 | `conf/battle/sfx_bindings.json`(`weapons` / `units` / `default`) |
+| UI 音效入口 | autoload **`UiSfx`**(`Script/ui/ui_sfx.gd`)+ `conf/audio/ui_sfx.json`;战斗演出仍由 `TurnTransition` / `BattleCutIn` 各自持有的 `BattleSfx` 播放 |
 | 优先级 | 批次 1(23 个)→ 批次 2(51 个)→ 批次 3(12 个) |
 
 ---
@@ -40,16 +42,6 @@
 
 > **A.1 实际值大于清单目标**:目标时长是 0.25~0.30s,但首版听感反馈后调整到 2.0~2.7s(承载完整"冲击 + 衰减"曲线)。如果觉得太长,后续可再切短版覆盖。
 
-### A.5 战斗遮罩过渡(待生成)
-
-> 服务 `BattleCutIn`(战斗入场遮罩:左攻右守立绘 + 数值飘字)。
-> 与 A.1 横幅语义不同:**横幅是轻提示**,**战斗遮罩是重头戏**,需要独立的、更有质感的入退场音效。
-> 当前 cue key 已占位,binding 值为空,等后续 AI 生成 + 切片后填入。
-
-| cue key | 时长 | 文件 | 描述 | 触发点 | 状态 |
-|---|---|---|---|---|---|
-| `sfx_battle_cutin_in` | TBD | TBD | 战斗遮罩入场:立绘左攻右守滑入,带更厚重的金属/能量开门声 | `BattleCutIn.begin_session()` | ⏳ 待生成 |
-| `sfx_battle_cutin_out` | TBD | TBD | 战斗遮罩退场:反向滑出,衰减余震 | `BattleCutIn.end_session()` | ⏳ 待生成 |
 
 ### A.2 开火(按 weapon_id 路由)
 
@@ -83,6 +75,17 @@
 | `sfx_enemy_hurt` | 0.45s | 敌人受击:肉搏挤压 + 痛叫(泛用,可分两层:punch/grunt) | 敌人被打中 |
 | `sfx_unit_down` | 1.20s | 倒地:沉重跌落 + 装备/护甲金属碰撞 + 后续轻尾音 | `unit_down`(击倒帧) |
 
+### A.5 战斗遮罩过渡(待生成)
+
+> 服务 `BattleCutIn`(战斗入场遮罩:左攻右守立绘 + 数值飘字)。
+> 与 A.1 横幅语义不同:**横幅是轻提示**,**战斗遮罩是重头戏**,需要独立的、更有质感的入退场音效。
+> 当前 cue key 已占位,binding 值为空,等后续 AI 生成 + 切片后填入。
+
+| cue key | 时长 | 文件 | 描述 | 触发点 | 状态 |
+|---|---|---|---|---|---|
+| `sfx_battle_cutin_in` | TBD | TBD | 战斗遮罩入场:立绘左攻右守滑入,带更厚重的金属/能量开门声 | `BattleCutIn.begin_session()` | ⏳ 待生成 |
+| `sfx_battle_cutin_out` | TBD | TBD | 战斗遮罩退场:反向滑出,衰减余震 | `BattleCutIn.end_session()` | ⏳ 待生成 |
+
 ---
 
 ## B. 回合过渡(章节已合并到 A.1 / A.5)
@@ -94,15 +97,35 @@
 
 ## C. UI 通用(7)
 
-| cue key | 时长 | 描述 |
-|---|---|---|
-| `sfx_ui_click` | 0.08s | 通用点击:轻塑料感,短促"嗒" |
-| `sfx_ui_hover` | 0.06s | 通用悬停:更短的轻"叮" |
-| `sfx_ui_open` | 0.18s | 面板打开:布幕拉起 + 软皮绒低音 |
-| `sfx_ui_close` | 0.15s | 面板关闭:反向上推合 |
-| `sfx_ui_confirm` | 0.22s | 确认/同意:二段"叮→咚"清脆 |
-| `sfx_ui_cancel` | 0.18s | 取消/拒绝:低音"嗡"短促 |
-| `sfx_ui_error` | 0.30s | 操作失败/禁止:两声短促错误"嘟-嘟" |
+| cue key | 时长 | 描述 | 接入点(v1.4 已生效) | 状态 |
+|---|---|---|---|---|
+| `sfx_ui_click` | 0.08s | 通用点击:轻塑料感,短促"嗒" | autoload `UiSfx` 监听 `SceneTree.node_added`,给全项目每个 `BaseButton.pressed` 自动挂钩 → 主菜单 / 指挥中心 / 仓库 / 贸易站 / 战斗 HUD 的按钮全覆盖;**格子类控件不响**(见下方「只给真按钮出声」) | ✅ 已接入 |
+| `sfx_ui_hover` | 0.06s | 通用悬停:更短的轻"叮" | 同上,挂 `BaseButton.mouse_entered`,带 60ms 冷却;**禁用态按钮、格子类控件不出声**(格子长时间 hover 只弹内置 tooltip,不出声) | ✅ 已接入 |
+| `sfx_ui_open` | 0.22s(目标 0.18s) | 面板打开:布幕拉起 + 软皮绒低音 | ① `Popup.about_to_popup`——3 个 `PopupPanel`(`battle_context_menu` / `battle_container_action_menu` / `battle_item_action_menu`);② `AcceptDialog.visibility_changed`——3 个 `ConfirmationDialog`(强制撤离 `battlefield.gd:290`、丢弃 `battle_loadout_panel.gd:116`、存档覆盖/删除 `save_load_ui.gd:7`);③ `UiSfx.attach_panel()` 的常驻面板:`unit_status_widget.gd:33`、`battle_loadout_panel.gd:125`、`save_load_ui.gd:16`。**引擎内置 tooltip 整棵跳过**——它是 `theme_type_variation = "TooltipPanel"` 的 `PopupPanel`,鼠标停留就会弹,不能算面板打开 | ✅ 已接入 |
+| `sfx_ui_close` | 0.20s(目标 0.15s) | 面板关闭:反向上推合 | ① `Popup.popup_hide`;② `attach_panel()` 面板的 `visibility_changed` 转 false。**对话框不播 close**——已有 `ui_confirm` / `ui_cancel` 反馈,避免叠音;**面板上的「收起」按钮已 `set_silent()`**——关闭音由面板给出,不再叠一层 click;**菜单项点击引起的关闭也不叠 close**(只留 click),点空白处 / ESC 关菜单才单独出 close | ✅ 已接入 |
+| `sfx_ui_confirm` | 0.22s | 确认/同意:二段"叮→咚"清脆 | `AcceptDialog.confirmed` 自动挂钩;**确定按钮本身不出 `ui_click`**,只有 confirm 一个音 | ✅ 已接入 |
+| `sfx_ui_cancel` | 0.18s | 取消/拒绝:两声短促错误"嘟-嘟" | `AcceptDialog.canceled` 自动挂钩——此前全项目**没有任何一处**连接 `canceled`,现在三个对话框的取消按钮 / ESC / 标题栏 X 都响;**取消按钮本身不出 `ui_click`**,只有 cancel 一个音 | ✅ 已接入 |
+| `sfx_ui_error` | 0.30s | 操作失败/禁止:低音"嗡"短促 | `UiSfx.report_status(text)` 按失败关键字判定,出口: `warehouse.gd:917 _set_status()`(49 处文案:空间不足 / 接口不兼容 / 未选择武器 …)、`battle_loadout_panel.gd:524 _set_status()`(14 处,含战场"行动点不足""无法丢弃""丢弃物堆已满")、`trading_post.gd:74 _set_feedback()`(3 处,含"信用点不足");关键字表在 `conf/audio/ui_sfx.json` 的 `error_markers`,成功/提示文案保持安静 | ✅ 已接入 |
+> **接入实现(v1.4)**:UI 层不再逐场景手接。新增 autoload **`UiSfx`**(`Script/ui/ui_sfx.gd`,`project.godot:23`),内部持有一个常驻 `BattleSfx`(host = autoload 节点,`AudioStreamPlayer` 池跟随整个游戏生命周期,切场景不断音),启动时监听 `SceneTree.node_added` 自动为 `BaseButton` / `Popup` / `AcceptDialog` 挂钩,并延迟全树扫一遍兜底。开关与手感参数集中在 `conf/audio/ui_sfx.json`:逐个 cue 的 `cues` 开关、`hover_cooldown_seconds`、`error_markers` 失败关键字、`debug`(打印 `cue -> 文件名`)、`audio_bus`。
+>
+> **只反馈玩家操作**:C 类音效定位是"玩家操作的反馈",系统自动弹出的 UI 不能响。`UiSfx` 提供 `begin_system_ui(owner)` / `end_system_ui()` 静默作用域(计数可嵌套,期间所有 cue 静音),已用在**敌方回合**——`battlefield.gd:553` 把 `await _run_enemy_phase()` 整段包起来,敌方移动时自动弹出的单位面板(`battlefield.gd:610` `status_widget.show_for(enemy)`)不再播 `ui_open` / `ui_close`;玩家自己点敌人查看(`battlefield.gd:1018`)照常响。`owner` 传发起方节点,该节点被释放时作用域自动归零,避免 begin/end 没配对导致 UI 音效永久静音。
+>
+> **只给真按钮出声**:C 类音效只反馈"玩家点了个按钮 / 开了个面板",不是"点什么都响"。两条排除机制:① `UiSfx.set_silent(node)` 逐个标记(已用在三个面板的收起/关闭按钮:`unit_status_widget.gd:38`、`battle_loadout_panel.gd:86`、`save_load_ui.gd:18`);② `conf/audio/ui_sfx.json` 的 `silent_scripts` 按脚本路径整类排除——已列 `inventory_slot.gd` / `operator_equipment_slot.gd` / `weapon_attachment_slot.gd`(它们 `extends Button` 但语义是**格子**:点击是选中物资、hover 是弹名称,都不该有按钮音)。静默判定放在**触发时**而不是绑定时,所以标记晚于 `node_added` 也生效。另外引擎内置 tooltip 的 `Popup` 因为直接挂在 Viewport 下,绑定阶段就整棵跳过。
+>
+> **一个交互只出一个音**:按钮的职责就是关闭/取消/确认时,只保留结果音,不叠 `ui_click`;按钮是执行动作、关闭只是副作用时,只保留 `ui_click`,不叠 `ui_close`。三条规则:① `AcceptDialog` 自带的 确定 / 取消 按钮静音(`_is_dialog_own_button()`,用 `get_ok_button()` / `get_cancel_button()` 精确识别,塞进对话框内容的自定义按钮不受影响;标题栏 X 不是 Button 节点,走 `close_requested`,本来就没有 click);② 面板上的收起/关闭按钮 `set_silent()`,关闭音由面板 `visibility_changed` 给出;③ 菜单项点击后 popup 的关闭延一帧结算(`CLOSE_SETTLE_MSEC = 400`),同帧内登记过该 popup 的点击即判定为"点击引起的关闭",只留 click。
+>
+> **有意保留的两组连响**:点存档槽的 存/读/删 → `ui_click` + 随后确认框的 `ui_open`(两个独立事件);操作被拒 → `ui_click` + `ui_error`(错误音有信息量)。
+>
+> **tooltip 一律不出声**:Godot 4.6 的内置 tooltip 是 `theme_type_variation = "TooltipPanel"` 的 `PopupPanel`,**每次显示都新建一个,并 `add_child` 到被 hover 的那个控件下面**(不是 Viewport —— 按父节点类型判断拦不住),`_bind_popup` 用 `_is_engine_tooltip()` 认 type variation,父节点是 Viewport 只作兜底;另外 `CommandCenter.tscn` 六个卡片按钮的 `tooltip_text`("进入战场"之类)已直接删掉——文案和按钮名重复,没有信息量。带信息量的 tooltip 保留:战斗菜单里不可用原因(`battle_context_menu.gd:91`、`battle_container_action_menu.gd:53`)、背包格子的物资名(`inventory_slot.gd:55`)。
+>
+> **故意不接的三类**:① `battle_discard_zone`、`battle_status_bar` 的飘字 Label —— 拖拽/每次数值变化都会切换显隐,会被误判成开关面板;② 战斗结算遮罩 `success_overlay` / `failure_overlay`(`battlefield.gd:304`、`:359`)—— 留给 G 类 `sfx_battle_victory` / `sfx_battle_defeat`,不占用 `ui_open` / `ui_close`;③ 敌方回合的系统驱动 UI(见上一条)。非 Popup 的常驻面板仍需显式调一次 `UiSfx.attach_panel(self)`。
+>
+> **总线**:`conf/audio/ui_sfx.json` 的 `audio_bus` 填的是 `SFX`,但项目**还没有 SFX/BGM/AMB 总线布局**,`BattleSfx._has_bus()` 找不到就回落 `Master`;要做音量滑条需先补 §4 第 3~4 步。
+
+> **C 类已全部落盘(7/7)**:`ui_open` / `ui_close` 文件为 `Art/audio/sfx/sfx_ui_open.mp3`(0.222s)、`Art/audio/sfx/sfx_ui_close.mp3`(0.200s),48kHz 单声道 MP3 96k;实际时长略长于清单目标,因为尾部保留了自然衰减(不做硬切)。
+>
+> **定稿过程**:AI 路线(`batch_text_to_music`)对这两个 cue 不可用——open 给了电子 screech、close 直接给了人声呼气;v1.4 改走程序合成,出 `wood`(木箱咔哒)/`wood2`(加箱体共鸣 + 早反射)/`latch`(金属卡扣)/`soft`(布幕皮绒)4 个变体,先用 `connector__matrix__audios_understand` 做客观试听评审(wood 9/10、latch 9/10、soft 7/10,并按评审意见补出 wood2),再人工试听定稿 **soft** 版——最贴本表原描述「布幕拉起 + 软皮绒低音」,且音色柔和不抢 `ui_click` / `ui_confirm`。合成配方与验证闭环见 §6.5。
+
 
 ---
 
@@ -316,20 +339,28 @@
 3. **总线**:Godot 4 `AudioBus` 三总线 — `SFX`、`BGM`、`AMB`,UI 层加静音 / 音量滑条。
 4. **UI 音量**:新增 `conf/audio/volume.json`,启动时 `AudioServer.set_bus_volume_db`。
 
+### 4.1 进度(v1.4)
+
+- **已完成**:第 1 步的 C 类资源;第 2 步的 UI 部分——autoload `UiSfx` 复用同一个 `BattleSfx`(相同 binding 表 + 播放器池),C 类 7 个 cue 全场景自动生效。
+- **未完成**:第 3 步三总线布局(当前 `audio_bus` 写 `SFX` 会回落 `Master`)、第 4 步音量配置与 UI。
+- **验证**:叠音规则测过 4 个用例(对话框 OK 只出 confirm / Cancel 只出 cancel / 对话框内自定义按钮照常 click / 菜单项 click 后 popup_hide 不叠 close,无点击时 close 延一帧照出);静默规则测过 7 个用例(普通按钮 click+hover / 三类格子全静音 / 收起按钮只出 close / Viewport 下的 Popup 不绑定 / Control 下的 PopupPanel 正常 open+close);系统驱动作用域测过 6 个场景(玩家操作有声 / 作用域内全静音含 `report_status` / 结束后恢复 / 嵌套计数 / owner 释放自动归零 / 禁用按钮 hover 静音);`Godot --headless --path . --import` 无脚本错误;MainMenu / Warehouse / TradingPost / CommandCenter / Battlefield 五个场景 headless 跑 60 帧无报错;单独校验过 Button / PopupPanel / ConfirmationDialog / `attach_panel` 的信号连接数与 7 个 cue 的 binding 解析。
+
 ---
 
 ## 5. 交付清单(可勾选)
 
 - [x] **批次 1 / A.1**:turn_in + turn_out(2 个)✅ 横幅专用
+- [x] **批次 2 / C**:UI 通用 7 个 ✅(click / hover / open / close / confirm / cancel / error)
+- [x] **C 类接线**:autoload `UiSfx` + `conf/audio/ui_sfx.json`,全场景按钮/悬停/面板开关/对话框/失败文案已挂钩
 - [ ] 批次 1:A.2 开火 9 个
 - [ ] 批次 1:A.3 命中/未命中 3 个
 - [ ] 批次 1:A.4 受击/倒下 3 个
 - [ ] 批次 1:A.5 战斗遮罩过渡 2 个
 - [ ] 批次 1:G 战斗结算 5 个
-- [ ] 批次 2:C~J 全部 51 个
+- [ ] 批次 2:D~J 全部 44 个
 - [ ] 批次 2:L 环境音 3 个
 - [ ] 批次 3:K BGM 9 个
-- [ ] `Script/battle/battle_sfx.gd` 切换为真实播放实现
+- [x] `Script/battle/battle_sfx.gd` 切换为真实播放实现 ✅(AudioStreamPlayer 池 + host 注入)
 - [ ] `conf/audio/volume.json` + 音量 UI
 
 ---
@@ -378,13 +409,30 @@
 |---|---|---|
 | A.2 开火(各武器) | ⚠️ 谨慎,可能跑偏 | 一次出 1 把武器,多档听;同家族(SMG 三把)试一次 batch |
 | A.3 / A.4 命中受击 | ⚠️ 谨慎 | 单 cue 出,加 `single transient impact` 强约束 |
-| C/D UI 短音 | ⚠️ 难度高 | UI 短音(<0.2s)模型难出干净,建议改用 SoX/ffmpeg 程序合成 |
+| C/D UI 短音 | ❌ 不可行 | UI 短音(<0.25s)模型出不了干净素材,**必须程序合成**(见 §6.5,C 类 7 个已全部落盘) |
 | E/F/G 状态 / 道具 / 结算 | ❌ 不推荐批量 | 长尾/细腻音,单条 prompt 一次 |
 | H 装备 / 背包 | ⚠️ 单 cue 出 | 物件声多样,各自 prompt |
 | I 存档 | ⚠️ 单 cue 出 | UI 反馈短音,程序合成可能更稳 |
 | J 商店 / 订单 | ⚠️ 单 cue 出 | 混合物件声 |
 | K BGM | ✅ 9 首独立 | batch_text_to_music 一次最多 5 个,分两批 |
 | L 环境音 | ✅ 一次出 3 个 loop | 强调 `continuous loop, no melody, environmental only` |
+
+### 6.5 程序合成实操(v1.4 新增,C 类 UI 短音的可用路线)
+
+C 类 7 个 cue 全部用 **numpy 分层合成 → ffmpeg 编 MP3** 落盘,配方可直接复用到 D/I 类的 UI 短音:
+
+| 层 | 做法 | 作用 |
+|---|---|---|
+| 撞击瞬态 | 白噪 burst(0.25ms 起振 + 指数衰减 τ≈2ms),经 rfft 掩膜带限 300~7kHz | "咔"的棱角 |
+| 木体/箱体模态 | 非谐波分音 462/731/1043/1568/2286/3360Hz(τ 8~50ms)+ 空腔模态 148/211Hz;起始 3.5% 音高下滑模拟接触非线性 | 材质辨识度 |
+| 软皮绒低音 | 正弦 138→56Hz 快速下滑 + τ≈70~90ms | 面板厚度 / 关盖下潜 |
+| 布幕扫动 | 逐帧时变高斯带通白噪(512 样本窗 / hop 128)+ overlap-add,中心频率按指数扫动;**开=上扫、关=下扫** | 开关的方向感 |
+| 空间感 | 11/17/24ms 三个早反射,wet 14~16%(不用长混响) | 干声变"在房间里"又不糊 |
+
+- **必备收尾**:每层加 6~22ms release 淡出(否则层拼接处会硬切爆音)→ 整曲 `tanh` 软限幅 → 尾部按 -46dB 门限裁静音 → 末端 5ms 淡出
+- **响度对齐**:不要按 §3 的 -1 dBFS 峰值归一(C 类既有文件峰值只有 0.065~0.400),要按 **RMS 对齐家族**:click .0375 / hover .0386 / confirm .0543 / cancel .0521 → `ui_open` 取 **.050**、`ui_close` 取 **.046**
+- **验证闭环(关键)**:`mcode-tools upload_temp_url <file.mp3>` → `mcode-tools connector call connector__matrix__audios_understand --args-file <args.json>`(**单次最多 5 条**),让音频模型客观描述材质/结构/瑕疵并打分,再按评审意见迭代;本轮即"三变体评审 → 按意见精修出 wood2 → 人工定稿 soft"
+- **坑**:numpy float64 数组直接喂 `ffmpeg -f f32le` 会让 libmp3lame 断言崩溃(`psymodel.c:576 calc_energy`),必须先 `.astype(np.float32)`
 
 ---
 

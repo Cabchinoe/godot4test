@@ -7,6 +7,9 @@
   "damage_label_seconds": 0.55,
   "shake_strength": 14.0,
   "shake_duration_seconds": 0.14,
+  "turn_in_seconds": 0.4,
+  "turn_hold_seconds": 1.9,
+  "turn_out_seconds": 0.4,
   "debug_sfx": false,
   "audio_bus": "Master"
 }

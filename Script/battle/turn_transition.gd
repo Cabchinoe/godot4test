@@ -11,10 +11,16 @@ const PRESENTATION_CONFIG_PATH := "res://conf/battle/presentation.json"
 var _config: Dictionary = {}
 var _sfx: BattleSfx
 var _is_playing := false
+var _turn_in_sec: float = 0.4
+var _turn_hold_sec: float = 1.9
+var _turn_out_sec: float = 0.4
 
 
 func _ready() -> void:
 	_config = _load_config()
+	_turn_in_sec = float(_config.get("turn_in_seconds", 0.4))
+	_turn_hold_sec = float(_config.get("turn_hold_seconds", 1.9))
+	_turn_out_sec = float(_config.get("turn_out_seconds", 0.4))
 	_sfx = BattleSfx.new(
 		bool(_config.get("debug_sfx", false)),
 		self,
@@ -32,7 +38,7 @@ func play_player(turn: int, max_turns: int, evacuation_pending: bool) -> void:
 	if evacuation_pending:
 		_subtitle.text += " · 撤离倒计时：撑过本回合"
 	_band.color = Color(0.05, 0.46, 0.64, 0.94)
-	await _play(Vector2(-1.0, -0.24), 0.2, 0.5, 0.3, &"turn_in")
+	await _play(Vector2(-1.0, -0.24), _turn_in_sec, _turn_hold_sec, _turn_out_sec, &"turn_in")
 	_is_playing = false
 
 
@@ -45,7 +51,7 @@ func play_enemy(evacuation_pending: bool) -> void:
 	if evacuation_pending:
 		_subtitle.text += " · 撤离倒计时：撑过本回合"
 	_band.color = Color(0.66, 0.2, 0.14, 0.94)
-	await _play(Vector2(1.0, 0.0), 0.18, 0.34, 0.28, &"turn_out")
+	await _play(Vector2(1.0, 0.0), _turn_in_sec, _turn_hold_sec, _turn_out_sec, &"turn_out")
 	_is_playing = false
 
 

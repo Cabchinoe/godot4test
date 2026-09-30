@@ -30,9 +30,12 @@ static func mount(parent: Control) -> UnitStatusWidget:
 
 
 func _ready() -> void:
+	UiSfx.attach_panel(self)
 	theme = BattleHudTheme.get_theme()
 	_close_button.add_theme_font_size_override("font_size", 14)
 	_close_button.pressed.connect(hide_panel)
+	# 收起按钮只保留面板的 ui_close,不再叠一层 ui_click
+	UiSfx.set_silent(_close_button)
 	for row_def in ROW_DEFS:
 		_rows[row_def[0]] = _make_row(str(row_def[1]))
 

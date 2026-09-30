@@ -71,15 +71,20 @@ func _create_goods_card(item_data: Dictionary) -> PanelContainer:
 	return card
 
 
+func _set_feedback(text: String) -> void:
+	feedback_label.text = text
+	UiSfx.report_status(text)
+
+
 func _buy_item(item_id: String) -> void:
 	var item_data = ItemDB.get_item(item_id)
 	if not item_data is Dictionary:
-		feedback_label.text = "该物资暂时无法交易。"
+		_set_feedback("该物资暂时无法交易。")
 		return
 	var price := int(item_data.get("price", 0))
 	var player_data := SaveManager.current_data.player
 	if player_data.credits < price:
-		feedback_label.text = "信用点不足，先从战区或居民订单中补充资金。"
+		_set_feedback("信用点不足，先从战区或居民订单中补充资金。")
 		return
 	player_data.credits -= price
 	var quantities := SaveManager.current_data.inventory.item_quantities
@@ -87,7 +92,7 @@ func _buy_item(item_id: String) -> void:
 	SaveManager.current_data.inventory.item_quantities = quantities
 	SaveManager.save_current()
 	_refresh_credits()
-	feedback_label.text = "%s 已送入仓库。" % str(item_data.get("name", "物资"))
+	_set_feedback("%s 已送入仓库。" % str(item_data.get("name", "物资")))
 
 
 func _ensure_trade_data() -> void:
