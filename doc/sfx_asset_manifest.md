@@ -37,10 +37,10 @@
 
 | cue key | 时长 | 文件 | 切片位置 | 描述 | 触发点 | 状态 |
 |---|---|---|---|---|---|---|
-| `sfx_turn_in` | 2.70s | `Art/audio/sfx/sfx_turn_in.mp3` | `cutin_in_v2.mp3` @ 5.20s,取 2.70s | 玩家回合横幅:青蓝斜切 + 金属 scrape + 鼓点冲击 + 衰减尾 | `TurnTransition.play_player()` | ✅ 已落盘 |
+| `sfx_turn_in` | **1.50s** | `Art/audio/sfx/sfx_turn_in.mp3` | `cand_a1_audpapkin_cinematic_woosh008.mp3` @ 0.00s,取 1.50s | 玩家回合横幅:cinematic + 金属冲击 + 鼓点冲击 + 衰减尾 | `TurnTransition.play_player()` | ✅ 已落盘(2026-10-08 重做,v1 batch_text_to_music 切片 → AudioPapkin · Cinematic Woosh SFX-008 CC0 切前 1.5s;48kHz 单声道 96kbps) |
 | `sfx_turn_out` | 2.00s | `Art/audio/sfx/sfx_turn_out.mp3` | `cutin_out_raw.mp3` @ 15.00s,取 2.00s | 敌方回合横幅:橙红横条 + 锐利金属冲击 + 衰减尾 | `TurnTransition.play_enemy()` | ✅ 已落盘 |
 
-> **A.1 实际值大于清单目标**:目标时长是 0.25~0.30s,但首版听感反馈后调整到 2.0~2.7s(承载完整"冲击 + 衰减"曲线)。如果觉得太长,后续可再切短版覆盖。
+> **A.1 实际值大于清单目标**:目标时长是 0.25~0.30s,但首版听感反馈后调整到 2.0~2.7s(承载完整"冲击 + 衰减"曲线)。**`sfx_turn_in` 在 2026-10-08 重做,从 2.7s 缩短到 1.5s**——之前 2.7s 版本在 `_review/rejected_sfx_turn_in_v1_batch_music_2.7s.mp3` 留底,新版本改用 AudioPapkin CC0 cinematic woosh 切前 1.5s,带金属 + 鼓点冲击 + 衰减尾。`sfx_turn_out` 仍保留 v1 的 2.0s 切片。
 
 
 ### A.2 开火(按 weapon_id 路由,**与角色无关**)
@@ -495,6 +495,32 @@ batch_text_to_music 对 A.2 武器开火不可用(见 §6.1),本轮改走"Freeso
 3. **miss 走统一 default 兜底**——`sfx_bullet_whiz` 一个全局,所有角色共用;
 4. **bulwark 一个特殊 miss**——`units[raider_bulwark].miss` 单独覆盖为 `sfx_bulwark_shield_miss`,体现护盾机制。
 
+### 6.7 A.1 回合横幅音重做(`sfx_turn_in`,2026-10-08)
+
+`sfx_turn_in` 第一版走的是 `batch_text_to_music` 路线(源 `cutin_in_v2.mp3` 切片),时长 2.7s。2.7s 在 §A.1 v1.1 修订时就说过"实际值大于清单目标 0.25~0.30s"——但听感上对"回合横幅入场"还是偏长,玩家在战斗中会等那个衰减走完才看到行动条。
+
+本轮重做,从 Freesound AudioPapkin 候选里挑了 `Cinematic Woosh SFX-008.wav` (3.89s,CC0) 切**前 1.5s**,保留"金属冲击 + 鼓点 + 衰减"三段结构,去掉尾段无信息量的拖尾。
+
+| 文件 | 时长 | 来源 | 授权 | 评分 | 切片 |
+|---|---:|---|---|---|---|
+| `cand_a1_audpapkin_swoosh3.mp3` | 1.57s | Freesound AudioPapkin · Swoosh 3 | **CC0** | 暂无 | — |
+| `cand_a1_audpapkin_swoosh7.mp3` | 2.03s | Freesound AudioPapkin · Swoosh 7 | **CC0** | 暂无 | — |
+| **`cand_a1_audpapkin_cinematic_woosh008.mp3`** | **3.89s** | Freesound AudioPapkin · Cinematic Woosh SFX-008 | **CC0** | 10 评 | **@ 0.00s 取 1.50s → 已落盘为 `sfx_turn_in.mp3`** |
+| `cand_a1_audpapkin_futuristic_organic46.mp3` | 4.11s | Freesound AudioPapkin · Futuristic organic effect (46) | **CC0** | 7 评 | — |
+
+**ffmpeg 切片命令**(本轮 §6.2 模板的具体应用):
+```bash
+ffmpeg -y -ss 00:00:00.000 -i cand_a1_audpapkin_cinematic_woosh008.mp3 -t 1.50 \
+  -c:a libmp3lame -b:a 96k -ar 48000 -ac 1 \
+  Art/audio/sfx/sfx_turn_in.mp3
+```
+
+输出规格:48kHz / 16bit / 单声道 / 96kbps MP3 / 1.500s,符合 §3 规范。
+
+**A.1 落盘状态变化**:
+- `sfx_turn_in` 2.7s → **1.5s**,v1 切片备份在 `_review/rejected_sfx_turn_in_v1_batch_music_2.7s.mp3`
+- `sfx_turn_out` 2.0s **未动**(用户本次只重做 turn_in,turn_out 仍走 v1 切片)
+
 ---
 
-> **下一步**:把 A.2 SMG 三把(野兔跳跃者 / 黎明初霁)按 cand5 的同一 prompt 模板做"音色递进"变体(更紧更亮 / 辉石能量尾音),再处理 rifle / scout / bulwark_gun 三把敌人武器(走 Freesound / Sonilo 同样的免登录 preview 路线)。A.3 命中类 + A.4 受击(贝妮 + 5 个敌人)继续在 Freesound 找,允许在 `_review/` 长期囤。
+> **下一步**:把 A.2 SMG 三把(野兔跳跃者 / 黎明初霁)按 cand5 的同一 prompt 模板做"音色递进"变体(更紧更亮 / 辉石能量尾音),再处理 rifle / scout / bulwark_gun 三把敌人武器(走 Freesound / Sonilo 同样的免登录 preview 路线)。A.3 命中类 + A.4 受击(贝妮 + 5 个敌人)继续在 Freesound 找,允许在 `_review/` 长期囤。`sfx_turn_out` 如果你也想重做(走 Freesound cinematic impact 但**比 turn_in 更"敌对"**——比如 "industrial bass boom" / "epic explosion" / "synth drop")告诉我。
