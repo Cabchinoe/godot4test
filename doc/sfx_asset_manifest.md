@@ -14,7 +14,7 @@
 | 项 | 值 |
 |---|---|
 | 总 cue 数 | **91** |
-| 已落盘 | **9**(A.1 turn_in/out 2 个 + C 类 UI 7 个) |
+| 已落盘 | **10**(A.1 turn_in/out 2 个 + A.2 `sfx_weapon_defender9_fire` 1 个 + C 类 UI 7 个) |
 | 分类数 | **11**(A、C~L) |
 | 命名风格 | `sfx_<scene>_<verb>` / `bgm_<scene>` / `amb_<scene>` |
 | 采样规格(目标) | SFX 48kHz/16bit 单声道;BGM 48kHz/24bit 立体声;时长 ≤2.5s(SFX)/60~120s(BGM)/10~30s(loop 环境音) |
@@ -43,37 +43,53 @@
 > **A.1 实际值大于清单目标**:目标时长是 0.25~0.30s,但首版听感反馈后调整到 2.0~2.7s(承载完整"冲击 + 衰减"曲线)。如果觉得太长,后续可再切短版覆盖。
 
 
-### A.2 开火(按 weapon_id 路由)
+### A.2 开火(按 weapon_id 路由,**与角色无关**)
 
-> 走 `weapons` 绑定;单位 → 武器 → fire 优先取武器级 cue,缺失回落到 `units.fire`,再缺失回落 `default.attack_fire`。
+> 走 `weapons` 绑定。**开火 cue 严格按武器绑定**——同一把武器,谁拿都是同一个 fire 音;不会因为"这把武器现在在贝妮手里"或"在敌人手里"而变。命中目标是另一个事(那是 A.3 / A.4)。
+>
+> 解析路径:**`weapons[weapon_id].fire` → `units[attacker.cutin_art_key].fire` → `default.fire`**(weapon 优先、unit 做"该角色用别的武器时的兜底"、default 是全集兜底)。**所有 `weapons[weapon_id]` 节点只允许写 `fire` 类 cue**,不写 hurt/miss——hurt 是按角色绑的(见 A.4),miss 默认走 default 兜底+bulwark 特殊(见 A.3 末尾)。
 
-| cue key | 时长 | 武器 ID | 武器名 | 描述 |
-|---|---|---|---|---|
-| `sfx_weapon_defender9_fire` | 0.55s | `weapon_benny_defender_9` | 防卫者-9(SMG Lv1) | 中低音 SMG,中等密度,短回响 |
-| `sfx_weapon_hare_hopper_fire` | 0.45s | `weapon_benny_hare_hopper` | 野兔跳跃者(SMG Lv2) | 同 SMG 但更紧、更亮,导轨金属感 |
-| `sfx_weapon_dawn_pulse_fire` | 0.40s | `weapon_benny_dawn_pulse` | 黎明初霁(SMG Lv3) | 高频脉冲冲锋,带辉石能量"滋滋"尾音 |
-| `sfx_weapon_rifle_fire` | 0.65s | `weapon_enemy_rifle` | 掠夺者步枪通用 | 单发步枪,后坐强,弹壳落音 |
-| `sfx_weapon_scout_rifle_fire` | 0.50s | `weapon_enemy_scout_rifle` | 斥候步枪 | 短管步枪,更尖的爆发 |
-| `sfx_weapon_bulwark_rifle_fire` | 0.80s | `weapon_enemy_bulwark_gun` | 护盾兵重枪 | 低沉厚实,带盾牌共鸣 |
-| `sfx_weapon_hound_bite` | 0.45s | `weapon_pyroxene_hound` | 辉石猎犬撕咬 | 肉食撕咬 + 爪击 |
-| `sfx_weapon_sentry_laser` | 0.70s | `weapon_pyroxene_sentry` | 哨戒机激光 | 高能激光充能 + 释放,带电子嗡鸣 |
-| `sfx_attack_fire_default` | 0.55s | (兜底) | 通用开火 | 同防卫者-9 的中性版本,做 fallback |
+| cue key | 时长 | 武器 ID | 武器名 | 描述 | 状态 |
+|---|---|---|---|---|---|
+| `sfx_weapon_defender9_fire` | 0.55s(实落 1.20s) | `weapon_benny_defender_9` | 防卫者-9(SMG Lv1) | 中低音 SMG,中等密度,短回响 | ✅ 已落盘(`Freesound pgi · MG001 triple shot` CC0 1.20s) |
+| `sfx_weapon_hare_hopper_fire` | 0.45s | `weapon_benny_hare_hopper` | 野兔跳跃者(SMG Lv2) | 同 SMG 但更紧、更亮,导轨金属感 | ⏳ 待生成 |
+| `sfx_weapon_dawn_pulse_fire` | 0.40s | `weapon_benny_dawn_pulse` | 黎明初霁(SMG Lv3) | 高频脉冲冲锋,带辉石能量"滋滋"尾音 | ⏳ 待生成 |
+| `sfx_weapon_rifle_fire` | 0.65s | `weapon_enemy_rifle` | 掠夺者步枪通用 | 单发步枪,后坐强,弹壳落音 | ⏳ 待生成 |
+| `sfx_weapon_scout_rifle_fire` | 0.50s | `weapon_enemy_scout_rifle` | 斥候步枪 | 短管步枪,更尖的爆发 | ⏳ 待生成 |
+| `sfx_weapon_bulwark_rifle_fire` | 0.80s | `weapon_enemy_bulwark_gun` | 护盾兵重枪 | 低沉厚实,带盾牌共鸣 | ⏳ 待生成 |
+| `sfx_weapon_hound_bite` | 0.45s | `weapon_pyroxene_hound` | 辉石猎犬撕咬 | 肉食撕咬 + 爪击 | ⏳ 待生成 |
+| `sfx_weapon_sentry_laser` | 0.70s | `weapon_pyroxene_sentry` | 哨戒机激光 | 高能激光充能 + 释放,带电子嗡鸣 | ⏳ 待生成 |
+| `sfx_attack_fire_default` | 0.55s | (兜底) | 通用开火 | 同防卫者-9 的中性版本,做 fallback | ⏳ 待生成 |
 
 ### A.3 命中 / 未命中 / 受击
 
-| cue key | 时长 | 描述 | 触发点 |
-|---|---|---|---|
-| `sfx_hit_armor` | 0.40s | 弹头击穿护甲短金属撞击 + 火花迸射声 | `hit_armor`(吸收) |
-| `sfx_hit_flesh` | 0.35s | 入肉钝击 + 湿闷尾音 | `hit_flesh`(真实伤害) |
-| `sfx_bullet_whiz` | 0.30s | 子弹擦肩而过的啸叫(同时复用作 miss 兜底) | `miss` |
+> 命中(`hit_armor` / `hit_flesh`)和未命中(`miss`)**按角色 art_key 绑定的语义不冲突——本表把它们列在一起,只是因为它们都是"被击中侧"的反应**。实际解析时:
+> - **`hit_armor` / `hit_flesh` / `miss` 都走 `default` 兜底**——一个通用命中、通用入肉、通用擦肩啸叫,所有角色共用。
+> - **`miss` 有且仅有一个角色特殊例外:护盾兵 `raider_bulwark`**——它有"格挡"或"护盾反弹"的特殊 miss 音,因为它的护盾机制要单独表达。所以 `units[raider_bulwark].miss` 单独覆盖。
+>
+> 即:"开火按武器,miss 默认兜底+bulwark 特殊,hit 类(命中/入肉)目前统一 default,无角色区分"。
 
-### A.4 单位受击 / 倒下
+| cue key | 时长 | 描述 | 触发点 | 绑定 |
+|---|---|---|---|---|
+| `sfx_hit_armor` | 0.40s | 弹头击穿护甲短金属撞击 + 火花迸射声 | `hit_armor`(吸收) | `default` 兜底(暂未做角色区分) |
+| `sfx_hit_flesh` | 0.35s | 入肉钝击 + 湿闷尾音 | `hit_flesh`(真实伤害) | `default` 兜底(暂未做角色区分) |
+| `sfx_bullet_whiz` | 0.30s | 子弹擦肩而过的啸叫 | `default.miss` 全局兜底 |  |
+| `sfx_bulwark_shield_miss` | 0.45s | 护盾兵格挡反弹音,金属护盾共鸣 + 滑开 | `units[raider_bulwark].miss` 特殊覆盖 | ⏳ 待生成 |
 
-| cue key | 时长 | 描述 | 触发点 |
-|---|---|---|---|
-| `sfx_player_hurt` | 0.50s | 玩家受击:短促闷响 + 呼吸/失神(主角额外红闪对应) | `apply_attack` 后贝妮被打中 |
-| `sfx_enemy_hurt` | 0.45s | 敌人受击:肉搏挤压 + 痛叫(泛用,可分两层:punch/grunt) | 敌人被打中 |
-| `sfx_unit_down` | 1.20s | 倒地:沉重跌落 + 装备/护甲金属碰撞 + 后续轻尾音 | `unit_down`(击倒帧) |
+### A.4 单位受击 / 倒下(**严格按角色 art_key 绑定,和武器/护甲无关**)
+
+> 受击 = 被打的那个人是谁 → 谁就叫。所以**按角色 art_key 绑定**,不按武器,也不按"当前穿着什么护甲":
+> - 护甲只影响伤害数字(`hit_armor` vs `hit_flesh` 走 A.3),**不替换**受击本身;
+> - 武器不替换受击;
+> - 一个角色在不同姿态(站立/蹲下/跑动)被打也是同一个受击 cue。
+>
+> 解析:`units[unit.cutin_art_key].hurt` → `default.hurt`(不查 weapons,因为受击跟开火不同轴)。
+
+| cue key | 时长 | 描述 | 触发点 | 绑定 |
+|---|---|---|---|---|
+| `sfx_player_hurt` | 0.50s | 玩家受击:短促闷响 + 呼吸/失神(主角额外红闪对应) | `apply_attack` 后贝妮被打中 | `units[benny].hurt` |
+| `sfx_enemy_hurt` | 0.45s | 敌人受击:肉搏挤压 + 痛叫(泛用,可分两层:punch/grunt) | 敌人被打中 | 所有敌人 `units[*].hurt` 共用;或 `default.enemy_hurt` 兜底 |
+| `sfx_unit_down` | 1.20s | 倒地:沉重跌落 + 装备/护甲金属碰撞 + 后续轻尾音 | `unit_down`(击倒帧) | 按角色 art_key 绑(每个敌人可能有不同倒地声) |
 
 ### A.5 战斗遮罩过渡(待生成)
 
@@ -266,25 +282,32 @@
     "unit_down": "sfx_unit_down"
   },
   "units": {
-    "benny": {
-      "fire": "sfx_weapon_defender9_fire",
-      "hurt": "sfx_player_hurt"
-    },
-    "raider_infantry":   { "fire": "sfx_weapon_rifle_fire",          "hurt": "sfx_enemy_hurt" },
-    "raider_scout":      { "fire": "sfx_weapon_scout_rifle_fire",    "hurt": "sfx_enemy_hurt" },
-    "raider_bulwark":    { "fire": "sfx_weapon_bulwark_rifle_fire",  "hurt": "sfx_enemy_hurt" },
-    "pyroxene_hound":    { "fire": "sfx_weapon_hound_bite",          "hurt": "sfx_enemy_hurt" },
-    "pyroxene_sentry":   { "fire": "sfx_weapon_sentry_laser",        "hurt": "sfx_enemy_hurt" }
+    "benny":           { "hurt": "sfx_player_hurt" },
+    "raider_infantry": { "hurt": "sfx_enemy_hurt" },
+    "raider_scout":    { "hurt": "sfx_enemy_hurt" },
+    "raider_bulwark":  { "hurt": "sfx_enemy_hurt", "miss": "sfx_bulwark_shield_miss" },
+    "pyroxene_hound":  { "hurt": "sfx_enemy_hurt" },
+    "pyroxene_sentry": { "hurt": "sfx_enemy_hurt" }
   },
   "weapons": {
-    "weapon_benny_defender_9":  { "fire": "sfx_weapon_defender9_fire" },
-    "weapon_benny_hare_hopper": { "fire": "sfx_weapon_hare_hopper_fire" },
-    "weapon_benny_dawn_pulse":  { "fire": "sfx_weapon_dawn_pulse_fire" }
+    "weapon_benny_defender_9":  { "attack_fire": "sfx_weapon_defender9_fire" },
+    "weapon_benny_hare_hopper": { "attack_fire": "sfx_weapon_hare_hopper_fire" },
+    "weapon_benny_dawn_pulse":  { "attack_fire": "sfx_weapon_dawn_pulse_fire" },
+    "weapon_enemy_rifle":       { "attack_fire": "sfx_weapon_rifle_fire" },
+    "weapon_enemy_scout_rifle": { "attack_fire": "sfx_weapon_scout_rifle_fire" },
+    "weapon_enemy_bulwark_gun": { "attack_fire": "sfx_weapon_bulwark_rifle_fire" },
+    "weapon_pyroxene_hound":    { "attack_fire": "sfx_weapon_hound_bite" },
+    "weapon_pyroxene_sentry":   { "attack_fire": "sfx_weapon_sentry_laser" }
   }
 }
 ```
 
-> 解析优先级(`Script/battle/battle_sfx.gd::resolve_binding`):**weapon_id 命中 → 角色 art_key 命中 → default**。cue key 全部对应表中 cue key,加 `.ogg` 后缀落盘。
+> **绑定策略(v1.5 明确化)**
+> - **开火 `fire`**:严格按 `weapons[weapon_id]`——同一把武器,谁拿都是同一个音;`units[*]` 不写 fire,避免"用别的武器时角色级兜底"语义被误读。
+> - **受击 `hurt`**:严格按 `units[unit.cutin_art_key]`——和穿什么护甲无关(护甲只影响伤害类型 → A.3 的 `hit_armor`/`hit_flesh`),和用什么武器打过来也无关。
+> - **`miss`**:全局 `default.miss` 兜底(目前 `sfx_bullet_whiz` 兼用);**只有 `raider_bulwark` 一个角色有 `units[*].miss` 特殊覆盖**(`sfx_bulwark_shield_miss`,格挡反弹音,体现护盾机制)。
+> - **解析路径**(`Script/battle/battle_sfx.gd::resolve_binding`):**`weapons[weapon_id].<cue>` → `units[attacker_or_victim.cutin_art_key].<cue>` → `default.<cue>`**。命中侧(A.3 / A.4)的 context 用 `victim` 代替 `attacker`。
+> - cue key 全部对应表中 cue key,加 `.mp3` 后缀落盘。
 
 ---
 
@@ -434,6 +457,44 @@ C 类 7 个 cue 全部用 **numpy 分层合成 → ffmpeg 编 MP3** 落盘,配�
 - **验证闭环(关键)**:`mcode-tools upload_temp_url <file.mp3>` → `mcode-tools connector call connector__matrix__audios_understand --args-file <args.json>`(**单次最多 5 条**),让音频模型客观描述材质/结构/瑕疵并打分,再按评审意见迭代;本轮即"三变体评审 → 按意见精修出 wood2 → 人工定稿 soft"
 - **坑**:numpy float64 数组直接喂 `ffmpeg -f f32le` 会让 libmp3lame 断言崩溃(`psymodel.c:576 calc_energy`),必须先 `.astype(np.float32)`
 
+### 6.6 网上找音频素材(本轮新增)
+
+batch_text_to_music 对 A.2 武器开火不可用(见 §6.1),本轮改走"Freesound / Sonilo 等免登录 preview + 高质量素材库"路线。
+
+| 来源 | 授权 | 适合 | 备注 |
+|---|---|---|---|
+| **Freesound** `freesound.org` | 多数 **CC0** / CC-BY | 单发、三连、loop 全覆盖;按 tag 搜 `smg` / `submachine` / `gun` / `full-auto` | 完整原文件需登录,**preview mp3 公开直链**(`cdn.freesound.org/previews/<id>/<id>_<user>-hq.mp3`) |
+| **Sonilo** `sonilo.com/royalty-free-sound-effects/guns/` | royalty-free / 商用免署名 | 已烘焙好混响的成品 burst | JSON-LD 直接给 `contentUrl` mp3 直链;编辑评分 |
+| **SFX Engine** `sfxengine.com/sound-effects/firearm` | royalty-free | Kriss Vector 等 SMG 专项,loop-ready mono 48k 0.3s | 短小干净,适合切片 |
+| **SFX Mint** `sfxmint.com/sounds/machine-gun-burst` | CC0 | 2 变体 2.5s | 直接 mp3 + wav 下载 |
+| **Mixkit** `mixkit.co/free-sound-effects/gun/` | Mixkit License 免署名 | 23 个 gun SFX 通用 | 免登录直下 |
+| **Audio.com** `audio.com/category/sound-effect/gunshot` | 各异 | 700+ gunshot 资源 | 部分游戏风格素材 |
+| **BudgetPixel** `budgetpixel.com/sfx/...` | royalty-free | 3.0s rapid machine gun burst,AI 生成但编辑评分 10.0/10 | 干净 |
+| **Soniss GDC Bundle** `soniss.com` | royalty-free | The Gun Locker 500+ 文件 96kHz/24bit;**每年 GDC 期间免费** | 顶级专业库 |
+| **Boom Library** `boomlibrary.com` | 付费 | Toy Guns / WWI / WWII Firearms,192kHz/24bit | 商单项目优先 |
+
+**SMG 单发/连发最常用备选(本轮已下到 `Art/audio/sfx/_review/` 待挑)**:
+
+| 文件 | 时长 | 来源 | 授权 | 评分 | 特征 |
+|---|---:|---|---|---|---|
+| `cand1_freesound_mp5_single_hq.mp3` | 0.81s | Freesound smill.and.welson | CC-BY 4.0 | 暂无 | **真 H&K MP5 SMG 9mm 实弹**;48kHz/32bit 立体声;需署名 American Sub Gunner |
+| `cand2_freesound_mg002_single_hq.mp3` | 1.01s | Freesound pgi | **CC0** | 4.6 / 98 | 电子合成 SMG 单发;免署名 |
+| `cand3_freesound_mg001_single_hq.mp3` | 1.00s | Freesound pgi | **CC0** | 4.7 / 95 | 电子合成,评分最高 |
+| `cand4_sonilo_distant_smg_burst.mp3` | 1.88s | Sonilo | royalty-free | 编辑 10/10 | 远景 SMG 短点射 + 户外 reverb,已烘焙好 |
+| `cand5_pgi_mg001_triple_hq.mp3` | 1.20s | Freesound pgi | **CC0** | 4.5 / 72 | **电子合成 3 连发**——本轮**已落盘为 `sfx_weapon_defender9_fire.mp3`** |
+| `cand6_pgi_mg002_triple_hq.mp3` | 1.61s | Freesound pgi | **CC0** | 4.4 / 58 | 电子合成 3 连发 |
+| `cand7_pgi_mg002_loop_hq.mp3` | 0.90s | Freesound pgi | **CC0** | 4.3 / 55 | 电子合成 loop 段 |
+| `cand8_pgi_mg001_loop_hq.mp3` | 0.30s | Freesound pgi | **CC0** | 4.4 / 10 | 电子合成 loop 段,可叠 burst |
+
+**A.2 第一个落盘决策(`sfx_weapon_defender9_fire`)**:从 cand1~8 里选 **cand5 pgi MG001 triple shot(1.20s 三连发,CC0)**。理由:**1.20s 比清单 0.55s 目标长,但和 A.1 实际值大于清单目标一脉相承**(承载完整"3 发 + 衰减"曲线),且三连发在 SMG 武器里比单发更"SMG 感";CC0 商用无负担;可以直接复用到 A.2 其他 SMG 武器变体(野兔跳跃者、黎明初霁)的"音色递进"基准。
+
+**绑定策略澄清(本轮新增,与 §1 绑定表互锁)**:
+
+1. **开火按武器**——同一把武器,谁拿都是同一个 fire 音;`units[*]` 不写 fire,避免"用别的武器时角色级兜底"语义被误读;
+2. **受击按角色**——被打的人是谁 → 谁就叫;和穿什么护甲无关(护甲只影响伤害类型 → A.3 `hit_armor`/`hit_flesh`),和用什么武器打过来也无关;
+3. **miss 走统一 default 兜底**——`sfx_bullet_whiz` 一个全局,所有角色共用;
+4. **bulwark 一个特殊 miss**——`units[raider_bulwark].miss` 单独覆盖为 `sfx_bulwark_shield_miss`,体现护盾机制。
+
 ---
 
-> **下一步**:A.1 听感方向已定,继续推 A.2 武器开火。建议先做贝妮的「防卫者-9」(Lv1 SMG),定下 SMG 的整体音色基调,后面野兔跳跃者 / 黎明初霁 在同一 prompt 模板上做"音色递进"变体即可。
+> **下一步**:把 A.2 SMG 三把(野兔跳跃者 / 黎明初霁)按 cand5 的同一 prompt 模板做"音色递进"变体(更紧更亮 / 辉石能量尾音),再处理 rifle / scout / bulwark_gun 三把敌人武器(走 Freesound / Sonilo 同样的免登录 preview 路线)。A.3 命中类 + A.4 受击(贝妮 + 5 个敌人)继续在 Freesound 找,允许在 `_review/` 长期囤。

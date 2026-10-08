@@ -46,17 +46,22 @@ func play(cue: StringName, context: Dictionary = {}) -> void:
 
 func resolve_binding(cue: StringName, context: Dictionary = {}) -> String:
 	var cue_name := str(cue)
+	# 1) 开火按武器:同一把武器,谁拿都是同一个音。
 	var weapon_id := str(context.get("weapon_id", ""))
 	if not weapon_id.is_empty():
 		var weapon_bindings: Variant = (_bindings.get("weapons", {}) as Dictionary).get(weapon_id, {})
 		if weapon_bindings is Dictionary and (weapon_bindings as Dictionary).has(cue_name):
 			return str((weapon_bindings as Dictionary).get(cue_name, ""))
-	var attacker := context.get("attacker") as Unit
-	if attacker:
-		var unit_key := attacker.cutin_art_key
+	# 2) 受击按角色(角色 art_key 绑):victim 优先(被打的人),没 victim 才退回 attacker(兜底)。
+	var unit: Unit = (context.get("victim") as Unit) if context.get("victim") is Unit else null
+	if unit == null:
+		unit = (context.get("attacker") as Unit) if context.get("attacker") is Unit else null
+	if unit:
+		var unit_key := unit.cutin_art_key
 		var unit_bindings: Variant = (_bindings.get("units", {}) as Dictionary).get(unit_key, {})
 		if unit_bindings is Dictionary and (unit_bindings as Dictionary).has(cue_name):
 			return str((unit_bindings as Dictionary).get(cue_name, ""))
+	# 3) default 兜底
 	return str((_bindings.get("default", {}) as Dictionary).get(cue_name, ""))
 
 

@@ -50,7 +50,7 @@ func begin_session(attacker: Unit) -> void:
 	_defender_portrait.modulate.a = 0.0
 	_root.modulate.a = 0.0
 	_root.visible = true
-	_sfx.play(&"battle_cutin_in", _sfx_context())
+	_sfx.play(&"battle_cutin_in", _sfx_context(&"battle_cutin_in"))
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_property(_root, "modulate:a", 1.0, _seconds("session_in_seconds", 0.2))
@@ -71,7 +71,7 @@ func set_defender(defender: Unit) -> void:
 func play_attack_lead_in(_roll: Dictionary) -> void:
 	_clear_damage_labels()
 	await get_tree().create_timer(_seconds("lead_in_seconds", 0.32)).timeout
-	_sfx.play(&"attack_fire", _sfx_context())
+	_sfx.play(&"attack_fire", _sfx_context(&"attack_fire"))
 
 
 func show_result(applied: Dictionary, instantly: bool = false) -> void:
@@ -83,13 +83,13 @@ func show_result(applied: Dictionary, instantly: bool = false) -> void:
 	if bool(applied.get("hit", false)):
 		_shake(float(_config.get("shake_strength", 14.0)), instantly)
 		if int(applied.get("absorbed", 0)) > 0:
-			_sfx.play(&"hit_armor", _sfx_context())
+			_sfx.play(&"hit_armor", _sfx_context(&"hit_armor"))
 		elif int(applied.get("damage", 0)) > 0:
-			_sfx.play(&"hit_flesh", _sfx_context())
+			_sfx.play(&"hit_flesh", _sfx_context(&"hit_flesh"))
 		if bool(applied.get("defeated", false)):
-			_sfx.play(&"unit_down", _sfx_context())
+			_sfx.play(&"unit_down", _sfx_context(&"unit_down"))
 	else:
-		_sfx.play(&"miss", _sfx_context())
+		_sfx.play(&"miss", _sfx_context(&"miss"))
 
 
 func finish_round() -> void:
@@ -99,7 +99,7 @@ func finish_round() -> void:
 func end_session() -> void:
 	if not _root.visible:
 		return
-	_sfx.play(&"battle_cutin_out", _sfx_context())
+	_sfx.play(&"battle_cutin_out", _sfx_context(&"battle_cutin_out"))
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_property(_root, "modulate:a", 0.0, _seconds("session_out_seconds", 0.18))
@@ -225,11 +225,22 @@ func _style_panel(panel: PanelContainer, color: Color, alignment: HorizontalAlig
 			(child as Label).horizontal_alignment = alignment
 
 
-func _sfx_context() -> Dictionary:
+func _sfx_context(cue: StringName = &"") -> Dictionary:
 	var weapon_id := ""
 	if _attacker and _attacker.has_method("get_equipped_item_id"):
 		weapon_id = str(_attacker.get_equipped_item_id(&"weapon"))
-	return {"attacker": _attacker, "defender": _defender, "weapon_id": weapon_id}
+	# 受击侧(hurt / hit / miss / unit_down)的"按角色绑"语义:被打的人是谁 → 谁就叫。
+	# 把 defender 作为 victim 喂进 context,BattleSfx.resolve_binding 会用 victim.cutin_art_key
+	# 查 units。开火/横幅类不传 victim,继续走 weapons / default。
+	var ctx := {"attacker": _attacker, "defender": _defender, "weapon_id": weapon_id}
+	if _is_victim_cue(cue):
+		ctx["victim"] = _defender
+	return ctx
+
+
+func _is_victim_cue(cue: StringName) -> bool:
+	var s := str(cue)
+	return s == "hit_armor" or s == "hit_flesh" or s == "miss" or s == "unit_down" or s == "hurt"
 
 
 func _seconds(key: String, fallback: float) -> float:
