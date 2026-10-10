@@ -10,6 +10,11 @@
 > v1.6 修订(2026-10-10):**敌人开火绑定定案**——敌人没有装备系统,**不引入武器 id / 新属性**:开火直接按 `art_key` 绑在 `units[<art_key>].attack_fire`(复用 `resolve_binding` 现成的 units 通道,零代码改动);`weapons[]` 只保留贝妮 3 把,弃用 `weapon_enemy_rifle` 等 5 个敌人武器计划名;cue key 定为 `sfx_weapon_raider_infantry_fire` / `sfx_weapon_raider_scout_fire` / `sfx_weapon_raider_bulwark_fire` / `sfx_weapon_hound_bite` / `sfx_weapon_sentry_laser`(归属一眼可见)。
 > v1.7 修订(2026-10-10):**A.2 收录 3 个敌人开火音**(raider 三件套)——`sfx_weapon_raider_infantry_fire`(AK-47 单发切前 0.8s)/ `sfx_weapon_raider_scout_fire`(autorifle metallic punchy 切前 0.7s)/ `sfx_weapon_raider_bulwark_fire`(pgi Heavy weapon 002 切前 0.8s),均 CC0 + 尾 30ms 淡出;已落盘 12 → **15**;候选与中间产物已按「收录」流程清理;详见 §6.9。
 > v1.8 修订(2026-10-10):**A.2 9/9 收尾**——收录 `sfx_weapon_hound_bite`(Escorpion_melee 原长直用 0.556s)/ `sfx_weapon_sentry_laser`(Spaceship laser burst + Laser Gun 01 各取前 1s 双轨合并 1.000s)/ `sfx_attack_fire_default`(machinegun-one-shot ×2 跨淡化直拼 0.701s);`conf/battle/sfx_bindings.json` 的 `default.attack_fire` 由空串回填;已落盘 15 → **18**;详见 §6.10。
+> v1.9 修订(2026-10-10):**移动类 cue 全部改按角色自身绑定**——D.1 `sfx_move_step` 更名 **`sfx_move_step_benny`**、D.2 `sfx_move_blocked` 更名 **`sfx_move_blocked_benny`**,均绑 `units[benny].*`;新增 M 类「角色移动脚步(补充)」,补 5 个敌人脚步 cue(`sfx_move_step_raider_infantry` / `raider_scout` / `raider_bulwark` / `pyroxene_hound` / `pyroxene_sentry`,绑 `units[<art_key>].move_step`);分类数 11 → **12**(A、C~M),表内口径 cue 总数 81 → **86**;详见 §M。
+> v1.10 修订(2026-10-10):**M 类收录 4 件脚步**——`sfx_move_step_benny`(Freesound DavidJohnson2019 `Footsteps Run` 原长 3.91s)/ `sfx_move_step_raider_scout`(Mixkit `Footsteps on mattress loop` 取前 5s)/ `sfx_move_step_raider_bulwark`(Mixkit `Giant monster footstep` 取前 5s)/ `sfx_move_step_pyroxene_hound`(Freesound qubodup `Dog Running Past` 取 2s~5s = 3.0s);已落盘 18 → **22**;raider_infantry / pyroxene_sentry 候选不满意、重搜中;详见 §6.11。
+> v1.11 修订(2026-10-10):**M 类 `pyroxene_sentry` 收录**——Mixkit `Robot step` #2530 取前 5s(5.000s);已落盘 22 → **23**;M 类 5/6,仅剩 `raider_infantry`(改角度:雨中砖地步行/跑步,重搜中);详见 §6.11。
+> v1.12 修订(2026-10-10):**M 类 6/6 收官**——`sfx_move_step_raider_infantry`(Freesound `Small Puddle Splash` **×10 等间隔直拼** @450ms/步 = 4.456s,雨中踩水步感);已落盘 23 → **24**;M 类全齐;详见 §6.11。
+> v1.13 修订(2026-10-10):**M 类脚步接线落地**——`Battlefield` 新增 `BattleSfx` 实例,监听所有单位 `grid_position_changed`(移动中只起播一次)→ 播 `move_step`(`units[art_key]` 路由),`movement_finished` 后**最短保底 450ms** 再 80ms 淡出停止(单格移动曾因同帧淡出而听不到,已修;`BattleSfx.play` 改为返回播放器);`move_blocked` 待音频收录后接线。
 
 ---
 
@@ -18,8 +23,8 @@
 | 项 | 值 |
 |---|---|
 | 总 cue 数 | **91** |
-| 已落盘 | **18**(A.1 turn_in/out 2 个 + A.2 `defender9` / `hare_hopper` / `dawn_pulse` / `raider_infantry` / `raider_scout` / `raider_bulwark` / `hound_bite` / `sentry_laser` / `attack_fire_default` 9 个 + C 类 UI 7 个) |
-| 分类数 | **11**(A、C~L) |
+| 已落盘 | **24**(A.1 turn_in/out 2 个 + A.2 `defender9` / `hare_hopper` / `dawn_pulse` / `raider_infantry` / `raider_scout` / `raider_bulwark` / `hound_bite` / `sentry_laser` / `attack_fire_default` 9 个 + C 类 UI 7 个 + M 类脚步 6 个) |
+| 分类数 | **12**(A、C~M) |
 | 命名风格 | `sfx_<scene>_<verb>` / `bgm_<scene>` / `amb_<scene>` |
 | 采样规格(目标) | SFX 48kHz/16bit 单声道;BGM 48kHz/24bit 立体声;时长 ≤2.5s(SFX)/60~120s(BGM)/10~30s(loop 环境音) |
 | **实际落盘格式** | **MP3 (libmp3lame) 96kbps 单声道**(本机 ffmpeg 8.1 编了 `libmp3lame` / `libopus` 但**没编 `libvorbis`**;MP3 兼容性最广、QuickTime/Win Media/几乎所有播放器直接放;Godot 4 原生支持 `.mp3` import) |
@@ -153,10 +158,12 @@
 
 ## D. 战场地图交互(6)
 
+> v1.9 补充:**移动类 cue 全部按角色自身绑定**——D.1 更名 `sfx_move_step_benny`(绑 `units[benny].move_step`)、D.2 更名 `sfx_move_blocked_benny`(绑 `units[benny].move_blocked`);5 类敌人脚步见 §M(`units[<art_key>].move_step`)。
+
 | cue key | 时长 | 描述 | 触发点 |
 |---|---|---|---|
-| `sfx_move_step` | 0.25s | 单格脚步:贝妮兔耳短靴在废墟地面的"嗒" | 玩家每格移动(`Unit._step_to_next`) |
-| `sfx_move_blocked` | 0.18s | 移动被阻挡/AP 不足:短"咚" | AP 不足或目标格不可达 |
+| `sfx_move_step_benny` | 0.25s | 单格脚步:贝妮兔耳短靴在废墟地面的"嗒" | 玩家每格移动(`Unit._step_to_next`),绑 `units[benny].move_step` |
+| `sfx_move_blocked_benny` | 0.18s | 移动被阻挡/AP 不足:短"咚" | AP 不足或目标格不可达,绑 `units[benny].move_blocked` |
 | `sfx_select_unit` | 0.15s | 选中玩家单位:青蓝聚焦"叮" | `_change_state(MOVE_STATE)` |
 | `sfx_select_enemy` | 0.18s | 选中敌人:橙红聚焦警示音 | `unit_status_widget.show_for(enemy)` |
 | `sfx_context_open` | 0.20s | 右键菜单弹出:轻快划动 | `BattleContextMenu.popup()` |
@@ -272,6 +279,28 @@
 
 ---
 
+## M. 角色移动脚步(补充,v1.9)
+
+> v1.9 新增。**移动脚步按角色绑**:`units[<art_key>].move_step`,复用 v1.6 定案的 units 通道(零代码改动)。
+> 现状:D 类只有 `sfx_move_step_benny`(v1.9 更名)一个,仅描述贝妮;5 类敌人移动没有任何脚步 cue——本章补齐;移动类(含 `sfx_move_blocked_benny`)全部按角色自身绑定,不走 default。
+> 触发点统一是 `Unit._step_to_next()`(`Script/unit.gd:419`,所有单位共用);敌人移动经 `enemy_ai` → `battlefield_tactics.execute_move` 驱动,步进节拍 `move_interval = 0.3s`(`Script/unit.gd:51`)。
+> 建议排期:与 D 类同批(批次 2)。
+
+| cue key | 时长 | 绑定 | 描述 | 状态 |
+|---|---|---|---|---|
+| `sfx_move_step_benny` | 0.25s(实落 3.91s) | `units[benny].move_step` | (D.1 已有条目,更名)贝妮兔耳短靴在废墟地面的"嗒" | ✅ 已落盘(`Freesound DavidJohnson2019 · Footsteps Run` CC0 原长,详见 §6.11) |
+| `sfx_move_step_raider_infantry` | 0.25s(实落 4.46s) | `units[raider_infantry].move_step` | 掠夺兵硬底靴:碎砖砾石 + 布料摩擦 | ✅ 已落盘(Freesound `Small Puddle Splash` ×10 @450ms,详见 §6.11) |
+| `sfx_move_step_raider_scout` | 0.20s(实落 5.00s) | `units[raider_scout].move_step` | 斥候轻装:更轻、更快的软底一步 | ✅ 已落盘(Mixkit `Footsteps on mattress loop` 取前 5s,详见 §6.11) |
+| `sfx_move_step_raider_bulwark` | 0.30s(实落 5.00s) | `units[raider_bulwark].move_step` | 护盾兵重甲:沉重落地 + 装备晃动 | ✅ 已落盘(Mixkit `Giant monster footstep` 取前 5s,详见 §6.11) |
+| `sfx_move_step_pyroxene_hound` | 0.25s(实落 3.00s) | `units[pyroxene_hound].move_step` | 辉石猎犬四足:爪尖刮擦 + 晶簇轻响 | ✅ 已落盘(Freesound qubodup `Dog Running Past` 取 2s~5s,详见 §6.11) |
+| `sfx_move_step_pyroxene_sentry` | 0.30s(实落 5.00s) | `units[pyroxene_sentry].move_step` | 哨戒机机械步伐:伺服 + 金属落地(walk 动画 4 帧) | ✅ 已落盘(Mixkit `Robot step` 取前 5s,详见 §6.11) |
+
+- 单格节拍 0.3s,脚步 cue 建议 ≤0.3s;规格沿用 §3(48kHz / 单声道 / MP3 96kbps)。
+- **接线已落地(v1.13)**:`Battlefield` 监听每单位 `grid_position_changed`(每次移动起播一次)+ `movement_finished` 后最短保底 450ms 再 80ms 淡出停止;当前按「每次移动播一段」策略——3~5s 段落与单格节拍不匹配,若要严格逐格同步需把段落切成单步。
+- 现成 CC0 参考(pgi 库,前轮已核对授权):`mech_step_001.ogg`(1.60s)、`mech_step_002.ogg`(1.70s)、`sand_step.ogg`(0.59s)——sentry / 步兵类候选,可切片。
+
+---
+
 ## 1. 绑定表(填法示例)
 
 > 在 `conf/battle/sfx_bindings.json` 中按下面形式填,接音频时直接消费。
@@ -306,6 +335,7 @@
 > **绑定策略(v1.6 修订)**
 > - **开火 `fire`(贝妮)**:按 `weapons[weapon_id]`——同一把武器,谁拿都是同一个音。
 > - **开火 `fire`(敌人)**:敌人没有装备系统,**按 `units[<art_key>].attack_fire` 绑**——同一类敌人 = 同一把武器,语义等价,且零代码改动。
+> - **移动 `move_step` / `move_blocked`(v1.9)**:移动类**全部按角色自身绑**——`units[<art_key>].move_step`(贝妮 + 5 类敌人)、`units[benny].move_blocked`;不走 default 兜底。
 > - **受击 `hurt`**:严格按 `units[unit.cutin_art_key]`——和穿什么护甲无关(护甲只影响伤害类型 → A.3 的 `hit_armor`/`hit_flesh`),和用什么武器打过来也无关。
 > - **`miss`**:全局 `default.miss` 兜底(目前 `sfx_bullet_whiz` 兼用);**只有 `raider_bulwark` 一个角色有 `units[*].miss` 特殊覆盖**(`sfx_bulwark_shield_miss`,格挡反弹音,体现护盾机制)。
 > - **解析路径**(`Script/battle/battle_sfx.gd::resolve_binding`):**`weapons[weapon_id].<cue>` → `units[attacker_or_victim.cutin_art_key].<cue>` → `default.<cue>`**。命中侧(A.3 / A.4)的 context 用 `victim` 代替 `attacker`。
@@ -384,6 +414,7 @@
 - [ ] 批次 1:G 战斗结算 5 个
 - [ ] 批次 2:D~J 全部 44 个
 - [ ] 批次 2:L 环境音 3 个
+- [x] M 类:角色移动脚步 6 个 ✅(benny / raider_scout / raider_bulwark / pyroxene_hound / pyroxene_sentry / raider_infantry)
 - [ ] 批次 3:K BGM 9 个
 - [x] `Script/battle/battle_sfx.gd` 切换为真实播放实现 ✅(AudioStreamPlayer 池 + host 注入)
 - [ ] `conf/audio/volume.json` + 音量 UI
@@ -561,6 +592,22 @@ A.2 最后三件一并收录;`conf/battle/sfx_bindings.json` 的 `default.attack
 
 - **A.2 9/9 全部落盘**;规格均为 48kHz / 单声道 / MP3 96kbps(§3);三个新文件的 `.import` 与 `.godot/imported` 缓存已生成。
 
+### 6.11 M 类收录 6 件移动脚步(benny / scout / bulwark / hound / sentry / infantry,2026-10-10)
+
+Mixkit + Freesound 混合源(均 CC0 / Mixkit License)。**注意:实落为"步伐段落"(3~5s)而非单步**——用户指定段落;单格节拍 0.3s 的调用策略待代码接线时定(循环 / 整段 / 再切单步)。
+
+| cue | 配方 | 成品时长 | 电平(实测) | 来源 |
+|---|---|---:|---:|---|
+| `sfx_move_step_benny` | `Footsteps Run` 原长直用(尾 30ms 补淡出) | 3.905s | 峰值 -1.0dBFS / RMS -24.7dB | Freesound DavidJohnson2019 #867161(CC0) |
+| `sfx_move_step_raider_scout` | Mixkit `Footsteps on mattress loop`(23.2s)取**前 5s**,两端 30ms 淡化 | 5.000s | 峰值 -1.0dBFS / RMS -22.2dB | Mixkit #1274 |
+| `sfx_move_step_raider_bulwark` | Mixkit `Giant monster footstep`(29.4s)取**前 5s**,两端 30ms 淡化 | 5.000s | 峰值 -0.9dBFS / RMS -24.6dB | Mixkit #1270 |
+| `sfx_move_step_pyroxene_hound` | qubodup `Dog Running Past`(5.22s)取 **2s~5s**,两端 30ms 淡化 | 3.000s | 峰值 -0.9dBFS / RMS -22.5dB | Freesound qubodup #827320(CC0) |
+| `sfx_move_step_pyroxene_sentry` | Mixkit `Robot step`(9.6s)取**前 5s**,两端 30ms 淡化 | 5.000s | 峰值 -1.0dBFS / RMS -19.8dB | Mixkit #2530 |
+| `sfx_move_step_raider_infantry` | `Small Puddle Splash`(0.406s)**×10 等间隔直拼**(450ms/步,无随机变化),尾 30ms 淡化 | 4.456s | 峰值 -1.2dBFS / RMS -30.0dB | Freesound Robo9418 #841834(CC0) |
+
+- 两端 30ms 淡化用于防切片爆音;若改 seamless loop 使用,需去掉淡化并重做 loop 点。
+- 6 件的 `.import` 与 `.godot/imported` 缓存已生成;**M 类 6/6 全部落盘**(infantry 采用「`puddle_splash` ×10 等间隔直拼」工艺,450ms/步)。
+
 ---
 
-> **下一步**:A.2 **9/9 全部落盘** ✅;接着 A.3 命中类(4)+ A.4 受击(3)、A.5 战斗遮罩(2)、G 结算(5),继续走 Freesound / Sonilo 免登录 preview 路线。`sfx_turn_out` 如果你也想重做(走 Freesound cinematic impact 但**比 turn_in 更"敌对"**——比如 "industrial bass boom" / "epic explosion" / "synth drop")告诉我。
+> **下一步**:A.2 **9/9 全部落盘** ✅、M 类 **6/6 全部落盘** ✅;接着 A.3 命中类(4)+ A.4 受击(3)、A.5 战斗遮罩(2)、G 结算(5)。`sfx_turn_out` 如果你也想重做(走 Freesound cinematic impact 但**比 turn_in 更"敌对"**——比如 "industrial bass boom" / "epic explosion" / "synth drop")告诉我。

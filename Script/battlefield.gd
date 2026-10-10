@@ -38,6 +38,8 @@ var bullet_range: BulletRange
 var combat_resolver: BattleCombatResolver
 var battle_cut_in: BattleCutIn
 var battle_presentation: BattlePresentation
+var _sfx: BattleSfx
+var _move_sfx: Dictionary = {}
 var battle_camera: BattleCamera
 var turn_transition: TurnTransition
 var container_spawner: BattleContainerSpawner
@@ -64,6 +66,7 @@ var pending_recalc_range: bool = false
 const DEFAULT_MOVE_INTERVAL: float = 0.3
 const FAST_MOVE_INTERVAL: float = 0.01
 const ENEMY_MOVE_INTERVAL: float = 0.3
+const MOVE_SFX_MIN_RING_MSEC: int = 450
 const ENEMY_MOVE_MARKER_SOURCE_ID := 2
 var skip_held: bool = false
 var _pending_container: BattleContainer
@@ -105,6 +108,8 @@ func _ready():
 
 	player.initialize_player(level_manager)
 	player.movement_finished.connect(_on_player_movement_finished)
+	player.grid_position_changed.connect(_on_unit_step_taken.bind(player))
+	player.movement_finished.connect(_on_unit_move_finished.bind(player))
 	player_save_provider = PlayerSaveProvider.new(player)
 	SaveManager.register_provider(player_save_provider)
 	SaveManager.reload_current()
@@ -135,6 +140,7 @@ func _ready():
 	battle_cut_in = BATTLE_CUT_IN_SCENE.instantiate()
 	add_child(battle_cut_in)
 	battle_presentation = BATTLE_PRESENTATION_SCRIPT.new(combat_resolver, battle_cut_in)
+	_sfx = BattleSfx.new(false, self, &"SFX")
 	battle_camera = BATTLE_CAMERA_SCRIPT.new(camera)
 	turn_transition = TURN_TRANSITION_SCENE.instantiate()
 	add_child(turn_transition)
@@ -164,6 +170,8 @@ func _ready():
 	enemy_spawner = EnemySpawner.new(level_manager, enemies_container)
 	for enemy in enemy_spawner.spawn_batch(_get_enemy_spawn_entries()):
 		enemy.defeated.connect(_on_unit_defeated)
+		enemy.grid_position_changed.connect(_on_unit_step_taken.bind(enemy))
+		enemy.movement_finished.connect(_on_unit_move_finished.bind(enemy))
 		unit_intel.register_unit(enemy)
 	enemy_ai = EnemyAI.new(bullet_range, combat_resolver)
 	enemy_ai.set_battle_presentation(battle_presentation)
@@ -461,6 +469,33 @@ func _on_turn_started(turn: int):
 
 func _on_player_movement_finished() -> void:
 	_update_player_animation()
+
+
+func _on_unit_step_taken(_grid_position: Vector2i, _level: int, unit: Unit) -> void:
+	if _sfx == null or unit == null or not is_instance_valid(unit):
+		return
+	if _move_sfx.has(unit):
+		return
+	var player := _sfx.play(&"move_step", {"attacker": unit})
+	if player != null:
+		_move_sfx[unit] = {"player": player, "started_msec": Time.get_ticks_msec()}
+
+
+func _on_unit_move_finished(unit: Unit) -> void:
+	if not _move_sfx.has(unit):
+		return
+	var info: Dictionary = _move_sfx[unit]
+	_move_sfx.erase(unit)
+	var player := info.get("player") as AudioStreamPlayer
+	if not is_instance_valid(player) or not player.playing:
+		return
+	var elapsed_msec := Time.get_ticks_msec() - int(info.get("started_msec", 0))
+	var hold := maxf(0.0, float(MOVE_SFX_MIN_RING_MSEC - elapsed_msec) / 1000.0)
+	var tween := create_tween()
+	if hold > 0.0:
+		tween.tween_interval(hold)
+	tween.tween_property(player, "volume_db", -60.0, 0.08)
+	tween.tween_callback(player.stop)
 
 
 func _setup_injury_feedback() -> void:

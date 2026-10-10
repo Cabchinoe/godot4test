@@ -20,28 +20,30 @@ func _init(debug_enabled: bool = false, host: Node = null, audio_bus: StringName
 	_audio_bus = audio_bus if _has_bus(audio_bus) else &"Master"
 
 
-func play(cue: StringName, context: Dictionary = {}) -> void:
+func play(cue: StringName, context: Dictionary = {}) -> AudioStreamPlayer:
 	var resolved: String = resolve_binding(cue, context)
 	if _debug_enabled:
 		print("[BattleSfx] %s -> %s" % [cue, resolved])
 	if resolved.is_empty():
-		return
+		return null
 	if _host == null:
 		# 没注入 host(常见于纯 debug 模式),仅打印
-		return
+		return null
 	var path := AUDIO_BASE + resolved + AUDIO_EXT
 	if not ResourceLoader.exists(path):
 		push_warning("BattleSfx: missing audio %s" % path)
-		return
+		return null
 	var stream: Resource = load(path)
 	if stream == null:
-		return
+		return null
 	var player := _acquire_player()
 	if player == null:
-		return
+		return null
 	player.stream = stream as AudioStream
 	player.bus = _audio_bus
+	player.volume_db = 0.0
 	player.play()
+	return player
 
 
 func resolve_binding(cue: StringName, context: Dictionary = {}) -> String:
