@@ -36,7 +36,7 @@ func play_attack_round(attacker: Unit, defender: Unit) -> Dictionary:
 	var roll := _combat_resolver.roll_attack(attacker, defender)
 	await _cut_in.play_attack_lead_in(roll)
 	var applied := _combat_resolver.apply_attack(attacker, defender, roll)
-	_cut_in.show_result(applied)
+	await _cut_in.show_result(applied)
 	await _cut_in.finish_round()
 	return applied
 

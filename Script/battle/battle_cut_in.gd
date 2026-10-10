@@ -71,7 +71,8 @@ func set_defender(defender: Unit) -> void:
 func play_attack_lead_in(_roll: Dictionary) -> void:
 	_clear_damage_labels()
 	await get_tree().create_timer(_seconds("lead_in_seconds", 0.32)).timeout
-	_sfx.play(&"attack_fire", _sfx_context(&"attack_fire"))
+	var player := _sfx.play(&"attack_fire", _sfx_context(&"attack_fire"))
+	await _wait_sfx(player, _seconds("attack_sfx_wait_max", 1.2))
 
 
 func show_result(applied: Dictionary, instantly: bool = false) -> void:
@@ -82,7 +83,10 @@ func show_result(applied: Dictionary, instantly: bool = false) -> void:
 	_show_result_labels(applied, instantly)
 	if bool(applied.get("hit", false)):
 		_shake(float(_config.get("shake_strength", 14.0)), instantly)
-		_sfx.play(&"hit", _sfx_context(&"hit"))
+		var hit_player := _sfx.play(&"hit", _sfx_context(&"hit"))
+		if bool(applied.get("defeated", false)):
+			await _wait_sfx(hit_player, _seconds("hit_sfx_wait_max", 1.2))
+			_sfx.play(&"unit_down", _sfx_context(&"unit_down"))
 	else:
 		_sfx.play(&"miss", _sfx_context(&"miss"))
 
@@ -235,11 +239,19 @@ func _sfx_context(cue: StringName = &"") -> Dictionary:
 
 func _is_victim_cue(cue: StringName) -> bool:
 	var s := str(cue)
-	return s == "hit" or s == "miss"
+	return s == "hit" or s == "miss" or s == "unit_down"
 
 
 func _seconds(key: String, fallback: float) -> float:
 	return maxf(0.0, float(_config.get(key, fallback)))
+
+
+func _wait_sfx(player: AudioStreamPlayer, max_wait: float) -> void:
+	if player == null or not is_instance_valid(player) or player.stream == null:
+		return
+	var wait := minf(player.stream.get_length(), max_wait)
+	if wait > 0.0:
+		await get_tree().create_timer(wait).timeout
 
 
 func _load_json(path: String) -> Dictionary:

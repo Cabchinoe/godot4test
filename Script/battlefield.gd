@@ -1497,7 +1497,7 @@ func _spawn_map_containers() -> void:
 func _on_unit_defeated(unit: Unit) -> void:
 	if unit == null or _pending_defeats.has(unit):
 		return
-	if _sfx != null:
+	if _sfx != null and (battle_presentation == null or not battle_presentation.is_busy()):
 		_sfx.play(&"unit_down", {"attacker": unit})
 	unit.remove_from_group("units")
 	if unit.faction == "enemy":

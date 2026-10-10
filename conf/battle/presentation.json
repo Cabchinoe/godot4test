@@ -3,6 +3,8 @@
   "session_out_seconds": 0.18,
   "lead_in_seconds": 0.32,
   "result_hold_seconds": 0.62,
+  "attack_sfx_wait_max": 1.2,
+  "hit_sfx_wait_max": 1.2,
   "value_tween_seconds": 0.18,
   "damage_label_seconds": 0.55,
   "shake_strength": 14.0,
