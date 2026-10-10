@@ -40,6 +40,7 @@ var battle_cut_in: BattleCutIn
 var battle_presentation: BattlePresentation
 var _sfx: BattleSfx
 var _move_sfx: Dictionary = {}
+var _last_move_hover_sfx_msec: int = -1000000
 var battle_camera: BattleCamera
 var turn_transition: TurnTransition
 var container_spawner: BattleContainerSpawner
@@ -67,6 +68,7 @@ const DEFAULT_MOVE_INTERVAL: float = 0.3
 const FAST_MOVE_INTERVAL: float = 0.01
 const ENEMY_MOVE_INTERVAL: float = 0.3
 const MOVE_SFX_MIN_RING_MSEC: int = 450
+const MOVE_HOVER_SFX_COOLDOWN_MSEC: int = 60
 const ENEMY_MOVE_MARKER_SOURCE_ID := 2
 var skip_held: bool = false
 var _pending_container: BattleContainer
@@ -496,6 +498,16 @@ func _on_unit_move_finished(unit: Unit) -> void:
 		tween.tween_interval(hold)
 	tween.tween_property(player, "volume_db", -60.0, 0.08)
 	tween.tween_callback(player.stop)
+
+
+func _play_move_hover_sfx() -> void:
+	if _sfx == null:
+		return
+	var now_msec := Time.get_ticks_msec()
+	if now_msec - _last_move_hover_sfx_msec < MOVE_HOVER_SFX_COOLDOWN_MSEC:
+		return
+	_last_move_hover_sfx_msec = now_msec
+	_sfx.play(&"move_hover", {"attacker": player})
 
 
 func _setup_injury_feedback() -> void:
@@ -937,6 +949,8 @@ func _process(delta: float):
 					player
 				)
 				_draw_path(path)
+				if player.action_points > 0:
+					_play_move_hover_sfx()
 		else:
 			hover_sprite.visible = false
 			if last_hover_node != {}:

@@ -15,6 +15,7 @@
 > v1.11 修订(2026-10-10):**M 类 `pyroxene_sentry` 收录**——Mixkit `Robot step` #2530 取前 5s(5.000s);已落盘 22 → **23**;M 类 5/6,仅剩 `raider_infantry`(改角度:雨中砖地步行/跑步,重搜中);详见 §6.11。
 > v1.12 修订(2026-10-10):**M 类 6/6 收官**——`sfx_move_step_raider_infantry`(Freesound `Small Puddle Splash` **×10 等间隔直拼** @450ms/步 = 4.456s,雨中踩水步感);已落盘 23 → **24**;M 类全齐;详见 §6.11。
 > v1.13 修订(2026-10-10):**M 类脚步接线落地**——`Battlefield` 新增 `BattleSfx` 实例,监听所有单位 `grid_position_changed`(移动中只起播一次)→ 播 `move_step`(`units[art_key]` 路由),`movement_finished` 后**最短保底 450ms** 再 80ms 淡出停止(单格移动曾因同帧淡出而听不到,已修;`BattleSfx.play` 改为返回播放器);`move_blocked` 待音频收录后接线。
+> v1.14 修订(2026-10-10):**新增并收录 D.7 移动悬停提示音 `sfx_move_hover_benny`**——选中角色进入移动预览、且 `action_points > 0` 时,指针悬停/滑过**可移动格**播放轻提示音(绑 `units[benny].move_hover`,沿用 v1.9「移动类按角色绑定」;与 C 类 `ui_hover` 语义分离——`ui_hover` 只服务真按钮,格子类控件仍静音,互不冲突);D 类 6 → **7**,总 cue 数 91 → **92**,批次 2 从 51 → **52**;候选 14 个落 `_review/` 试听后选定 **Freesound loganzsound · `Lightswitch Flick_02`(CC0)**,已落盘 + 绑定 + 接线(详见 §6.12)。
 
 ---
 
@@ -22,8 +23,8 @@
 
 | 项 | 值 |
 |---|---|
-| 总 cue 数 | **91** |
-| 已落盘 | **24**(A.1 turn_in/out 2 个 + A.2 `defender9` / `hare_hopper` / `dawn_pulse` / `raider_infantry` / `raider_scout` / `raider_bulwark` / `hound_bite` / `sentry_laser` / `attack_fire_default` 9 个 + C 类 UI 7 个 + M 类脚步 6 个) |
+| 总 cue 数 | **92** |
+| 已落盘 | **25**(A.1 turn_in/out 2 个 + A.2 `defender9` / `hare_hopper` / `dawn_pulse` / `raider_infantry` / `raider_scout` / `raider_bulwark` / `hound_bite` / `sentry_laser` / `attack_fire_default` 9 个 + C 类 UI 7 个 + D.7 移动悬停 1 个 + M 类脚步 6 个) |
 | 分类数 | **12**(A、C~M) |
 | 命名风格 | `sfx_<scene>_<verb>` / `bgm_<scene>` / `amb_<scene>` |
 | 采样规格(目标) | SFX 48kHz/16bit 单声道;BGM 48kHz/24bit 立体声;时长 ≤2.5s(SFX)/60~120s(BGM)/10~30s(loop 环境音) |
@@ -156,18 +157,22 @@
 
 ---
 
-## D. 战场地图交互(6)
+## D. 战场地图交互(7)
 
 > v1.9 补充:**移动类 cue 全部按角色自身绑定**——D.1 更名 `sfx_move_step_benny`(绑 `units[benny].move_step`)、D.2 更名 `sfx_move_blocked_benny`(绑 `units[benny].move_blocked`);5 类敌人脚步见 §M(`units[<art_key>].move_step`)。
+> v1.14 补充:新增 D.7 `sfx_move_hover_benny`(**移动预览悬停可移动格**的轻提示音,绑 `units[benny].move_hover`);触发前提为"已选中移动 + 仍有剩余 AP",格子不可达 / 无 AP 时不出声。
 
 | cue key | 时长 | 描述 | 触发点 |
 |---|---|---|---|
 | `sfx_move_step_benny` | 0.25s | 单格脚步:贝妮兔耳短靴在废墟地面的"嗒" | 玩家每格移动(`Unit._step_to_next`),绑 `units[benny].move_step` |
 | `sfx_move_blocked_benny` | 0.18s | 移动被阻挡/AP 不足:短"咚" | AP 不足或目标格不可达,绑 `units[benny].move_blocked` |
+| `sfx_move_hover_benny` | 0.10s(实落 0.150s) | 移动预览悬停:指针移到/滑过**可移动格**上的轻提示(比 `ui_hover` 更短更收,连续扫格不疲劳) | `Battlefield` 移动态(`MOVE_STATE`):悬停格变化且可达、`action_points > 0`;绑 `units[benny].move_hover` |
 | `sfx_select_unit` | 0.15s | 选中玩家单位:青蓝聚焦"叮" | `_change_state(MOVE_STATE)` |
 | `sfx_select_enemy` | 0.18s | 选中敌人:橙红聚焦警示音 | `unit_status_widget.show_for(enemy)` |
 | `sfx_context_open` | 0.20s | 右键菜单弹出:轻快划动 | `BattleContextMenu.popup()` |
 | `sfx_turn_end` | 0.40s | 结束轮次:面板回弹 + 短合音 | `BattleStatusBar.end_turn_pressed` |
+
+> **D.7 状态**:✅ 已落盘(2026-10-10,Freesound loganzsound `Lightswitch Flick_02` CC0,实落 0.150s);`conf/battle/sfx_bindings.json` 已回填 `units[benny].move_hover`;接线在 `Script/battlefield.gd` 移动悬停变化处调 `_sfx.play(&"move_hover", {"attacker": player})`(60ms 冷却);详见 §6.12。
 
 ---
 
@@ -335,7 +340,7 @@
 > **绑定策略(v1.6 修订)**
 > - **开火 `fire`(贝妮)**:按 `weapons[weapon_id]`——同一把武器,谁拿都是同一个音。
 > - **开火 `fire`(敌人)**:敌人没有装备系统,**按 `units[<art_key>].attack_fire` 绑**——同一类敌人 = 同一把武器,语义等价,且零代码改动。
-> - **移动 `move_step` / `move_blocked`(v1.9)**:移动类**全部按角色自身绑**——`units[<art_key>].move_step`(贝妮 + 5 类敌人)、`units[benny].move_blocked`;不走 default 兜底。
+> - **移动 `move_step` / `move_blocked` / `move_hover`(v1.9 / v1.14)**:移动类**全部按角色自身绑**——`units[<art_key>].move_step`(贝妮 + 5 类敌人)、`units[benny].move_blocked`、`units[benny].move_hover`(移动预览悬停可移动格的提示音);不走 default 兜底。
 > - **受击 `hurt`**:严格按 `units[unit.cutin_art_key]`——和穿什么护甲无关(护甲只影响伤害类型 → A.3 的 `hit_armor`/`hit_flesh`),和用什么武器打过来也无关。
 > - **`miss`**:全局 `default.miss` 兜底(目前 `sfx_bullet_whiz` 兼用);**只有 `raider_bulwark` 一个角色有 `units[*].miss` 特殊覆盖**(`sfx_bulwark_shield_miss`,格挡反弹音,体现护盾机制)。
 > - **解析路径**(`Script/battle/battle_sfx.gd::resolve_binding`):**`weapons[weapon_id].<cue>` → `units[attacker_or_victim.cutin_art_key].<cue>` → `default.<cue>`**。命中侧(A.3 / A.4)的 context 用 `victim` 代替 `attacker`。
@@ -352,12 +357,12 @@
 | A 战斗核心 | 19 | A.1(横幅,2 个已落盘)+ A.2(开火,9 个)+ A.3(命中,3 个)+ A.4(受击,3 个)+ A.5(战斗遮罩,2 个待生成) |
 | G 战斗结算 | 5 | 全部 |
 
-### 批次 2 — UI 与流程(51 个)
+### 批次 2 — UI 与流程(52 个)
 
 | 类别 | 数量 | cue |
 |---|---:|---|
 | C UI 通用 | 7 | 全部 |
-| D 战场交互 | 6 | 全部 |
+| D 战场交互 | 7 | 全部 |
 | E 状态 / 数值 | 6 | 全部 |
 | F 道具 / 容器 | 7 | 全部 |
 | H 装备 / 背包 | 8 | 全部 |
@@ -407,12 +412,13 @@
 - [x] **批次 1 / A.1**:turn_in + turn_out(2 个)✅ 横幅专用
 - [x] **批次 2 / C**:UI 通用 7 个 ✅(click / hover / open / close / confirm / cancel / error)
 - [x] **C 类接线**:autoload `UiSfx` + `conf/audio/ui_sfx.json`,全场景按钮/悬停/面板开关/对话框/失败文案已挂钩
+- [x] **D.7 移动悬停接线**:`sfx_move_hover_benny`(CC0)落盘 + `units[benny].move_hover` 绑定 + `Battlefield` hover 接线 ✅
 - [x] 批次 1:A.2 开火 9 个 ✅(defender9 / hare_hopper / dawn_pulse / raider_infantry / raider_scout / raider_bulwark / hound_bite / sentry_laser / attack_fire_default)
 - [ ] 批次 1:A.3 命中/未命中 3 个
 - [ ] 批次 1:A.4 受击/倒下 3 个
 - [ ] 批次 1:A.5 战斗遮罩过渡 2 个
 - [ ] 批次 1:G 战斗结算 5 个
-- [ ] 批次 2:D~J 全部 44 个
+- [ ] 批次 2:D~J 全部 45 个
 - [ ] 批次 2:L 环境音 3 个
 - [x] M 类:角色移动脚步 6 个 ✅(benny / raider_scout / raider_bulwark / pyroxene_hound / pyroxene_sentry / raider_infantry)
 - [ ] 批次 3:K BGM 9 个
@@ -610,4 +616,19 @@ Mixkit + Freesound 混合源(均 CC0 / Mixkit License)。**注意:实落为"步�
 
 ---
 
-> **下一步**:A.2 **9/9 全部落盘** ✅、M 类 **6/6 全部落盘** ✅;接着 A.3 命中类(4)+ A.4 受击(3)、A.5 战斗遮罩(2)、G 结算(5)。`sfx_turn_out` 如果你也想重做(走 Freesound cinematic impact 但**比 turn_in 更"敌对"**——比如 "industrial bass boom" / "epic explosion" / "synth drop")告诉我。
+### 6.12 D.7 移动悬停音收录(`sfx_move_hover_benny`,2026-10-10)
+
+走 game-sfx-search 技能单源(Freesound 免登录 preview)产出 14 个候选 → 用户听选 `loganzsound · Lightswitch Flick_02`(CC0,48kHz 单声道,源长 0.250s);落盘 + 绑定 + 接线一次完成;未选中候选与中间产物已按「收录」流程清理。
+
+| 项 | 值 |
+|---|---|
+| 源 | Freesound loganzsound #872834 `Lightswitch Flick_02`(CC0;48kHz 单声道) |
+| 配方 | 去前 12.5ms 引导静音 → 取 0.150s → 尾 30ms 淡出 → +12.70dB 峰值校至 -1.00dBFS(wav 阶段)→ 48kHz 单声道 MP3 96kbps |
+| 成品实测 | 0.150s;峰值 -2.3dBFS(编解码后实测,短瞬态经 MP3 编码的自然衰减)/ RMS -27.3dB(与 C 类 `ui_hover` 家族 -28.3dB 对齐) |
+| 绑定 | `conf/battle/sfx_bindings.json` → `units[benny].move_hover` |
+| 接线 | `Script/battlefield.gd`:`_process` 移动态中悬停格变化且可达、`action_points > 0` 时 `_sfx.play(&"move_hover", {"attacker": player})`;新增 `MOVE_HOVER_SFX_COOLDOWN_MSEC = 60` 冷却(与 `UiSfx` 按钮 hover 的 60ms 冷却同口径,防快速扫格叠音) |
+| 验证 | `--headless --path . --import` 通过(仅既有 TileSet 类报错);Battlefield headless 90 帧无脚本错误;单独校验 `units[benny].move_hover` → `sfx_move_hover_benny` → 资源存在(0.150s) |
+
+---
+
+> **下一步**:A.2 **9/9 全部落盘** ✅、M 类 **6/6 全部落盘** ✅、D.7 移动悬停 ✅;接着 A.3 命中类(4)+ A.4 受击(3)、A.5 战斗遮罩(2)、G 结算(5)。`sfx_turn_out` 如果你也想重做(走 Freesound cinematic impact 但**比 turn_in 更"敌对"**——比如 "industrial bass boom" / "epic explosion" / "synth drop")告诉我。

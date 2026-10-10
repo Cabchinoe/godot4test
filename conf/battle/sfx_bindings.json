@@ -18,7 +18,7 @@
     "ui_error": "sfx_ui_error"
   },
   "units": {
-    "benny":           { "hurt": "sfx_player_hurt", "move_step": "sfx_move_step_benny", "move_blocked": "sfx_move_blocked_benny" },
+    "benny":           { "hurt": "sfx_player_hurt", "move_step": "sfx_move_step_benny", "move_blocked": "sfx_move_blocked_benny", "move_hover": "sfx_move_hover_benny" },
     "raider_infantry": { "hurt": "sfx_enemy_hurt", "attack_fire": "sfx_weapon_raider_infantry_fire", "move_step": "sfx_move_step_raider_infantry" },
     "raider_scout":    { "hurt": "sfx_enemy_hurt", "attack_fire": "sfx_weapon_raider_scout_fire", "move_step": "sfx_move_step_raider_scout" },
     "raider_bulwark":  { "hurt": "sfx_enemy_hurt", "miss": "sfx_bulwark_shield_miss", "attack_fire": "sfx_weapon_raider_bulwark_fire", "move_step": "sfx_move_step_raider_bulwark" },
