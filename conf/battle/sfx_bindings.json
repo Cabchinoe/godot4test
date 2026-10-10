@@ -4,7 +4,7 @@
     "turn_out": "sfx_turn_out",
     "battle_cutin_in": "",
     "battle_cutin_out": "",
-    "attack_fire": "",
+    "attack_fire": "sfx_attack_fire_default",
     "hit_armor": "sfx_hit_armor",
     "hit_flesh": "sfx_hit_flesh",
     "miss": "sfx_bullet_whiz",
@@ -19,20 +19,15 @@
   },
   "units": {
     "benny":           { "hurt": "sfx_player_hurt" },
-    "raider_infantry": { "hurt": "sfx_enemy_hurt" },
-    "raider_scout":    { "hurt": "sfx_enemy_hurt" },
-    "raider_bulwark":  { "hurt": "sfx_enemy_hurt", "miss": "sfx_bulwark_shield_miss" },
-    "pyroxene_hound":  { "hurt": "sfx_enemy_hurt" },
-    "pyroxene_sentry": { "hurt": "sfx_enemy_hurt" }
+    "raider_infantry": { "hurt": "sfx_enemy_hurt", "attack_fire": "sfx_weapon_raider_infantry_fire" },
+    "raider_scout":    { "hurt": "sfx_enemy_hurt", "attack_fire": "sfx_weapon_raider_scout_fire" },
+    "raider_bulwark":  { "hurt": "sfx_enemy_hurt", "miss": "sfx_bulwark_shield_miss", "attack_fire": "sfx_weapon_raider_bulwark_fire" },
+    "pyroxene_hound":  { "hurt": "sfx_enemy_hurt", "attack_fire": "sfx_weapon_hound_bite" },
+    "pyroxene_sentry": { "hurt": "sfx_enemy_hurt", "attack_fire": "sfx_weapon_sentry_laser" }
   },
   "weapons": {
     "weapon_benny_defender_9":  { "attack_fire": "sfx_weapon_defender9_fire" },
     "weapon_benny_hare_hopper": { "attack_fire": "sfx_weapon_hare_hopper_fire" },
-    "weapon_benny_dawn_pulse":  { "attack_fire": "sfx_weapon_dawn_pulse_fire" },
-    "weapon_enemy_rifle":       { "attack_fire": "sfx_weapon_rifle_fire" },
-    "weapon_enemy_scout_rifle": { "attack_fire": "sfx_weapon_scout_rifle_fire" },
-    "weapon_enemy_bulwark_gun": { "attack_fire": "sfx_weapon_bulwark_rifle_fire" },
-    "weapon_pyroxene_hound":    { "attack_fire": "sfx_weapon_hound_bite" },
-    "weapon_pyroxene_sentry":   { "attack_fire": "sfx_weapon_sentry_laser" }
+    "weapon_benny_dawn_pulse":  { "attack_fire": "sfx_weapon_dawn_pulse_fire" }
   }
 }

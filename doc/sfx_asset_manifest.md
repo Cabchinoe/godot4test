@@ -6,6 +6,10 @@
 > v1.2 修订:**B 章节移除独立 cue**,回合过渡复用 A.1 的 `sfx_cutin_in` / `sfx_cutin_out`(横幅与遮罩共用一对反向 cue,语义一致且避免冗余);撤销已生成的 `sfx_turn_player/enemy/evacuation`;总 cue 数 92 → **89**;批次 1 从 26 → **23**;BattleSfx 接入真实播放(AudioStreamPlayer 池 + host 注入)。
 > v1.3 修订:**澄清语义分离**——A.1 的 `cutin_in/out` **仅服务回合横幅(`TurnTransition`)**,**不再**被战斗遮罩(`BattleCutIn`)调用;改名为 `turn_in/out`(cue key + 文件名同步);战斗遮罩另起 `battle_cutin_in/out` 两个 cue,目前留空待后续生成;总 cue 数 89 → **91**;批次 1 从 23 → **25**。
 > v1.4 修订:**C 类 UI 通用 7/7 全部落盘**——`ui_open` / `ui_close` 改走**程序合成**(numpy 分层合成 → ffmpeg 编 MP3),一次出 4 个变体(wood / wood2 / latch / soft),经 `audios_understand` 试听评审 + 人工试听后选定 **soft(布幕/皮绒)** 版;`conf/battle/sfx_bindings.json` 的 `ui_open` / `ui_close` 已回填;新增 §6.5 合成配方与验证闭环;已落盘 2 → **9**。**并新增 autoload `UiSfx`,把 C 类 7 个 cue 全量接线到所有场景**(按钮/悬停/面板开关/对话框确认取消/失败文案),详见 §C 与 §4.1。
+> v1.5 修订(2026-10-10):**A.2 收录 2 个 SMG 家族 cue**——`sfx_weapon_hare_hopper_fire`(Silenced SMG 三点射 ×2 直拼,0.883s)/ `sfx_weapon_dawn_pulse_fire`(dimapain sci-fi shot 前 1s + hare_hopper 版双轨叠加,1.000s),来源均 CC0;已落盘 10 → **12**;候选与加工中间产物已按「收录」流程清理;详见 §6.8。
+> v1.6 修订(2026-10-10):**敌人开火绑定定案**——敌人没有装备系统,**不引入武器 id / 新属性**:开火直接按 `art_key` 绑在 `units[<art_key>].attack_fire`(复用 `resolve_binding` 现成的 units 通道,零代码改动);`weapons[]` 只保留贝妮 3 把,弃用 `weapon_enemy_rifle` 等 5 个敌人武器计划名;cue key 定为 `sfx_weapon_raider_infantry_fire` / `sfx_weapon_raider_scout_fire` / `sfx_weapon_raider_bulwark_fire` / `sfx_weapon_hound_bite` / `sfx_weapon_sentry_laser`(归属一眼可见)。
+> v1.7 修订(2026-10-10):**A.2 收录 3 个敌人开火音**(raider 三件套)——`sfx_weapon_raider_infantry_fire`(AK-47 单发切前 0.8s)/ `sfx_weapon_raider_scout_fire`(autorifle metallic punchy 切前 0.7s)/ `sfx_weapon_raider_bulwark_fire`(pgi Heavy weapon 002 切前 0.8s),均 CC0 + 尾 30ms 淡出;已落盘 12 → **15**;候选与中间产物已按「收录」流程清理;详见 §6.9。
+> v1.8 修订(2026-10-10):**A.2 9/9 收尾**——收录 `sfx_weapon_hound_bite`(Escorpion_melee 原长直用 0.556s)/ `sfx_weapon_sentry_laser`(Spaceship laser burst + Laser Gun 01 各取前 1s 双轨合并 1.000s)/ `sfx_attack_fire_default`(machinegun-one-shot ×2 跨淡化直拼 0.701s);`conf/battle/sfx_bindings.json` 的 `default.attack_fire` 由空串回填;已落盘 15 → **18**;详见 §6.10。
 
 ---
 
@@ -14,7 +18,7 @@
 | 项 | 值 |
 |---|---|
 | 总 cue 数 | **91** |
-| 已落盘 | **10**(A.1 turn_in/out 2 个 + A.2 `sfx_weapon_defender9_fire` 1 个 + C 类 UI 7 个) |
+| 已落盘 | **18**(A.1 turn_in/out 2 个 + A.2 `defender9` / `hare_hopper` / `dawn_pulse` / `raider_infantry` / `raider_scout` / `raider_bulwark` / `hound_bite` / `sentry_laser` / `attack_fire_default` 9 个 + C 类 UI 7 个) |
 | 分类数 | **11**(A、C~L) |
 | 命名风格 | `sfx_<scene>_<verb>` / `bgm_<scene>` / `amb_<scene>` |
 | 采样规格(目标) | SFX 48kHz/16bit 单声道;BGM 48kHz/24bit 立体声;时长 ≤2.5s(SFX)/60~120s(BGM)/10~30s(loop 环境音) |
@@ -45,21 +49,23 @@
 
 ### A.2 开火(按 weapon_id 路由,**与角色无关**)
 
-> 走 `weapons` 绑定。**开火 cue 严格按武器绑定**——同一把武器,谁拿都是同一个 fire 音;不会因为"这把武器现在在贝妮手里"或"在敌人手里"而变。命中目标是另一个事(那是 A.3 / A.4)。
+> 贝妮走 `weapons` 绑定、**敌人走 `units[art_key]` 绑定**(v1.6 定案,见下)。**开火 cue 按武器 / 敌人类型绑定**——同一把武器、同一类敌人,谁拿 / 哪只都是同一个 fire 音。命中目标是另一个事(那是 A.3 / A.4)。
 >
 > 解析路径:**`weapons[weapon_id].fire` → `units[attacker.cutin_art_key].fire` → `default.fire`**(weapon 优先、unit 做"该角色用别的武器时的兜底"、default 是全集兜底)。**所有 `weapons[weapon_id]` 节点只允许写 `fire` 类 cue**,不写 hurt/miss——hurt 是按角色绑的(见 A.4),miss 默认走 default 兜底+bulwark 特殊(见 A.3 末尾)。
+>
+> v1.6 起**敌人开火按 `units[<art_key>].attack_fire` 绑**(敌人无装备系统,不走 weapons);贝妮开火仍走 `weapons[weapon_id]`。
 
-| cue key | 时长 | 武器 ID | 武器名 | 描述 | 状态 |
+| cue key | 时长 | 武器 ID / 绑定 | 武器名 | 描述 | 状态 |
 |---|---|---|---|---|---|
 | `sfx_weapon_defender9_fire` | 0.55s(实落 1.20s) | `weapon_benny_defender_9` | 防卫者-9(SMG Lv1) | 中低音 SMG,中等密度,短回响 | ✅ 已落盘(`Freesound pgi · MG001 triple shot` CC0 1.20s) |
-| `sfx_weapon_hare_hopper_fire` | 0.45s | `weapon_benny_hare_hopper` | 野兔跳跃者(SMG Lv2) | 同 SMG 但更紧、更亮,导轨金属感 | ⏳ 待生成 |
-| `sfx_weapon_dawn_pulse_fire` | 0.40s | `weapon_benny_dawn_pulse` | 黎明初霁(SMG Lv3) | 高频脉冲冲锋,带辉石能量"滋滋"尾音 | ⏳ 待生成 |
-| `sfx_weapon_rifle_fire` | 0.65s | `weapon_enemy_rifle` | 掠夺者步枪通用 | 单发步枪,后坐强,弹壳落音 | ⏳ 待生成 |
-| `sfx_weapon_scout_rifle_fire` | 0.50s | `weapon_enemy_scout_rifle` | 斥候步枪 | 短管步枪,更尖的爆发 | ⏳ 待生成 |
-| `sfx_weapon_bulwark_rifle_fire` | 0.80s | `weapon_enemy_bulwark_gun` | 护盾兵重枪 | 低沉厚实,带盾牌共鸣 | ⏳ 待生成 |
-| `sfx_weapon_hound_bite` | 0.45s | `weapon_pyroxene_hound` | 辉石猎犬撕咬 | 肉食撕咬 + 爪击 | ⏳ 待生成 |
-| `sfx_weapon_sentry_laser` | 0.70s | `weapon_pyroxene_sentry` | 哨戒机激光 | 高能激光充能 + 释放,带电子嗡鸣 | ⏳ 待生成 |
-| `sfx_attack_fire_default` | 0.55s | (兜底) | 通用开火 | 同防卫者-9 的中性版本,做 fallback | ⏳ 待生成 |
+| `sfx_weapon_hare_hopper_fire` | 0.45s(实落 0.88s) | `weapon_benny_hare_hopper` | 野兔跳跃者(SMG Lv2) | 同 SMG 但更紧、更亮,导轨金属感 | ✅ 已落盘(`Freesound qubodup · Silenced SMG Three-Shot Burst` CC0 0.441s **×2 直拼**,详见 §6.8) |
+| `sfx_weapon_dawn_pulse_fire` | 0.40s(实落 1.00s) | `weapon_benny_dawn_pulse` | 黎明初霁(SMG Lv3) | 高频脉冲冲锋,带辉石能量"滋滋"尾音 | ✅ 已落盘(`dimapain sci-fi shot` 前 1s + hare_hopper 成品**双轨叠加**,CC0,详见 §6.8) |
+| `sfx_weapon_raider_infantry_fire` | 0.65s(实落 0.80s) | `units[raider_infantry]` | 掠夺者步兵步枪 | 单发步枪,后坐强,弹壳落音 | ✅ 已落盘(`Freesound serøutōnin · AK-47 single` CC0 取前 0.8s,详见 §6.9) |
+| `sfx_weapon_raider_scout_fire` | 0.50s(实落 0.70s) | `units[raider_scout]` | 斥候步枪 | 短管步枪,更尖的爆发 | ✅ 已落盘(`Freesound serøutōnin · autorifle metallic punchy` CC0 取前 0.7s,详见 §6.9) |
+| `sfx_weapon_raider_bulwark_fire` | 0.80s | `units[raider_bulwark]` | 护盾兵重枪 | 低沉厚实,带盾牌共鸣 | ✅ 已落盘(`Freesound pgi · Heavy weapon 002` CC0 取前 0.8s,详见 §6.9) |
+| `sfx_weapon_hound_bite` | 0.45s(实落 0.56s) | `units[pyroxene_hound]` | 辉石猎犬撕咬 | 肉食撕咬 + 爪击 | ✅ 已落盘(`Freesound CSStudios · Escorpion_melee` CC0 原长直用 + 尾 30ms 淡出,详见 §6.10) |
+| `sfx_weapon_sentry_laser` | 0.70s(实落 1.00s) | `units[pyroxene_sentry]` | 哨戒机激光 | 高能激光充能 + 释放,带电子嗡鸣 | ✅ 已落盘(`spaceship laser burst` 前 1s + `Laser Gun 01` 前 1s **双轨合并**,CC0,详见 §6.10) |
+| `sfx_attack_fire_default` | 0.55s(实落 0.70s) | `default.attack_fire` | 通用开火 | 同防卫者-9 的中性版本,做 fallback | ✅ 已落盘(`machinegun-one-shot` **×2 跨淡化直拼**,CC0,详见 §6.10) |
 
 ### A.3 命中 / 未命中 / 受击
 
@@ -283,27 +289,23 @@
   },
   "units": {
     "benny":           { "hurt": "sfx_player_hurt" },
-    "raider_infantry": { "hurt": "sfx_enemy_hurt" },
-    "raider_scout":    { "hurt": "sfx_enemy_hurt" },
-    "raider_bulwark":  { "hurt": "sfx_enemy_hurt", "miss": "sfx_bulwark_shield_miss" },
-    "pyroxene_hound":  { "hurt": "sfx_enemy_hurt" },
-    "pyroxene_sentry": { "hurt": "sfx_enemy_hurt" }
+    "raider_infantry": { "hurt": "sfx_enemy_hurt", "attack_fire": "sfx_weapon_raider_infantry_fire" },
+    "raider_scout":    { "hurt": "sfx_enemy_hurt", "attack_fire": "sfx_weapon_raider_scout_fire" },
+    "raider_bulwark":  { "hurt": "sfx_enemy_hurt", "miss": "sfx_bulwark_shield_miss", "attack_fire": "sfx_weapon_raider_bulwark_fire" },
+    "pyroxene_hound":  { "hurt": "sfx_enemy_hurt", "attack_fire": "sfx_weapon_hound_bite" },
+    "pyroxene_sentry": { "hurt": "sfx_enemy_hurt", "attack_fire": "sfx_weapon_sentry_laser" }
   },
   "weapons": {
     "weapon_benny_defender_9":  { "attack_fire": "sfx_weapon_defender9_fire" },
     "weapon_benny_hare_hopper": { "attack_fire": "sfx_weapon_hare_hopper_fire" },
-    "weapon_benny_dawn_pulse":  { "attack_fire": "sfx_weapon_dawn_pulse_fire" },
-    "weapon_enemy_rifle":       { "attack_fire": "sfx_weapon_rifle_fire" },
-    "weapon_enemy_scout_rifle": { "attack_fire": "sfx_weapon_scout_rifle_fire" },
-    "weapon_enemy_bulwark_gun": { "attack_fire": "sfx_weapon_bulwark_rifle_fire" },
-    "weapon_pyroxene_hound":    { "attack_fire": "sfx_weapon_hound_bite" },
-    "weapon_pyroxene_sentry":   { "attack_fire": "sfx_weapon_sentry_laser" }
+    "weapon_benny_dawn_pulse":  { "attack_fire": "sfx_weapon_dawn_pulse_fire" }
   }
 }
 ```
 
-> **绑定策略(v1.5 明确化)**
-> - **开火 `fire`**:严格按 `weapons[weapon_id]`——同一把武器,谁拿都是同一个音;`units[*]` 不写 fire,避免"用别的武器时角色级兜底"语义被误读。
+> **绑定策略(v1.6 修订)**
+> - **开火 `fire`(贝妮)**:按 `weapons[weapon_id]`——同一把武器,谁拿都是同一个音。
+> - **开火 `fire`(敌人)**:敌人没有装备系统,**按 `units[<art_key>].attack_fire` 绑**——同一类敌人 = 同一把武器,语义等价,且零代码改动。
 > - **受击 `hurt`**:严格按 `units[unit.cutin_art_key]`——和穿什么护甲无关(护甲只影响伤害类型 → A.3 的 `hit_armor`/`hit_flesh`),和用什么武器打过来也无关。
 > - **`miss`**:全局 `default.miss` 兜底(目前 `sfx_bullet_whiz` 兼用);**只有 `raider_bulwark` 一个角色有 `units[*].miss` 特殊覆盖**(`sfx_bulwark_shield_miss`,格挡反弹音,体现护盾机制)。
 > - **解析路径**(`Script/battle/battle_sfx.gd::resolve_binding`):**`weapons[weapon_id].<cue>` → `units[attacker_or_victim.cutin_art_key].<cue>` → `default.<cue>`**。命中侧(A.3 / A.4)的 context 用 `victim` 代替 `attacker`。
@@ -375,7 +377,7 @@
 - [x] **批次 1 / A.1**:turn_in + turn_out(2 个)✅ 横幅专用
 - [x] **批次 2 / C**:UI 通用 7 个 ✅(click / hover / open / close / confirm / cancel / error)
 - [x] **C 类接线**:autoload `UiSfx` + `conf/audio/ui_sfx.json`,全场景按钮/悬停/面板开关/对话框/失败文案已挂钩
-- [ ] 批次 1:A.2 开火 9 个
+- [x] 批次 1:A.2 开火 9 个 ✅(defender9 / hare_hopper / dawn_pulse / raider_infantry / raider_scout / raider_bulwark / hound_bite / sentry_laser / attack_fire_default)
 - [ ] 批次 1:A.3 命中/未命中 3 个
 - [ ] 批次 1:A.4 受击/倒下 3 个
 - [ ] 批次 1:A.5 战斗遮罩过渡 2 个
@@ -521,6 +523,44 @@ ffmpeg -y -ss 00:00:00.000 -i cand_a1_audpapkin_cinematic_woosh008.mp3 -t 1.50 \
 - `sfx_turn_in` 2.7s → **1.5s**,v1 切片备份在 `_review/rejected_sfx_turn_in_v1_batch_music_2.7s.mp3`
 - `sfx_turn_out` 2.0s **未动**(用户本次只重做 turn_in,turn_out 仍走 v1 切片)
 
+### 6.8 A.2 收录 2 个 SMG 家族 cue(`hare_hopper` / `dawn_pulse`,2026-10-10)
+
+本轮走 game-sfx-search 技能(Freesound 免登录 preview 路线),单源产出 12 个候选 → 用户听选后指定加工配方 → ffmpeg 合成落盘;未选中的 10 个候选与加工中间产物已按「收录」流程清理(`_review/` 已清空)。
+
+| cue | 加工配方 | 成品时长 | 电平(实测) | 来源(均 CC0) |
+|---|---|---:|---:|---|
+| `sfx_weapon_hare_hopper_fire` | `Silenced SMG Three-Shot Burst`(0.441s)**×2 直拼**——源尾 30ms 已自然衰减至 -59dB,拼接点无爆音;节奏为 3+3 连发 | 0.883s | 峰值 -1.2dBFS / RMS -12.2dB | Freesound qubodup #740120 |
+| `sfx_weapon_dawn_pulse_fire` | `sci-fi weapon shot` 取**前 1s** + hare_hopper 成品**双轨叠加**(0~0.88s 两层齐响,0.88~1.0s 仅 dimapain 尾段;叠加前峰值 +5.26dB → 统一压回 -1dBFS;末端 30ms 淡出防硬切) | 1.000s | 峰值 -1.0dBFS / RMS -14.1dB | Freesound dimapain #867558 |
+
+- 规格:48kHz / 单声道 / MP3 96kbps(§3);实落时长大于清单目标(0.45 / 0.40s),与 defender9(1.20s)同量级,延续 A.1/A.2「实际值大于目标」惯例。
+- 电平参考:defender9 实测峰值 0.0dBFS / RMS -7.9dB;本两件峰值 -1.2 / -1.0,RMS -12.2 / -14.1——后续若要统一家族响度,可加软限幅版。
+- 绑定:`conf/battle/sfx_bindings.json` 的 `weapons[weapon_benny_hare_hopper / weapon_benny_dawn_pulse].attack_fire` 原本即指向这两个 cue key,**未改任何代码,落盘即生效**;`--headless --path . --import` 通过(仅既有 TileSet 图集类报错,与音频无关),两个新文件的 `.import` 与 `.godot/imported` 缓存均已生成。
+
+### 6.9 A.2 收录 3 个敌人开火音(`raider_infantry` / `raider_scout` / `raider_bulwark`,2026-10-10)
+
+用户听选 3 个候选并指定切片 → ffmpeg 落盘(降混单声道 48k → 尾 30ms 淡出 → 峰值校到 ≈ -1dBFS → MP3 96k);三个来源均 CC0;绑定已在位(`units[<art_key>].attack_fire`,v1.6),**未改代码,落盘即生效**;候选与中间产物已按「收录」流程清理。
+
+| cue | 配方 | 成品时长 | 电平(实测) | 来源(均 CC0) |
+|---|---|---:|---:|---|
+| `sfx_weapon_raider_infantry_fire` | `AK-47 single` 取前 0.8s(切口处 -32.4dB,补 30ms 淡出) | 0.800s | 峰值 -1.3dBFS / RMS -16.4dB | Freesound serøutōnin #855841 |
+| `sfx_weapon_raider_scout_fire` | `autorifle metallic punchy` 取前 0.7s(切口处 -23.8dB,补 30ms 淡出) | 0.700s | 峰值 -1.2dBFS / RMS -18.7dB | Freesound serøutōnin #855655 |
+| `sfx_weapon_raider_bulwark_fire` | `pgi Heavy weapon 002 single` 取前 0.8s(切口处 -6.7dB,补 30ms 淡出) | 0.800s | 峰值 -1.2dBFS / RMS -8.9dB | Freesound pgi #257962 |
+
+- 家族响度参考(RMS):defender9 -7.9 / hare_hopper -12.2 / dawn_pulse -14.1;本次 scout 偏轻(-18.7)、bulwark 偏厚(-8.9),如需统一响度可后续出软限幅版。
+- 三个新文件的 `.import` 与 `.godot/imported` 缓存已生成;`--headless --path . --import` 通过(仅既有 TileSet 图集类报错,与音频无关)。
+
+### 6.10 A.2 收尾:收录 3 个 cue(`hound_bite` / `sentry_laser` / `attack_fire_default`,2026-10-10)
+
+A.2 最后三件一并收录;`conf/battle/sfx_bindings.json` 的 `default.attack_fire` 由空串回填为 `sfx_attack_fire_default`(本表唯一需要显式回填的绑定);三个来源均 CC0;候选与中间产物已按「收录」流程清理。
+
+| cue | 配方 | 成品时长 | 电平(实测) | 来源(均 CC0) |
+|---|---|---:|---:|---|
+| `sfx_weapon_hound_bite` | `Escorpion_melee` 原长直用(源尾 30ms 仍是 -0.1dB → 补 30ms 淡出) | 0.556s | 峰值 -0.8dBFS / RMS -16.6dB | Freesound CSStudios #871496 |
+| `sfx_weapon_sentry_laser` | `Spaceship laser burst` 前 1s + `Laser Gun 01` 前 1s **双轨合并**(叠加前峰值 +2.3dB → 统一压回;切口处 laser_gun 仍有 -15.5dB → 尾 30ms 淡出) | 1.000s | 峰值 -0.7dBFS / RMS -16.8dB | Freesound randbsoundbites #868441 + mrspivey #805193 |
+| `sfx_attack_fire_default` | `machinegun-one-shot` **×2 跨淡化直拼**(10ms 交界 crossfade——源尾/源首均 ~0dB 满电平;尾 30ms 淡出) | 0.701s | 峰值 -0.9dBFS / RMS -20.4dB | Freesound DeltaCode #668347 |
+
+- **A.2 9/9 全部落盘**;规格均为 48kHz / 单声道 / MP3 96kbps(§3);三个新文件的 `.import` 与 `.godot/imported` 缓存已生成。
+
 ---
 
-> **下一步**:把 A.2 SMG 三把(野兔跳跃者 / 黎明初霁)按 cand5 的同一 prompt 模板做"音色递进"变体(更紧更亮 / 辉石能量尾音),再处理 rifle / scout / bulwark_gun 三把敌人武器(走 Freesound / Sonilo 同样的免登录 preview 路线)。A.3 命中类 + A.4 受击(贝妮 + 5 个敌人)继续在 Freesound 找,允许在 `_review/` 长期囤。`sfx_turn_out` 如果你也想重做(走 Freesound cinematic impact 但**比 turn_in 更"敌对"**——比如 "industrial bass boom" / "epic explosion" / "synth drop")告诉我。
+> **下一步**:A.2 **9/9 全部落盘** ✅;接着 A.3 命中类(4)+ A.4 受击(3)、A.5 战斗遮罩(2)、G 结算(5),继续走 Freesound / Sonilo 免登录 preview 路线。`sfx_turn_out` 如果你也想重做(走 Freesound cinematic impact 但**比 turn_in 更"敌对"**——比如 "industrial bass boom" / "epic explosion" / "synth drop")告诉我。
