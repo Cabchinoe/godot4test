@@ -16,6 +16,11 @@
 > v1.12 修订(2026-10-10):**M 类 6/6 收官**——`sfx_move_step_raider_infantry`(Freesound `Small Puddle Splash` **×10 等间隔直拼** @450ms/步 = 4.456s,雨中踩水步感);已落盘 23 → **24**;M 类全齐;详见 §6.11。
 > v1.13 修订(2026-10-10):**M 类脚步接线落地**——`Battlefield` 新增 `BattleSfx` 实例,监听所有单位 `grid_position_changed`(移动中只起播一次)→ 播 `move_step`(`units[art_key]` 路由),`movement_finished` 后**最短保底 450ms** 再 80ms 淡出停止(单格移动曾因同帧淡出而听不到,已修;`BattleSfx.play` 改为返回播放器);`move_blocked` 待音频收录后接线。
 > v1.14 修订(2026-10-10):**新增并收录 D.7 移动悬停提示音 `sfx_move_hover_benny`**——选中角色进入移动预览、且 `action_points > 0` 时,指针悬停/滑过**可移动格**播放轻提示音(绑 `units[benny].move_hover`,沿用 v1.9「移动类按角色绑定」;与 C 类 `ui_hover` 语义分离——`ui_hover` 只服务真按钮,格子类控件仍静音,互不冲突);D 类 6 → **7**,总 cue 数 91 → **92**,批次 2 从 51 → **52**;候选 14 个落 `_review/` 试听后选定 **Freesound loganzsound · `Lightswitch Flick_02`(CC0)**,已落盘 + 绑定 + 接线(详见 §6.12)。
+> v1.15 修订(2026-10-10):**A.5 战斗遮罩改为按角色绑定**——弃用固定 cue `sfx_battle_cutin_in/out`,改为 `units[<attacker art_key>].battle_cutin_in / .battle_cutin_out`(**发起 attack 的角色**各一对,6 角色共 **12 个** cue:`sfx_battle_cutin_in_benny` … `sfx_battle_cutin_out_pyroxene_sentry`);`default.*` 保留兜底;**零代码改动**(`BattleCutIn._sfx_context` 已带 attacker);总 cue 数 92 → **102**;详见 §A.5。
+> v1.16 修订(2026-10-10):**命中 / 受击合并为「每角色一个」**——弃用 `hit_armor` / `hit_flesh` / `hurt`(打击层 + 语音层的两层设计),改为 `units[<victim art_key>].hit` 共 6 个 cue(`sfx_hit_benny` … `sfx_hit_pyroxene_sentry`),absorbed / damage 都播它,不再区分击中护甲/入肉;保留 `sfx_bullet_whiz`(`default.miss`)与 `sfx_bulwark_shield_miss`(bulwark 特例);`sfx_unit_down` 改挂 `Unit.defeated` 信号——**真正死亡时**播放(含 debuff 流血流死);代码同步:`battle_cut_in` 两分支合并为 `hit`、`unit_down` 移到 `Battlefield._on_unit_defeated`;总 cue 数 102 → **104**。
+> v1.17 修订(2026-10-10):**受击/倒地细化 + benny 走 TTS**——`unit_down` 由全局单个改为**按角色**(`units[<art_key>].unit_down` 6 个,`default.unit_down` 仅兜底);benny 受击**留空**(女声素材网络池不可用,改走 **TTS 模型**路线待做),benny 倒地待定;已选待收录:infantry hit←`Oof` / scout hit←`Enemy hurt 1` / hound hit←`Bark and Growl`、infantry down←`Hurt light 1` / bulwark down←`Damage Hurt ooh!` / hound down←`Small Dog Cry`、whiz←`subsonic flyby`;**重搜**:bulwark hit / sentry hit(小爆炸)/ scout down / sentry down(较大爆炸)/ bulwark_shield_miss;总 cue 数 104 → **109**;详见 §A.4。
+> v1.18 修订(2026-10-10):**A.4 选型推进**——sentry hit←`Explosion (Pixel SFX)` / sentry down←`EXPLOSION_SFX1`(取前 1.2s)/ `bulwark_shield_miss`←`deepcrash`(均已选待收录);人形单位(掠夺系)的**命中 / 倒地 = 痛呼人声**方向,bulwark hit / scout down 重搜候选试听中;benny 仍走 TTS。
+> v1.19 修订(2026-10-10):**A.3 / A.4 收录 12 件**(落盘即生效)——hit×5(infantry←`Oof` / scout←`Enemy hurt 1` / bulwark←`Head Impact Grunt` 取 0.6s→ / hound←`Bark and Growl` / sentry←`Explosion (Pixel)`)+ unit_down×5(infantry←`Hurt light 1` / scout←`Character Death` / bulwark←`Damage Hurt ooh!` / hound←`Small Dog Cry` / sentry←`EXPLOSION_SFX1` 取前 1.2s)+ `bullet_whiz`←`subsonic flyby` + `bulwark_shield_miss`←`deepcrash`;benny 的 hit / down 留空(TTS / 待定);已落盘 25 → **37**;详见 §6.13。
 
 ---
 
@@ -23,8 +28,8 @@
 
 | 项 | 值 |
 |---|---|
-| 总 cue 数 | **92** |
-| 已落盘 | **25**(A.1 turn_in/out 2 个 + A.2 `defender9` / `hare_hopper` / `dawn_pulse` / `raider_infantry` / `raider_scout` / `raider_bulwark` / `hound_bite` / `sentry_laser` / `attack_fire_default` 9 个 + C 类 UI 7 个 + D.7 移动悬停 1 个 + M 类脚步 6 个) |
+| 总 cue 数 | **109** |
+| 已落盘 | **37**(A.1 turn_in/out 2 个 + A.2 `defender9` / `hare_hopper` / `dawn_pulse` / `raider_infantry` / `raider_scout` / `raider_bulwark` / `hound_bite` / `sentry_laser` / `attack_fire_default` 9 个 + C 类 UI 7 个 + D.7 移动悬停 1 个 + M 类脚步 6 个 + A.3 / A.4 命中倒地 12 个) |
 | 分类数 | **12**(A、C~M) |
 | 命名风格 | `sfx_<scene>_<verb>` / `bgm_<scene>` / `amb_<scene>` |
 | 采样规格(目标) | SFX 48kHz/16bit 单声道;BGM 48kHz/24bit 立体声;时长 ≤2.5s(SFX)/60~120s(BGM)/10~30s(loop 环境音) |
@@ -73,46 +78,66 @@
 | `sfx_weapon_sentry_laser` | 0.70s(实落 1.00s) | `units[pyroxene_sentry]` | 哨戒机激光 | 高能激光充能 + 释放,带电子嗡鸣 | ✅ 已落盘(`spaceship laser burst` 前 1s + `Laser Gun 01` 前 1s **双轨合并**,CC0,详见 §6.10) |
 | `sfx_attack_fire_default` | 0.55s(实落 0.70s) | `default.attack_fire` | 通用开火 | 同防卫者-9 的中性版本,做 fallback | ✅ 已落盘(`machinegun-one-shot` **×2 跨淡化直拼**,CC0,详见 §6.10) |
 
-### A.3 命中 / 未命中 / 受击
+### A.3 未命中 / 特殊命中(v1.16 精简)
 
-> 命中(`hit_armor` / `hit_flesh`)和未命中(`miss`)**按角色 art_key 绑定的语义不冲突——本表把它们列在一起,只是因为它们都是"被击中侧"的反应**。实际解析时:
-> - **`hit_armor` / `hit_flesh` / `miss` 都走 `default` 兜底**——一个通用命中、通用入肉、通用擦肩啸叫,所有角色共用。
-> - **`miss` 有且仅有一个角色特殊例外:护盾兵 `raider_bulwark`**——它有"格挡"或"护盾反弹"的特殊 miss 音,因为它的护盾机制要单独表达。所以 `units[raider_bulwark].miss` 单独覆盖。
->
-> 即:"开火按武器,miss 默认兜底+bulwark 特殊,hit 类(命中/入肉)目前统一 default,无角色区分"。
+> v1.16 改设计:`hit_armor` / `hit_flesh` 两个"打击层" cue 弃用——命中(含护甲吸收 / 入肉)与单位受击合并为**每角色一个** `hit`(见 A.4)。本节只保留未命中与护盾兵特例。
+> **`miss` 有且仅有一个角色特殊例外:护盾兵 `raider_bulwark`**——"格挡/护盾反弹"的 miss 音单独覆盖(`units[raider_bulwark].miss`)。
 
 | cue key | 时长 | 描述 | 触发点 | 绑定 |
 |---|---|---|---|---|
-| `sfx_hit_armor` | 0.40s | 弹头击穿护甲短金属撞击 + 火花迸射声 | `hit_armor`(吸收) | `default` 兜底(暂未做角色区分) |
-| `sfx_hit_flesh` | 0.35s | 入肉钝击 + 湿闷尾音 | `hit_flesh`(真实伤害) | `default` 兜底(暂未做角色区分) |
-| `sfx_bullet_whiz` | 0.30s | 子弹擦肩而过的啸叫 | `default.miss` 全局兜底 |  |
-| `sfx_bulwark_shield_miss` | 0.45s | 护盾兵格挡反弹音,金属护盾共鸣 + 滑开 | `units[raider_bulwark].miss` 特殊覆盖 | ⏳ 待生成 |
+| `sfx_bullet_whiz` | 0.30s | 子弹擦肩而过的啸叫 | `miss`(未命中帧) | `default.miss` 全局兜底 |
+| `sfx_bulwark_shield_miss` | 0.45s | 护盾兵格挡反弹音,金属护盾共鸣 + 滑开 | `miss` 且受害者为护盾兵 `raider_bulwark` | `units[raider_bulwark].miss` 特殊覆盖 |
 
-### A.4 单位受击 / 倒下(**严格按角色 art_key 绑定,和武器/护甲无关**)
+> 状态(2026-10-10):`sfx_bullet_whiz` ✅ 已落盘(`subsonic flyby`,1.334s);`sfx_bulwark_shield_miss` ✅ 已落盘(`deepcrash`,1.073s)。
 
-> 受击 = 被打的那个人是谁 → 谁就叫。所以**按角色 art_key 绑定**,不按武器,也不按"当前穿着什么护甲":
-> - 护甲只影响伤害数字(`hit_armor` vs `hit_flesh` 走 A.3),**不替换**受击本身;
-> - 武器不替换受击;
-> - 一个角色在不同姿态(站立/蹲下/跑动)被打也是同一个受击 cue。
->
-> 解析:`units[unit.cutin_art_key].hurt` → `default.hurt`(不查 weapons,因为受击跟开火不同轴)。
+### A.4 单位被击中 / 倒下(按角色 art_key 绑定,v1.17 细化)
 
-| cue key | 时长 | 描述 | 触发点 | 绑定 |
+> **命中**与**受击**合并为一个 cue:被打中的是谁 → 播谁(`absorbed` / `damage` 都走它),不再分"打击音 + 语音"两层,也不再分护甲/入肉。
+> **`unit_down` 同样按角色(v1.17)**:`units[<art_key>].unit_down`,在**真正死亡时**播放(击倒落定 + debuff 流血致死,挂 `Unit.defeated` 信号);`default.unit_down` 仅兜底。
+> **benny 特例**:受击**留空**——女声素材网络池不可用,改走 **TTS 模型**路线(待做);benny 倒地待定。
+> **v1.18 方向**:人形单位(掠夺系)的**命中 / 倒地 = 痛呼人声**(网络素材);非人形按各自语义(hound 兽类、sentry 爆炸/机械)。
+
+**hit(命中 / 受击)**
+
+| cue key | 时长 | 描述 | 绑定 | 状态 / 选型 |
 |---|---|---|---|---|
-| `sfx_player_hurt` | 0.50s | 玩家受击:短促闷响 + 呼吸/失神(主角额外红闪对应) | `apply_attack` 后贝妮被打中 | `units[benny].hurt` |
-| `sfx_enemy_hurt` | 0.45s | 敌人受击:肉搏挤压 + 痛叫(泛用,可分两层:punch/grunt) | 敌人被打中 | 所有敌人 `units[*].hurt` 共用;或 `default.enemy_hurt` 兜底 |
-| `sfx_unit_down` | 1.20s | 倒地:沉重跌落 + 装备/护甲金属碰撞 + 后续轻尾音 | `unit_down`(击倒帧) | 按角色 art_key 绑(每个敌人可能有不同倒地声) |
+| `sfx_hit_benny` | 0.50s | 贝妮被击中 | `units[benny].hit` | ⏳ 留空(TTS 路线,待做) |
+| `sfx_hit_raider_infantry` | 0.45s(实落 0.27s) | 掠夺兵被击中 | `units[raider_infantry].hit` | ✅ 已落盘(`unfa · Oof`,详见 §6.13) |
+| `sfx_hit_raider_scout` | 0.45s(实落 1.43s) | 斥候被击中 | `units[raider_scout].hit` | ✅ 已落盘(`K27K_Mike · Enemy hurt 1`) |
+| `sfx_hit_raider_bulwark` | 0.50s(实落 1.14s) | 护盾兵被击中 | `units[raider_bulwark].hit` | ✅ 已落盘(`Head Impact Grunt` 取 0.6s→尾) |
+| `sfx_hit_pyroxene_hound` | 0.40s(实落 0.74s) | 猎犬被击中(兽类) | `units[pyroxene_hound].hit` | ✅ 已落盘(`Dogs · Bark and Growl`) |
+| `sfx_hit_pyroxene_sentry` | 0.45s(实落 0.39s) | 哨戒机被击中 | `units[pyroxene_sentry].hit` | ✅ 已落盘(`Explosion (Pixel SFX)`) |
 
-### A.5 战斗遮罩过渡(待生成)
+**unit_down(真正死亡,含 debuff 致死)**
+
+| cue key | 时长 | 描述 | 绑定 | 状态 / 选型 |
+|---|---|---|---|---|
+| `sfx_unit_down_benny` | 1.20s | 贝妮倒下 | `units[benny].unit_down` | ⏳ 待定 |
+| `sfx_unit_down_raider_infantry` | 1.00s(实落 0.43s) | 掠夺兵倒下 | `units[raider_infantry].unit_down` | ✅ 已落盘(`Kreha · Hurt light 1`) |
+| `sfx_unit_down_raider_scout` | 1.00s(实落 1.13s) | 斥候倒下 | `units[raider_scout].unit_down` | ✅ 已落盘(`randbsoundbites · Character Death`) |
+| `sfx_unit_down_raider_bulwark` | 1.20s(实落 1.06s) | 护盾兵倒下 | `units[raider_bulwark].unit_down` | ✅ 已落盘(`Damage Hurt ooh!`) |
+| `sfx_unit_down_pyroxene_hound` | 1.00s(实落 0.82s) | 猎犬倒下 | `units[pyroxene_hound].unit_down` | ✅ 已落盘(`Small Dog Cry`) |
+| `sfx_unit_down_pyroxene_sentry` | 1.50s(实落 1.20s) | 哨戒机倒下 | `units[pyroxene_sentry].unit_down` | ✅ 已落盘(`EXPLOSION_SFX1` 取前 1.2s) |
+
+> 旧全局 cue `sfx_unit_down` 退役为 `default.unit_down` 兜底(可为空);`sfx_bullet_whiz` 已选 `subsonic flyby`、`bulwark_shield_miss` 已选 `deepcrash`(待收录)。
+
+### A.5 战斗遮罩过渡(按发起 attack 的角色绑定,v1.15 改设计)
 
 > 服务 `BattleCutIn`(战斗入场遮罩:左攻右守立绘 + 数值飘字)。
-> 与 A.1 横幅语义不同:**横幅是轻提示**,**战斗遮罩是重头戏**,需要独立的、更有质感的入退场音效。
-> 当前 cue key 已占位,binding 值为空,等后续 AI 生成 + 切片后填入。
+> v1.15 起:**不再使用单个固定 cue**,入场/退场音按**发起 attack 的角色**绑定——`units[<attacker art_key>].battle_cutin_in / .battle_cutin_out`(复用 resolve_binding 的 units 通道;`BattleCutIn._sfx_context` 已带 attacker,**零代码改动**)。
+> `default.battle_cutin_in / out` 保留为兜底(可为空)。旧固定 cue `sfx_battle_cutin_in/out` 弃用。
+> 与 A.1 横幅语义不同:横幅是轻提示,战斗遮罩是重头戏——每个角色一副"开门 + 关门"的质感,同一角色 in/out 保持同材质。
 
-| cue key | 时长 | 文件 | 描述 | 触发点 | 状态 |
-|---|---|---|---|---|---|
-| `sfx_battle_cutin_in` | TBD | TBD | 战斗遮罩入场:立绘左攻右守滑入,带更厚重的金属/能量开门声 | `BattleCutIn.begin_session()` | ⏳ 待生成 |
-| `sfx_battle_cutin_out` | TBD | TBD | 战斗遮罩退场:反向滑出,衰减余震 | `BattleCutIn.end_session()` | ⏳ 待生成 |
+| 角色(art_key) | 入场 cue | 退场 cue | 描述 | 状态 |
+|---|---|---|---|---|
+| `benny` | `sfx_battle_cutin_in_benny` | `sfx_battle_cutin_out_benny` | 贝妮突入:轻快果断 + 短促金属 | ⏳ 待生成 |
+| `raider_infantry` | `sfx_battle_cutin_in_raider_infantry` | `sfx_battle_cutin_out_raider_infantry` | 掠夺兵:粗粝街头感 | ⏳ 待生成 |
+| `raider_scout` | `sfx_battle_cutin_in_raider_scout` | `sfx_battle_cutin_out_raider_scout` | 斥候:更尖更疾 | ⏳ 待生成 |
+| `raider_bulwark` | `sfx_battle_cutin_in_raider_bulwark` | `sfx_battle_cutin_out_raider_bulwark` | 护盾兵:低沉厚重 + 金属共鸣 | ⏳ 待生成 |
+| `pyroxene_hound` | `sfx_battle_cutin_in_pyroxene_hound` | `sfx_battle_cutin_out_pyroxene_hound` | 猎犬:兽性冲刺 | ⏳ 待生成 |
+| `pyroxene_sentry` | `sfx_battle_cutin_in_pyroxene_sentry` | `sfx_battle_cutin_out_pyroxene_sentry` | 哨戒机:机械上电 / 断电 | ⏳ 待生成 |
+
+> 触发点不变:`BattleCutIn.begin_session()` / `end_session()`;绑定值在音频收录时回填 `units[<art_key>]`。
 
 ---
 
@@ -341,7 +366,8 @@
 > - **开火 `fire`(贝妮)**:按 `weapons[weapon_id]`——同一把武器,谁拿都是同一个音。
 > - **开火 `fire`(敌人)**:敌人没有装备系统,**按 `units[<art_key>].attack_fire` 绑**——同一类敌人 = 同一把武器,语义等价,且零代码改动。
 > - **移动 `move_step` / `move_blocked` / `move_hover`(v1.9 / v1.14)**:移动类**全部按角色自身绑**——`units[<art_key>].move_step`(贝妮 + 5 类敌人)、`units[benny].move_blocked`、`units[benny].move_hover`(移动预览悬停可移动格的提示音);不走 default 兜底。
-> - **受击 `hurt`**:严格按 `units[unit.cutin_art_key]`——和穿什么护甲无关(护甲只影响伤害类型 → A.3 的 `hit_armor`/`hit_flesh`),和用什么武器打过来也无关。
+> - **战斗遮罩 `battle_cutin_in/out`(v1.15)**:按**发起 attack 的角色**绑——`units[<attacker art_key>].battle_cutin_in` / `.battle_cutin_out`(`BattleCutIn._sfx_context` 已带 attacker,零代码改动);`default.*` 仅作兜底。
+> - **受击 `hit` / `unit_down`(v1.16 / v1.17)**:命中与受击**合并为每角色一个**——`units[<victim art_key>].hit`(absorbed / damage 都走它,不分护甲/入肉、不分打击/语音两层);**`unit_down` 亦按角色**(`units[<art_key>].unit_down`,真正死亡时播,含 debuff 致死);benny 受击留空走 **TTS**。
 > - **`miss`**:全局 `default.miss` 兜底(目前 `sfx_bullet_whiz` 兼用);**只有 `raider_bulwark` 一个角色有 `units[*].miss` 特殊覆盖**(`sfx_bulwark_shield_miss`,格挡反弹音,体现护盾机制)。
 > - **解析路径**(`Script/battle/battle_sfx.gd::resolve_binding`):**`weapons[weapon_id].<cue>` → `units[attacker_or_victim.cutin_art_key].<cue>` → `default.<cue>`**。命中侧(A.3 / A.4)的 context 用 `victim` 代替 `attacker`。
 > - cue key 全部对应表中 cue key,加 `.mp3` 后缀落盘。
@@ -354,7 +380,7 @@
 
 | 类别 | 数量 | cue |
 |---|---:|---|
-| A 战斗核心 | 19 | A.1(横幅,2 个已落盘)+ A.2(开火,9 个)+ A.3(命中,3 个)+ A.4(受击,3 个)+ A.5(战斗遮罩,2 个待生成) |
+| A 战斗核心 | 19 | A.1(横幅,2 个已落盘)+ A.2(开火,9 个)+ A.3(未命中/特殊,2 个)+ A.4(按角色命中 + 倒下,7 个)+ A.5(战斗遮罩,按角色 12 个待生成) |
 | G 战斗结算 | 5 | 全部 |
 
 ### 批次 2 — UI 与流程(52 个)
@@ -414,9 +440,9 @@
 - [x] **C 类接线**:autoload `UiSfx` + `conf/audio/ui_sfx.json`,全场景按钮/悬停/面板开关/对话框/失败文案已挂钩
 - [x] **D.7 移动悬停接线**:`sfx_move_hover_benny`(CC0)落盘 + `units[benny].move_hover` 绑定 + `Battlefield` hover 接线 ✅
 - [x] 批次 1:A.2 开火 9 个 ✅(defender9 / hare_hopper / dawn_pulse / raider_infantry / raider_scout / raider_bulwark / hound_bite / sentry_laser / attack_fire_default)
-- [ ] 批次 1:A.3 命中/未命中 3 个
-- [ ] 批次 1:A.4 受击/倒下 3 个
-- [ ] 批次 1:A.5 战斗遮罩过渡 2 个
+- [x] 批次 1:A.3 未命中 / 特殊 2 个 ✅(bullet_whiz ← subsonic flyby;bulwark 特殊 miss ← deepcrash)
+- [ ] 批次 1:A.4 命中 / 倒下(10/12 已落盘;benny 的 hit/down 留空待 TTS / 待定)
+- [ ] 批次 1:A.5 战斗遮罩过渡(按角色 v1.15:6 角色 × 入/退 = 12 个)
 - [ ] 批次 1:G 战斗结算 5 个
 - [ ] 批次 2:D~J 全部 45 个
 - [ ] 批次 2:L 环境音 3 个
@@ -629,6 +655,29 @@ Mixkit + Freesound 混合源(均 CC0 / Mixkit License)。**注意:实落为"步�
 | 接线 | `Script/battlefield.gd`:`_process` 移动态中悬停格变化且可达、`action_points > 0` 时 `_sfx.play(&"move_hover", {"attacker": player})`;新增 `MOVE_HOVER_SFX_COOLDOWN_MSEC = 60` 冷却(与 `UiSfx` 按钮 hover 的 60ms 冷却同口径,防快速扫格叠音) |
 | 验证 | `--headless --path . --import` 通过(仅既有 TileSet 类报错);Battlefield headless 90 帧无脚本错误;单独校验 `units[benny].move_hover` → `sfx_move_hover_benny` → 资源存在(0.150s) |
 
+### 6.13 A.3 / A.4 收录 12 件(2026-10-10)
+
+命中/倒地改为按角色后的第一批落盘(hit×5 + unit_down×5 + whiz + shield);全部走既定规格(48kHz / 单声道 / MP3 96kbps,峰值 ≈ -1dBFS);benny 的 hit / down 留空(女声走 TTS 路线待做)。
+
+| cue | 配方 | 成品时长 | 峰值 / RMS | 来源 |
+|---|---|---:|---:|---|
+| `sfx_hit_raider_infantry` | `Oof` 原长 | 0.273s | -1.1 / -16.1 | Freesound unfa #719053(CC0) |
+| `sfx_hit_raider_scout` | `Enemy hurt 1` 原长 | 1.425s | -0.9 / -20.7 | Freesound K27K_Mike #853659(CC0) |
+| `sfx_hit_raider_bulwark` | `Head Impact Grunt` 取 **0.6s→尾**(切口 30ms 淡入) | 1.141s | -0.8 / -16.7 | Freesound DeqstersLab #848188(CC-BY) |
+| `sfx_hit_pyroxene_hound` | `Bark and Growl` 原长 | 0.737s | -0.9 / -17.6 | Freesound TheKingOfGeeks360 #868312(CC0) |
+| `sfx_hit_pyroxene_sentry` | `Explosion (Pixel SFX)` 原长 | 0.387s | -1.0 / -14.1 | Freesound heyheytheree #871887(CC-BY) |
+| `sfx_unit_down_raider_infantry` | `Hurt light 1` 原长 | 0.427s | -0.9 / -14.7 | Freesound kreha #840222(CC0) |
+| `sfx_unit_down_raider_scout` | `Character Death` 原长 | 1.129s | -1.0 / -15.8 | Freesound randbsoundbites #796567(CC0) |
+| `sfx_unit_down_raider_bulwark` | `Damage Hurt ooh!` 原长 | 1.059s | -0.9 / -14.3 | Freesound gunpowderstudios #863709(CC0) |
+| `sfx_unit_down_pyroxene_hound` | `Small Dog Cry` 原长 | 0.824s | -1.0 / -18.9 | Freesound haulaway #735365(CC0) |
+| `sfx_unit_down_pyroxene_sentry` | `EXPLOSION_SFX1` 取前 1.2s | 1.200s | -1.0 / -19.0 | Freesound AgusIvan #868375(CC0) |
+| `sfx_bullet_whiz` | `Fly-by whiz (subsonic)` 原长 | 1.334s | -1.2 / -25.4 | Freesound modusmogulus #789222(CC0) |
+| `sfx_bulwark_shield_miss` | `deepcrash 3 long` 原长 | 1.073s | -0.9 / -18.7 | Freesound Logicogonist #811250(CC0) |
+
+- 全部 `.import` 与缓存已生成;**代码接线早已就位**(命中走 `battle_cut_in` victim 路由、倒地挂 `Unit.defeated` 含 debuff 致死、whiz/shield 走 miss 分支)→ 落盘即响。
+- 授权:10 CC0 + 2 CC-BY(bulwark hit / sentry hit,需署名)。
+- 候选与中间产物已清(`_review/` 清空)。
+
 ---
 
-> **下一步**:A.2 **9/9 全部落盘** ✅、M 类 **6/6 全部落盘** ✅、D.7 移动悬停 ✅;接着 A.3 命中类(4)+ A.4 受击(3)、A.5 战斗遮罩(2)、G 结算(5)。`sfx_turn_out` 如果你也想重做(走 Freesound cinematic impact 但**比 turn_in 更"敌对"**——比如 "industrial bass boom" / "epic explosion" / "synth drop")告诉我。
+> **下一步**:A.2 **9/9** ✅、A.3 **2/2** ✅、A.4 **10/12**(benny 的 hit/down 留 TTS/待定)、M 类 **6/6** ✅、D.7 ✅;接着 A.5 战斗遮罩(按角色,12 个)与 G 结算(5)。`sfx_turn_out` 如果你也想重做(走 Freesound cinematic impact 但**比 turn_in 更"敌对"**——比如 "industrial bass boom" / "epic explosion" / "synth drop")告诉我。

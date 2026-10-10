@@ -5,8 +5,6 @@
     "battle_cutin_in": "",
     "battle_cutin_out": "",
     "attack_fire": "sfx_attack_fire_default",
-    "hit_armor": "sfx_hit_armor",
-    "hit_flesh": "sfx_hit_flesh",
     "miss": "sfx_bullet_whiz",
     "unit_down": "sfx_unit_down",
     "ui_click": "sfx_ui_click",
@@ -18,12 +16,12 @@
     "ui_error": "sfx_ui_error"
   },
   "units": {
-    "benny":           { "hurt": "sfx_player_hurt", "move_step": "sfx_move_step_benny", "move_blocked": "sfx_move_blocked_benny", "move_hover": "sfx_move_hover_benny" },
-    "raider_infantry": { "hurt": "sfx_enemy_hurt", "attack_fire": "sfx_weapon_raider_infantry_fire", "move_step": "sfx_move_step_raider_infantry" },
-    "raider_scout":    { "hurt": "sfx_enemy_hurt", "attack_fire": "sfx_weapon_raider_scout_fire", "move_step": "sfx_move_step_raider_scout" },
-    "raider_bulwark":  { "hurt": "sfx_enemy_hurt", "miss": "sfx_bulwark_shield_miss", "attack_fire": "sfx_weapon_raider_bulwark_fire", "move_step": "sfx_move_step_raider_bulwark" },
-    "pyroxene_hound":  { "hurt": "sfx_enemy_hurt", "attack_fire": "sfx_weapon_hound_bite", "move_step": "sfx_move_step_pyroxene_hound" },
-    "pyroxene_sentry": { "hurt": "sfx_enemy_hurt", "attack_fire": "sfx_weapon_sentry_laser", "move_step": "sfx_move_step_pyroxene_sentry" }
+    "benny":           { "hit": "sfx_hit_benny", "move_step": "sfx_move_step_benny", "move_blocked": "sfx_move_blocked_benny", "move_hover": "sfx_move_hover_benny" },
+    "raider_infantry": { "hit": "sfx_hit_raider_infantry", "attack_fire": "sfx_weapon_raider_infantry_fire", "move_step": "sfx_move_step_raider_infantry", "unit_down": "sfx_unit_down_raider_infantry" },
+    "raider_scout":    { "hit": "sfx_hit_raider_scout", "attack_fire": "sfx_weapon_raider_scout_fire", "move_step": "sfx_move_step_raider_scout", "unit_down": "sfx_unit_down_raider_scout" },
+    "raider_bulwark":  { "hit": "sfx_hit_raider_bulwark", "miss": "sfx_bulwark_shield_miss", "attack_fire": "sfx_weapon_raider_bulwark_fire", "move_step": "sfx_move_step_raider_bulwark", "unit_down": "sfx_unit_down_raider_bulwark" },
+    "pyroxene_hound":  { "hit": "sfx_hit_pyroxene_hound", "attack_fire": "sfx_weapon_hound_bite", "move_step": "sfx_move_step_pyroxene_hound", "unit_down": "sfx_unit_down_pyroxene_hound" },
+    "pyroxene_sentry": { "hit": "sfx_hit_pyroxene_sentry", "attack_fire": "sfx_weapon_sentry_laser", "move_step": "sfx_move_step_pyroxene_sentry", "unit_down": "sfx_unit_down_pyroxene_sentry" }
   },
   "weapons": {
     "weapon_benny_defender_9":  { "attack_fire": "sfx_weapon_defender9_fire" },

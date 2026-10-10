@@ -82,12 +82,7 @@ func show_result(applied: Dictionary, instantly: bool = false) -> void:
 	_show_result_labels(applied, instantly)
 	if bool(applied.get("hit", false)):
 		_shake(float(_config.get("shake_strength", 14.0)), instantly)
-		if int(applied.get("absorbed", 0)) > 0:
-			_sfx.play(&"hit_armor", _sfx_context(&"hit_armor"))
-		elif int(applied.get("damage", 0)) > 0:
-			_sfx.play(&"hit_flesh", _sfx_context(&"hit_flesh"))
-		if bool(applied.get("defeated", false)):
-			_sfx.play(&"unit_down", _sfx_context(&"unit_down"))
+		_sfx.play(&"hit", _sfx_context(&"hit"))
 	else:
 		_sfx.play(&"miss", _sfx_context(&"miss"))
 
@@ -229,7 +224,7 @@ func _sfx_context(cue: StringName = &"") -> Dictionary:
 	var weapon_id := ""
 	if _attacker and _attacker.has_method("get_equipped_item_id"):
 		weapon_id = str(_attacker.get_equipped_item_id(&"weapon"))
-	# 受击侧(hurt / hit / miss / unit_down)的"按角色绑"语义:被打的人是谁 → 谁就叫。
+	# 受击侧(hit / miss)的"按角色绑"语义:被打的人是谁 → 谁就叫。
 	# 把 defender 作为 victim 喂进 context,BattleSfx.resolve_binding 会用 victim.cutin_art_key
 	# 查 units。开火/横幅类不传 victim,继续走 weapons / default。
 	var ctx := {"attacker": _attacker, "defender": _defender, "weapon_id": weapon_id}
@@ -240,7 +235,7 @@ func _sfx_context(cue: StringName = &"") -> Dictionary:
 
 func _is_victim_cue(cue: StringName) -> bool:
 	var s := str(cue)
-	return s == "hit_armor" or s == "hit_flesh" or s == "miss" or s == "unit_down" or s == "hurt"
+	return s == "hit" or s == "miss"
 
 
 func _seconds(key: String, fallback: float) -> float:
