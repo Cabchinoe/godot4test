@@ -97,12 +97,33 @@
 
 > 连点角色时语音会「重新从头说」而不是叠加，这是设计如此：人声通道只有一条。
 
+### 绑定格式：单文件 vs 多变体
+
+`conf/battle/sfx_bindings.json` 里每个 cue 的值支持两种写法：
+
+```jsonc
+"hit": "sfx_hit_benny",                    // ① 单文件（音效，向后兼容，永远播）
+"select_player": {                         // ② 多变体（角色台词）
+  "files": ["voice_benny_select_01"],       //    候选文件列表，随机选一条
+  "probability": 0.2,                      //    触发概率，默认 1.0（总播）
+  "avoid_repeat": true                     //    避免连续播同一条，默认 true
+}
+```
+
+**多变体随机规则**（`BattleSfx._pick_variant()`）：
+
+1. 先把**还没录出来的文件滤掉**——所以你一条条录新变体时，已录的那条每次都能播，不会抽中空文件导致整条不响
+2. 候选 ≥ 2 条时随机选一条，并避开该 cue **上一次播过的那条**（`_last_played` 是 `static`，跨实例共享）
+3. `probability` 在抽签**之前**判定：未命中就整条不播，不占人声通道
+
+> 加新变体只需往 `files` 数组里追加文件名，**代码不用改**。
+
 ### 已接
 
 | cue | 触发点 | 绑定 | 文件状态 |
 |---|---|---|---|
 | `units.benny.voice_heal` | `Script/battlefield.gd:870` `_sfx.play_voice(&"voice_heal", {"attacker": player})` | `voice_benny_heal_01` | ✅ 已落盘 |
-| `units.benny.select_player` | `Script/battlefield.gd:1113` 选中自己进入移动态 `_sfx.play_voice(&"select_player", {"attacker": player})` | `voice_benny_select_01` | ✅ 已落盘 |
+| `units.benny.select_player` | `Script/battlefield.gd:1113` 选中自己进入移动态 `_sfx.play_voice(&"select_player", {"attacker": player})` | `voice_benny_select_01`，**概率 20%** | ✅ 已落盘 |
 | `units.benny.fracture_apply` | `Script/battle/battle_cut_in.gd` `show_result()` → `_play_status_voice()` | `voice_benny_fracture_01` | ✅ 已落盘 |
 | `units.benny.bleed_apply` | 同上 | `voice_benny_bleed_01` | ❌ 文件未落盘（绑定已就位，文件到位即生效） |
 
@@ -123,8 +144,8 @@
 
 1. **`hit` / `unit_down` 撞名**：`units.benny.hit` 现在绑的是音效 `sfx_hit_benny`，`units.benny.unit_down` 绑的是音效 `sfx_unit_down`。voice 必须用**独立 cue 名**（如 `voice_hit` / `voice_unit_down`），否则会把音效顶掉。`voice_heal` 已经是这个模式，可作先例。
 2. **`player_voice` 段不存在**：`conf/battle/sfx_bindings.json` 只有 `default` / `units` / `weapons` 三段；`Script/battle/battle_sfx.gd` 的 `resolve_binding()` 也只按 `weapons → units.<art_key> → default` 三级查。`player_voice` 要**同时**加 JSON 段和 `resolve_binding()` 查找层。
-3. **多台词变体暂不支持**：当前一个 cue 只绑一个文件。`benny_voice_lines.md` 里每个 cue 有 2–4 条变体，要用随机/条件选择需把绑定扩展为数组或引入"台词槽"。
-4. **语音必须用 `play_voice()` 而不是 `play()`**：`play()` 会占用音效池且不做互斥，连点会叠加。语音一律走 `play_voice()`。
+3. **多台词变体已支持**：绑定值写成 `{ "files": [...], "probability": 0.2 }` 即可，运行时随机选一条且避免连续重复。见上面「绑定格式」。
+4. **语音必须用 `play_voice()` 而不是 `play()`**：`play()` 会占用音效池且不做互斥、不做概率判定，连点会叠加。语音一律走 `play_voice()`。
 
 ### cue 命名口径（三套并存，建议统一）
 
