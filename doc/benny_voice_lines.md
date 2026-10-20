@@ -47,11 +47,11 @@
 
 | 游戏 cue | 默认文件 / line ID | 场景 | 生产状态 | 代码绑定 |
 |---|---|---|---|---|
-| `units.benny.select_player` | `voice_benny_select_01` | 选中角色 / 进入移动 | 待生产 | ❌ 未接 |
+| `units.benny.select_player` | `voice_benny_select_01` | 选中角色 / 进入移动 | ✅ 已落盘 | ✅ **已接**（`battlefield.gd:1113`，选中自己进入移动态时） |
 | `units.benny.hit` | `voice_benny_hit_01` | 受击 | 待生产 | ❌ 未接（与音效 `hit` 撞名，需独立 voice cue） |
-| `units.benny.bleed_apply` | `voice_benny_bleed_01` | 流血施加 | 待生产 | ❌ 未接 |
-| `units.benny.fracture_apply` | `voice_benny_fracture_01` | 骨折施加 | 待生产 | ❌ 未接 |
-| `units.benny.voice_heal` | `voice_benny_heal_01` | 医疗道具生效 | 待生产 | ✅ **已接**（`battlefield.gd:870`） |
+| `units.benny.bleed_apply` | `voice_benny_bleed_01` | 流血施加 | 待生产 | ✅ **已接**（`battle_cut_in.gd` `show_result()` → `_play_status_voice()`），文件未录 |
+| `units.benny.fracture_apply` | `voice_benny_fracture_01` | 骨折施加 | ✅ 已落盘 | ✅ **已接**（同上） |
+| `units.benny.voice_heal` | `voice_benny_heal_01` | 医疗道具生效 | ✅ 已落盘 | ✅ **已接**（`battlefield.gd:870`） |
 | `units.benny.battle_cutin_in` | `voice_benny_cutin_in_01` | 战斗遮罩入场 | 待生产 | ❌ 未接（通道已在，加绑定即生效） |
 | `units.benny.unit_down` | `voice_benny_down_01` | 倒地 / 死亡 | 待生产 | ❌ 未接（与音效 `unit_down` 撞名） |
 | `player_voice.battle_victory` | `voice_benny_victory_01` | 胜利结算 | 待生产 | ❌ 未接（`player_voice` 段不存在） |
@@ -61,6 +61,8 @@
 | `player_voice.evac_fail` | `voice_benny_evac_fail_01` | 撤离失败 | 待生产 | ❌ 未接（同上） |
 
 > **cue 命名口径**：以本表（`units.<art_key>.<cue>` / `player_voice.<cue>`）为准。
+>
+> **语音一律走人声通道**：`_sfx.play_voice(&"cue", ctx)`，不占用音效池，新语音会自动掐断上一条（连点角色不会叠加）。详见 `doc/audio_pipeline.md` 第 4 节「人声通道」。
 > `doc/sfx_asset_manifest.md` 里的 `sfx_hit_benny` / `sfx_battle_cutin_in_benny` 等是另一套写法，
 > 三套命名的映射见 [`audio_pipeline.md`](audio_pipeline.md) 第 4 节。
 >

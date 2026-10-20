@@ -12,6 +12,11 @@ var _host: Node = null
 var _pool: Array[AudioStreamPlayer] = []
 var _audio_bus: StringName = &"Master"
 
+# 人声通道:全局唯一一条语音播放器。
+# 角色台词走独立通道(不占 SFX 池),新台词开始时自动掐断上一条,
+# 避免连点触发时语音叠加。static 让所有 BattleSfx 实例共用同一条通道。
+static var _voice_player: AudioStreamPlayer = null
+
 
 func _init(debug_enabled: bool = false, host: Node = null, audio_bus: StringName = &"SFX") -> void:
 	_bindings = _load_bindings()
@@ -54,6 +59,46 @@ func play_optional(cue: StringName, context: Dictionary = {}) -> AudioStreamPlay
 	if not ResourceLoader.exists(path):
 		return null
 	return play(cue, context)
+
+
+# 播放角色语音。占用独立的人声通道:先掐断当前正在播的上一条语音,再播新的。
+# 文件缺失时静默跳过(返回 null),不刷 warning。
+func play_voice(cue: StringName, context: Dictionary = {}) -> AudioStreamPlayer:
+	var resolved: String = resolve_binding(cue, context)
+	if resolved.is_empty():
+		return null
+	if _debug_enabled:
+		print("[BattleSfx] voice %s -> %s" % [cue, resolved])
+	var path := AUDIO_BASE + resolved + AUDIO_EXT
+	if not ResourceLoader.exists(path):
+		return null
+	var player := _ensure_voice_player()
+	if player == null:
+		return null
+	var stream: Resource = load(path)
+	if stream == null:
+		return null
+	player.stream = stream as AudioStream
+	player.bus = _audio_bus
+	player.volume_db = 0.0
+	player.stop()
+	player.play()
+	return player
+
+
+# 取人声通道的播放器。宿主节点被释放后(切场景)重建,static 引用会失效,
+# 这里用 is_instance_valid 兜底。
+func _ensure_voice_player() -> AudioStreamPlayer:
+	if _voice_player != null and is_instance_valid(_voice_player):
+		return _voice_player
+	_voice_player = null
+	if _host == null:
+		return null
+	var fresh := AudioStreamPlayer.new()
+	fresh.bus = _audio_bus
+	_host.add_child(fresh)
+	_voice_player = fresh
+	return fresh
 
 
 func resolve_binding(cue: StringName, context: Dictionary = {}) -> String:

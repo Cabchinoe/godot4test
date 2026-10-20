@@ -13,14 +13,15 @@
 | 正式 SFX | ✅ **65 个 mp3 已落盘**（`Art/audio/sfx/`），已提交 |
 | BGM | ❌ **0 个**。需求 9 条，见 `sfx_asset_manifest.md` §K |
 | 环境音 | ❌ **0 个**。需求 3 条（30s loop），见 `sfx_asset_manifest.md` §L |
-| 角色语音 | ❌ **0 个文件落盘**。12 条接线语音全部待生产 |
-| 已接线的语音 cue | ⚠️ **只有 1 个**：`voice_heal`（`Script/battlefield.gd:870` → `conf/battle/sfx_bindings.json` 的 `units.benny.voice_heal`） |
+| 角色语音 | 🟡 **3 个文件已落盘**（`Art/audio/sfx/voice_benny_*.mp3`，32kHz mono 128kbps） |
+| 已接线的语音 cue | 🟡 **4 个**：`voice_heal` / `select_player` / `fracture_apply` / `bleed_apply`（其中 `bleed_apply` 文件待录） |
+| 语音播放通道 | ✅ **独立人声通道**（`BattleSfx.play_voice()`），新语音自动掐断上一条，连点不叠加 |
 | TTS 管线 | ✅ 已跑通（官方 API 直连，44.1kHz FLAC），但**音色不达标** |
 | 真人配音 | 🔲 需求单已出（`benny_vo_brief.md`），**等录音** |
 
 **当前最关键的两条结论**（别再重复踩）：
 
-1. **代码侧只接了 1 个语音 cue，另外 11 个触发点没接。** 音频录好了不接代码不会响。详见第 4 节。
+1. **代码侧接了 4 个语音 cue，其余触发点还没接。** 音频录好了不接代码不会响。详见第 4 节。
 2. **语音质量问题的根因是"挑音色"这条路走不通** —— MiniMax 的 303 个系统音色是通用播音/角色声库，中文女性音色里没有一条符合 Benny 的规格。详见第 3 节。
 
 ---
@@ -82,20 +83,34 @@
 
 ## 4. 语音 cue 接线现状（代码侧）
 
+### 人声通道（角色语音专用）
+
+角色语音**不走 SFX 池**，走 `BattleSfx.play_voice()` 的独立人声通道：
+
+| 特性 | 说明 |
+|---|---|
+| 独占播放器 | 全局唯一一条 `AudioStreamPlayer`（`BattleSfx._voice_player` 是 `static`），不占 `POOL_MAX = 8` 的音效池 |
+| 互斥播放 | 新语音开始时自动掐断上一条。**单个 `AudioStreamPlayer` 无法同时播两条流，叠加在结构上不可能** |
+| 跨实例共享 | `static` 变量，`battlefield.gd` 与 `battle_cut_in.gd` 各自的 `BattleSfx` 实例共用同一条通道 |
+| 静默失败 | 文件不存在时返回 `null`，不刷 warning（语音文件经常还没录） |
+| 用法 | `_sfx.play_voice(&"cue_name", {"attacker": unit})`；音效仍用 `_sfx.play()` / `play_optional()` |
+
+> 连点角色时语音会「重新从头说」而不是叠加，这是设计如此：人声通道只有一条。
+
 ### 已接
 
-| cue | 触发点 | 绑定 |
-|---|---|---|
-| `units.benny.voice_heal` | `Script/battlefield.gd:870` `_sfx.play_optional(&"voice_heal", {"attacker": player})` | `voice_benny_heal_01`（**文件未落盘**） |
+| cue | 触发点 | 绑定 | 文件状态 |
+|---|---|---|---|
+| `units.benny.voice_heal` | `Script/battlefield.gd:870` `_sfx.play_voice(&"voice_heal", {"attacker": player})` | `voice_benny_heal_01` | ✅ 已落盘 |
+| `units.benny.select_player` | `Script/battlefield.gd:1113` 选中自己进入移动态 `_sfx.play_voice(&"select_player", {"attacker": player})` | `voice_benny_select_01` | ✅ 已落盘 |
+| `units.benny.fracture_apply` | `Script/battle/battle_cut_in.gd` `show_result()` → `_play_status_voice()` | `voice_benny_fracture_01` | ✅ 已落盘 |
+| `units.benny.bleed_apply` | 同上 | `voice_benny_bleed_01` | ❌ 文件未落盘（绑定已就位，文件到位即生效） |
 
 ### 待接（触发点存在，但没有 voice 通道）
 
 | 目标 cue | 可用的触发点 | 备注 |
 |---|---|---|
-| `units.benny.select_player` | `battlefield.gd` 移动态切换处 | 需新增 `select_player` cue 播放 |
-| `units.benny.hit` | `battle_cut_in.gd:86` `_sfx.play(&"hit", ...)` | **与音效 `sfx_hit_benny` 撞名**，需独立 voice cue 名 |
-| `units.benny.bleed_apply` | `battle_combat_resolver.gd:174` `result["statuses"]` | 状态施加结果在战斗结算侧 |
-| `units.benny.fracture_apply` | 同上 | 同上 |
+| `units.benny.hit` | `battle_cut_in.gd` `show_result()` 里 `_sfx.play(&"hit", ...)` | **与音效 `sfx_hit_benny` 撞名**，需独立 voice cue 名（如 `voice_hit`） |
 | `units.benny.battle_cutin_in` | `battle_cut_in.gd:53` `_sfx.play(&"battle_cutin_in", ...)` | cue 通道已存在，`sfx_bindings.json` 里 `default.battle_cutin_in` 为空、`units.benny` 无此项 → **加绑定即生效** |
 | `units.benny.unit_down` | `battlefield.gd:1540` / `battle_cut_in.gd:89` | **与音效 `sfx_unit_down` 撞名**，需独立 voice cue 名；且两条路径上下文不一致（一条用 `attacker` 传倒地者、一条用 `victim`） |
 | `player_voice.battle_victory` | `battlefield.gd` `_end_battle_as_success()` | `player_voice` 段在 JSON 与 `resolve_binding()` 里**都不存在**，需新建 |
@@ -104,11 +119,12 @@
 | `player_voice.evac_success` | `_end_battle_as_success()` | 同上 |
 | `player_voice.evac_fail` | `_end_battle_as_failure()` | 同上 |
 
-### 接线要注意的三个坑
+### 接线要注意的四个坑
 
 1. **`hit` / `unit_down` 撞名**：`units.benny.hit` 现在绑的是音效 `sfx_hit_benny`，`units.benny.unit_down` 绑的是音效 `sfx_unit_down`。voice 必须用**独立 cue 名**（如 `voice_hit` / `voice_unit_down`），否则会把音效顶掉。`voice_heal` 已经是这个模式，可作先例。
-2. **`player_voice` 段不存在**：`conf/battle/sfx_bindings.json` 只有 `default` / `units` / `weapons` 三段；`Script/battle/battle_sfx.gd` 的 `resolve_binding()`（第 59–77 行）也只按 `weapons → units.<art_key> → default` 三级查。`player_voice` 要**同时**加 JSON 段和 `resolve_binding()` 查找层。
+2. **`player_voice` 段不存在**：`conf/battle/sfx_bindings.json` 只有 `default` / `units` / `weapons` 三段；`Script/battle/battle_sfx.gd` 的 `resolve_binding()` 也只按 `weapons → units.<art_key> → default` 三级查。`player_voice` 要**同时**加 JSON 段和 `resolve_binding()` 查找层。
 3. **多台词变体暂不支持**：当前一个 cue 只绑一个文件。`benny_voice_lines.md` 里每个 cue 有 2–4 条变体，要用随机/条件选择需把绑定扩展为数组或引入"台词槽"。
+4. **语音必须用 `play_voice()` 而不是 `play()`**：`play()` 会占用音效池且不做互斥，连点会叠加。语音一律走 `play_voice()`。
 
 ### cue 命名口径（三套并存，建议统一）
 

@@ -867,7 +867,7 @@ func _on_consumable_use_requested(source: ItemLocation, item_uid: String) -> voi
 	])
 	status_bar.refresh()
 	if is_medical and _has_medical_effect(use_result) and _sfx != null:
-		_sfx.play_optional(&"voice_heal", {"attacker": player})
+		_sfx.play_voice(&"voice_heal", {"attacker": player})
 
 
 func _is_medical_item(item_data: Dictionary) -> bool:
@@ -1111,6 +1111,10 @@ func _handle_left_click():
 		if _is_same_node(click_node, player_node):
 			battle_loadout_panel.hide_panel()
 			_change_state(State.MOVE_STATE)
+			# 选中自己、进入移动态：贝妮报一句「路线我来带」。
+			# 走人声通道：连点时新语音会自动掐断上一条，不会叠加。
+			if _sfx != null:
+				_sfx.play_voice(&"select_player", {"attacker": player})
 
 func _handle_right_click(event: InputEvent):
 	var mouse_world = get_global_mouse_position()

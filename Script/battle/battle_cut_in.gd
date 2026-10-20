@@ -84,6 +84,7 @@ func show_result(applied: Dictionary, instantly: bool = false) -> void:
 	if bool(applied.get("hit", false)):
 		_shake(float(_config.get("shake_strength", 14.0)), instantly)
 		var hit_player := _sfx.play(&"hit", _sfx_context(&"hit"))
+		_play_status_voice(applied)
 		if bool(applied.get("defeated", false)):
 			await _wait_sfx(hit_player, _seconds("hit_sfx_wait_max", 1.2))
 			_sfx.play(&"unit_down", _sfx_context(&"unit_down"))
@@ -238,7 +239,21 @@ func _sfx_context(cue: StringName = &"") -> Dictionary:
 
 func _is_victim_cue(cue: StringName) -> bool:
 	var s := str(cue)
-	return s == "hit" or s == "miss" or s == "unit_down"
+	return s == "hit" or s == "miss" or s == "unit_down" or s == "fracture_apply" or s == "bleed_apply"
+
+
+# 异常状态语音：被施加异常的是「被打的人」，所以按 victim 绑（谁中招谁开口）。
+# 走人声通道：与其它角色语音互斥，不会叠加；文件没录出来时静默跳过。
+func _play_status_voice(applied: Dictionary) -> void:
+	for status_variant in applied.get("statuses", []):
+		if not (status_variant is Dictionary):
+			continue
+		var status_id := str((status_variant as Dictionary).get("id", ""))
+		match status_id:
+			"fractured":
+				_sfx.play_voice(&"fracture_apply", _sfx_context(&"fracture_apply"))
+			"bleeding":
+				_sfx.play_voice(&"bleed_apply", _sfx_context(&"bleed_apply"))
 
 
 func _seconds(key: String, fallback: float) -> float:
