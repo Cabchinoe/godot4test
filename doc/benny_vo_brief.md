@@ -125,11 +125,11 @@ voice_benny_<scene>_<variant>.wav
 | # | line_id | 游戏 cue | 台词 | 演绎备注 |
 |---|---|---|---|---|
 | 1 | `voice_benny_select_01` | `units.benny.select_player` | 我在这儿。路线我来带。 | 平静、可靠，句尾轻收。**句中停 0.3 秒** |
-| 2 | `voice_benny_hit_01` | `units.benny.hit` | ……唔。 | 短促闷哼，**不拖长**。带一点吸气 |
+| 2 | `voice_benny_hit_01` | `units.benny.hit` | 呃！ | 短促痛呼，更硬；**不拖长** |
 | 3 | `voice_benny_bleed_01` | `units.benny.bleed_apply` | 伤口裂开了……先包一下。 | 先短吸气，再说后半句。实用语气，不慌 |
 | 4 | `voice_benny_fracture_01` | `units.benny.fracture_apply` | 骨头……有点不对劲。 | **停顿 0.4 秒**，压低声音，带隐忍的痛感 |
 | 5 | `voice_benny_heal_01` | `units.benny.voice_heal` | 好多了。谢谢。 | 松一口气再说话，轻、真诚 |
-| 6 | `voice_benny_cutin_in_01` | `units.benny.battle_cutin_in` | 我先进去，你压后。 | **本组最重要一条**。果断、短、指令感强，**句中停 0.25 秒**。不喊口号，像在分配战术 |
+| 6 | `voice_benny_cutin_in_01` | `units.benny.battle_cutin_in` | 瞄准！射击！ | **本组最重要一条**。更硬、更急；两句之间留明显间隔；不喊口号、不拖长 |
 | 7 | `voice_benny_down_01` | `units.benny.unit_down` | ……先走。别等我。 | 气声，句尾下沉。意识在流失但还在交代事 |
 | 8 | `voice_benny_victory_01` | `player_voice.battle_victory` | 结束了。先把伤员带回去。 | **不庆祝**，先处理现场。平静、务实 |
 | 9 | `voice_benny_defeat_01` | `player_voice.battle_defeat` | 是我没算好路线…… | 自责，低声。不消沉、不长哭腔 |
@@ -180,7 +180,7 @@ voice_benny_<scene>_<variant>.wav
 - [ ] 每条都单独可辨，**没有把两条录在一起**
 - [ ] 12 条主线齐全
 - [ ] 音色统一：同一条角色在不同情绪下仍是同一个人
-- [ ] 「我先进去，你压后。」具备战场指令感（干练、果断、不喊）
+- [ ] 「瞄准！射击！」具备射击指令感（更硬、更急、不喊）
 - [ ] 「唔。」是短促闷哼而非拖长呻吟
 - [ ] 受伤类台词**无哭腔**
 - [ ] 全部为标准普通话，无方言口音、无英文

@@ -13,6 +13,7 @@ MiniMax T2A v2 语音合成客户端（speech-2.8-hd / 2.6-hd / 02-hd …）。
 用法:
     export MINIMAX_API_KEY=sk-xxxx
     python3 tools/tts_minimax.py tools/tts_lines_benny.json --out Art/audio/sfx/_review
+    python3 tools/tts_minimax.py tools/tts_lines_benny.json --out Art/audio/sfx/_review --voice-preset tools/tts_voice_benny_selected.json
 """
 import argparse
 import json
@@ -26,8 +27,9 @@ import urllib.error
 import urllib.request
 
 ENDPOINTS = [
-    "https://api.minimax.cn/v1/t2a_v2",
     "https://api-bj.minimaxi.com/v1/t2a_v2",
+    "https://api.minimaxi.com/v1/t2a_v2",
+    "https://api.minimax.cn/v1/t2a_v2",
 ]
 CACHE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".tts_cache.json")
 
@@ -267,6 +269,7 @@ def main():
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--normalize", action="store_true", help="产出后统一响度到 -16 LUFS")
     ap.add_argument("--limit", type=int, default=0, help="只跑前 N 条")
+    ap.add_argument("--voice-preset", help="声线预设 JSON（voice_id / pitch / timbre_weights）")
     args = ap.parse_args()
 
     api_key = os.environ.get("MINIMAX_API_KEY", "").strip()
@@ -280,6 +283,10 @@ def main():
         items = items.get("lines", [])
     if args.limit:
         items = items[:args.limit]
+    voice_preset = {}
+    if args.voice_preset:
+        with open(args.voice_preset, encoding="utf-8") as f:
+            voice_preset = json.load(f)
 
     os.makedirs(args.out, exist_ok=True)
     engine = Engine(api_key, args.rpm)
@@ -290,6 +297,14 @@ def main():
     t0 = time.time()
 
     for i, item in enumerate(items, 1):
+        if voice_preset:
+            item = dict(item)
+            item["voice_id"] = voice_preset.get("voice_id", "")
+            item["pitch"] = voice_preset.get("pitch", item.get("pitch", 0))
+            if voice_preset.get("timbre_weights"):
+                item["timbre_weights"] = voice_preset["timbre_weights"]
+            if voice_preset.get("voice_modify") and not item.get("voice_modify"):
+                item["voice_modify"] = voice_preset["voice_modify"]
         line_id = item.get("line_id", f"line_{i}")
         ext = os.path.splitext(item.get("output", ""))[1] or ".flac"
         name = os.path.splitext(item.get("output") or line_id)[0] + ext

@@ -46,7 +46,7 @@
     "container_open": "sfx_container_open"
   },
   "units": {
-    "benny":           { "hit": "sfx_hit_benny", "move_step": "sfx_move_step_benny", "move_hover": "sfx_move_hover_benny", "voice_heal": "voice_benny_heal_01", "select_player": { "files": ["voice_benny_select_01"], "probability": 0.2 }, "fracture_apply": "voice_benny_fracture_01", "bleed_apply": "voice_benny_bleed_01" },
+    "benny":           { "hit": "sfx_hit_benny", "move_step": "sfx_move_step_benny", "move_hover": "sfx_move_hover_benny", "voice_heal": "voice_benny_heal_01", "select_player": { "files": ["voice_benny_select_01"], "probability": 0.2 }, "fracture_apply": "voice_benny_fracture_01", "bleed_apply": "voice_benny_bleed_01", "battle_cutin_in": "voice_benny_cutin_in_01", "voice_hit": "voice_benny_hit_01" },
     "raider_infantry": { "hit": "sfx_hit_raider_infantry", "attack_fire": "sfx_weapon_raider_infantry_fire", "move_step": "sfx_move_step_raider_infantry", "unit_down": "sfx_unit_down_raider_infantry" },
     "raider_scout":    { "hit": "sfx_hit_raider_scout", "attack_fire": "sfx_weapon_raider_scout_fire", "move_step": "sfx_move_step_raider_scout", "unit_down": "sfx_unit_down_raider_scout" },
     "raider_bulwark":  { "hit": "sfx_hit_raider_bulwark", "miss": "sfx_bulwark_shield_miss", "attack_fire": "sfx_weapon_raider_bulwark_fire", "move_step": "sfx_move_step_raider_bulwark", "unit_down": "sfx_unit_down_raider_bulwark" },

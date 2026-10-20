@@ -1,0 +1,42 @@
+{
+  "name": "Benny reference (voice_benny_fracture_01)",
+  "approved": "2026-10-20",
+  "model": "speech-2.8-hd",
+  "voice_id": "Chinese (Mandarin)_Sweet_Lady",
+  "pitch": 0,
+  "source": "voice_benny_fracture_01",
+  "reference_request": {
+    "text": "骨头……有点不对劲。",
+    "speed": 1.1,
+    "vol": 0.95,
+    "emotion": "sad",
+    "audio_setting": {
+      "sample_rate": 32000,
+      "bitrate": 128000,
+      "format": "mp3",
+      "channel": 1
+    }
+  },
+  "cutin_reference": {
+    "text": "瞄准！射击！",
+    "emotion": "angry",
+    "speed": 1.1,
+    "vol": 0.95,
+    "voice_modify": {
+      "intensity": -35,
+      "timbre": 5
+    },
+    "postprocess": "0.65s gap + 0.35s breath; -0.6 semitone"
+  },
+  "hit_reference": {
+    "text": "呃！",
+    "emotion": "angry",
+    "speed": 1.1,
+    "vol": 1.0,
+    "voice_modify": {
+      "intensity": -25,
+      "timbre": 0
+    }
+  },
+  "note": "以正式目录中的 fracture_01 为声线基准；Sweet_Lady / sad / speed 1.1 / vol 0.95；不使用 E1 timbre_weights"
+}

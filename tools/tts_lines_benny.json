@@ -2,7 +2,7 @@
   {
     "line_id": "voice_benny_select_01",
     "text": "我在这儿<#0.30#>路线我来带。",
-    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "voice_id": "Chinese (Mandarin)_Sweet_Lady",
     "speed": 1.0, "vol": 1.0, "pitch": 0,
     "emotion": "fluent",
     "voice_modify": { "intensity": -20, "timbre": 8 },
@@ -11,18 +11,18 @@
   },
   {
     "line_id": "voice_benny_hit_01",
-    "text": "……唔。",
-    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
-    "speed": 1.05, "vol": 1.0, "pitch": 0,
-    "emotion": "surprised",
-    "tags": "(pant)",
+    "text": "呃！",
+    "voice_id": "Chinese (Mandarin)_Sweet_Lady",
+    "speed": 1.1, "vol": 1.0, "pitch": 0,
+    "emotion": "angry",
+    "voice_modify": { "intensity": -25, "timbre": 0 },
     "output": "voice_benny_hit_01.flac",
-    "_note": "受击。短促闷哼不拖长；(pant)=喘气"
+    "_note": "受击。短促痛呼；S4 更硬、更用力"
   },
   {
     "line_id": "voice_benny_bleed_01",
     "text": "伤口裂开了<#0.35#>先包一下。",
-    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "voice_id": "Chinese (Mandarin)_Sweet_Lady",
     "speed": 0.98, "vol": 1.0, "pitch": 0,
     "emotion": "sad",
     "tags": "(inhale)",
@@ -31,17 +31,17 @@
   },
   {
     "line_id": "voice_benny_fracture_01",
-    "text": "骨头<#0.40#>有点不对劲。",
-    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
-    "speed": 0.95, "vol": 1.0, "pitch": 0,
-    "emotion": "fearful",
+    "text": "骨头……有点不对劲。",
+    "voice_id": "Chinese (Mandarin)_Sweet_Lady",
+    "speed": 1.1, "vol": 0.95, "pitch": 0,
+    "emotion": "sad",
     "output": "voice_benny_fracture_01.flac",
-    "_note": "骨折。压低、0.4s 停顿"
+    "_note": "骨折。基准请求：Sweet_Lady / sad / 1.1 / vol 0.95"
   },
   {
     "line_id": "voice_benny_heal_01",
     "text": "好多了<#0.20#>谢谢。",
-    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "voice_id": "Chinese (Mandarin)_Sweet_Lady",
     "speed": 0.98, "vol": 1.0, "pitch": 0,
     "emotion": "happy",
     "output": "voice_benny_heal_01.flac",
@@ -49,19 +49,19 @@
   },
   {
     "line_id": "voice_benny_cutin_in_01",
-    "text": "我先进去<#0.25#>你压后。",
-    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
-    "speed": 1.1, "vol": 1.0, "pitch": 0,
+    "text": "瞄准！射击！",
+    "voice_id": "Chinese (Mandarin)_Sweet_Lady",
+    "speed": 1.1, "vol": 0.95, "pitch": 0,
     "emotion": "angry",
-    "tags": "(breath)",
-    "voice_modify": { "intensity": -35, "timbre": 8 },
+    "voice_modify": { "intensity": -35, "timbre": 5 },
     "output": "voice_benny_cutin_in_01.flac",
-    "_note": "战斗入场。intensity=-35 更刚劲"
+    "postprocess": "0.65s gap + 0.35s breath; -0.6 semitone",
+    "_note": "战斗入场。H1 母带后期：0.65s 间隔 + 0.35s 气声 + 降 0.6 半音"
   },
   {
     "line_id": "voice_benny_down_01",
     "text": "……先走<#0.30#>别等我。",
-    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "voice_id": "Chinese (Mandarin)_Sweet_Lady",
     "speed": 0.92, "vol": 1.0, "pitch": 0,
     "emotion": "sad",
     "tags": "(exhale)",
@@ -71,7 +71,7 @@
   {
     "line_id": "voice_benny_victory_01",
     "text": "结束了<#0.30#>先把伤员带回去。",
-    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "voice_id": "Chinese (Mandarin)_Sweet_Lady",
     "speed": 1.0, "vol": 1.0, "pitch": 0,
     "emotion": "happy",
     "output": "voice_benny_victory_01.flac",
@@ -80,7 +80,7 @@
   {
     "line_id": "voice_benny_defeat_01",
     "text": "是我没算好路线……",
-    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "voice_id": "Chinese (Mandarin)_Sweet_Lady",
     "speed": 0.95, "vol": 1.0, "pitch": 0,
     "emotion": "sad",
     "output": "voice_benny_defeat_01.flac",
@@ -89,7 +89,7 @@
   {
     "line_id": "voice_benny_evac_confirm_01",
     "text": "确认撤离<#0.25#>我压后。",
-    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "voice_id": "Chinese (Mandarin)_Sweet_Lady",
     "speed": 1.05, "vol": 1.0, "pitch": 0,
     "emotion": "angry",
     "voice_modify": { "intensity": -25, "timbre": 5 },
@@ -99,7 +99,7 @@
   {
     "line_id": "voice_benny_evac_success_01",
     "text": "全员都在<#0.35#>嗯<#0.20#>一个都没少。",
-    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "voice_id": "Chinese (Mandarin)_Sweet_Lady",
     "speed": 0.98, "vol": 1.0, "pitch": 0,
     "emotion": "happy",
     "tags": "(emm)",
@@ -109,7 +109,7 @@
   {
     "line_id": "voice_benny_evac_fail_01",
     "text": "出口被封了<#0.30#>换路线。",
-    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "voice_id": "Chinese (Mandarin)_Sweet_Lady",
     "speed": 1.1, "vol": 1.0, "pitch": 0,
     "emotion": "angry",
     "voice_modify": { "intensity": -30, "timbre": 5 },

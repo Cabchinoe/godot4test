@@ -115,10 +115,17 @@ API Key 在 <https://platform.minimax.cn/user-center/basic-information/interface
 - 最多 4 个音色
 - 4 个配比候选在 `tools/tts_lines_benny_blend.json`
 
+> **贝妮声线基准（2026-10-20）**：以正式目录 `voice_benny_fracture_01.mp3` 为准。
+> 实际请求：`voice_id: Chinese (Mandarin)_Sweet_Lady`，`emotion: sad`，`speed 1.1`，
+> `vol 0.95`，`pitch 0`，32kHz/128kbps MP3；不使用混合音色。
+> 预设文件：`tools/tts_voice_benny_selected.json`；生成时加
+> `--voice-preset tools/tts_voice_benny_selected.json`。E1 已弃用。
+
 ### 音色方向速查（取自 `POST /v1/get_voice` 返回的官方描述）
 
 | voice_id | 官方描述 |
 |---|---|
+| `Chinese (Mandarin)_Sweet_Lady` | 一位温柔甜美的青年女性声音，标准普通话。 |
 | `Chinese (Mandarin)_Crisp_Girl` | 一位温暖清脆的少女声音，标准普通话。 |
 | `Chinese (Mandarin)_Warm_Bestie` | 一位温暖清脆的青年女性闺蜜声音，标准普通话，友好而清晰。 |
 | `Arrogant_Miss` | 一位嚣张自信的青年女性声音，标准普通话，展现出优越感。 |
@@ -152,8 +159,8 @@ API Key 在 <https://platform.minimax.cn/user-center/basic-information/interface
 ```bash
 export MINIMAX_API_KEY=sk-xxxxxxxx
 
-# 12 条接线语音
-python3 tools/tts_minimax.py tools/tts_lines_benny.json --out Art/audio/sfx/_review --model speech-2.8-hd
+# 12 条接线语音（使用 E1 定稿声线）
+python3 tools/tts_minimax.py tools/tts_lines_benny.json --out Art/audio/sfx/_review --model speech-2.8-hd --voice-preset tools/tts_voice_benny_selected.json
 
 # select_01 演绎候选（8 条）
 python3 tools/tts_minimax.py tools/tts_lines_benny_audition.json --out Art/audio/sfx/_review --model speech-2.8-hd
@@ -203,21 +210,15 @@ python3 tools/tts_voice_design.py --preset A
 ```json
 {
   "line_id": "voice_benny_cutin_in_01",
-  "text": "我先进去<#0.30#>你压后。",
-  "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+  "text": "瞄准！射击！",
+  "voice_id": "Chinese (Mandarin)_Sweet_Lady",
   "speed": 1.1,
-  "vol": 1.0,
+  "vol": 0.95,
   "pitch": 0,
   "emotion": "angry",
-  "tags": "(breath)",
-  "pause_after": 0.2,
-  "pronunciation": ["白垩谷/(bai2)(e2)gu3"],
-  "voice_modify": { "intensity": -35, "timbre": 8 },
-  "timbre_weights": [
-    {"voice_id": "Chinese (Mandarin)_Crisp_Girl", "weight": 40},
-    {"voice_id": "Arrogant_Miss", "weight": 35}
-  ],
-  "output": "voice_benny_cutin_in_01.flac"
+  "voice_modify": { "intensity": -35, "timbre": 5 },
+  "output": "voice_benny_cutin_in_01.flac",
+  "_note": "最终文件另做后期：0.65s 间隔 + 0.35s 气声 + 降 0.6 半音"
 }
 ```
 

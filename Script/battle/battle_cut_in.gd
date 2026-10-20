@@ -21,6 +21,8 @@ var _attacker: Unit
 var _defender: Unit
 var _portrait_layouts: Dictionary = {}
 var _stage_origin := Vector2.ZERO
+var _cutin_intro_player: AudioStreamPlayer
+var _cutin_intro_stream: AudioStream
 
 
 func _ready() -> void:
@@ -50,7 +52,8 @@ func begin_session(attacker: Unit) -> void:
 	_defender_portrait.modulate.a = 0.0
 	_root.modulate.a = 0.0
 	_root.visible = true
-	_sfx.play(&"battle_cutin_in", _sfx_context(&"battle_cutin_in"))
+	_cutin_intro_player = _sfx.play(&"battle_cutin_in", _sfx_context(&"battle_cutin_in"))
+	_cutin_intro_stream = _cutin_intro_player.stream if _cutin_intro_player != null else null
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_property(_root, "modulate:a", 1.0, _seconds("session_in_seconds", 0.2))
@@ -71,6 +74,7 @@ func set_defender(defender: Unit) -> void:
 func play_attack_lead_in(_roll: Dictionary) -> void:
 	_clear_damage_labels()
 	await get_tree().create_timer(_seconds("lead_in_seconds", 0.32)).timeout
+	await _wait_cutin_intro()
 	var player := _sfx.play(&"attack_fire", _sfx_context(&"attack_fire"))
 	await _wait_sfx(player, _seconds("attack_sfx_wait_max", 1.2))
 
@@ -84,7 +88,7 @@ func show_result(applied: Dictionary, instantly: bool = false) -> void:
 	if bool(applied.get("hit", false)):
 		_shake(float(_config.get("shake_strength", 14.0)), instantly)
 		var hit_player := _sfx.play(&"hit", _sfx_context(&"hit"))
-		_play_status_voice(applied)
+		_play_hit_voice(applied)
 		if bool(applied.get("defeated", false)):
 			await _wait_sfx(hit_player, _seconds("hit_sfx_wait_max", 1.2))
 			_sfx.play(&"unit_down", _sfx_context(&"unit_down"))
@@ -106,6 +110,8 @@ func end_session() -> void:
 	_stage.position = _stage_origin
 	_clear_damage_labels()
 	_root.visible = false
+	_cutin_intro_player = null
+	_cutin_intro_stream = null
 	_attacker = null
 	_defender = null
 
@@ -239,7 +245,35 @@ func _sfx_context(cue: StringName = &"") -> Dictionary:
 
 func _is_victim_cue(cue: StringName) -> bool:
 	var s := str(cue)
-	return s == "hit" or s == "miss" or s == "unit_down" or s == "fracture_apply" or s == "bleed_apply"
+	return s == "hit" or s == "miss" or s == "unit_down" or s == "fracture_apply" or s == "bleed_apply" or s == "voice_hit"
+
+
+# 受击痛呼走独立 voice cue。若同一次受击还触发了骨折/流血语音，
+# 等痛呼播完再播状态语音，避免共用的人声通道互相掐断。
+func _play_hit_voice(applied: Dictionary) -> void:
+	var hit_voice := _sfx.play_voice(&"voice_hit", _sfx_context(&"voice_hit"))
+	if hit_voice == null:
+		_play_status_voice(applied)
+		return
+	if not _has_status_voice(applied):
+		return
+	var wait := 0.0
+	if hit_voice.stream:
+		wait = minf(hit_voice.stream.get_length(), _seconds("hit_voice_wait_max", 1.0))
+	if wait <= 0.0:
+		_play_status_voice(applied)
+		return
+	get_tree().create_timer(wait).timeout.connect(_play_status_voice.bind(applied), CONNECT_ONE_SHOT)
+
+
+func _has_status_voice(applied: Dictionary) -> bool:
+	for status_variant in applied.get("statuses", []):
+		if not (status_variant is Dictionary):
+			continue
+		var status_id := str((status_variant as Dictionary).get("id", ""))
+		if status_id == "fractured" or status_id == "bleeding":
+			return true
+	return false
 
 
 # 异常状态语音：被施加异常的是「被打的人」，所以按 victim 绑（谁中招谁开口）。
@@ -258,6 +292,20 @@ func _play_status_voice(applied: Dictionary) -> void:
 
 func _seconds(key: String, fallback: float) -> float:
 	return maxf(0.0, float(_config.get(key, fallback)))
+
+
+func _wait_cutin_intro() -> void:
+	var player := _cutin_intro_player
+	if player == null or not is_instance_valid(player):
+		return
+	if not player.playing or player.stream == null or player.stream != _cutin_intro_stream:
+		return
+	var remaining := player.stream.get_length() - player.get_playback_position()
+	if remaining <= 0.0:
+		return
+	remaining = minf(remaining + _seconds("cutin_voice_tail_padding", 0.05),
+		_seconds("cutin_voice_wait_max", 3.0))
+	await get_tree().create_timer(remaining).timeout
 
 
 func _wait_sfx(player: AudioStreamPlayer, max_wait: float) -> void:

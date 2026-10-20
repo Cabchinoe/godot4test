@@ -1,10 +1,10 @@
 line_id,cue,text,delivery,priority
 voice_benny_select_01,units.benny.select_player,我在这儿。路线我来带。,平静可靠；句中停0.3秒；句尾轻收,必录
-voice_benny_hit_01,units.benny.hit,……唔。,短促闷哼不拖长；带一点吸气,必录
+voice_benny_hit_01,units.benny.hit,呃！,短促痛呼；更硬；不拖长,必录
 voice_benny_bleed_01,units.benny.bleed_apply,伤口裂开了……先包一下。,先短吸气再说后半句；实用语气不慌,必录
 voice_benny_fracture_01,units.benny.fracture_apply,骨头……有点不对劲。,停顿0.4秒；压低；隐忍痛感,必录
 voice_benny_heal_01,units.benny.voice_heal,好多了。谢谢。,松一口气再说话；轻；真诚,必录
-voice_benny_cutin_in_01,units.benny.battle_cutin_in,我先进去，你压后。,本组最重要；果断短促指令感；句中停0.25秒；不喊口号,必录
+voice_benny_cutin_in_01,units.benny.battle_cutin_in,瞄准！射击！,本组最重要；更硬更急；两拍射击指令；中间留明显间隔；不喊口号,必录
 voice_benny_down_01,units.benny.unit_down,……先走。别等我。,气声；句尾下沉；意识流失中仍交代事,必录
 voice_benny_victory_01,player_voice.battle_victory,结束了。先把伤员带回去。,不庆祝；先处理现场；平静务实,必录
 voice_benny_defeat_01,player_voice.battle_defeat,是我没算好路线……,自责低声；不消沉；不长哭腔,必录

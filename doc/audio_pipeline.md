@@ -13,15 +13,15 @@
 | 正式 SFX | ✅ **65 个 mp3 已落盘**（`Art/audio/sfx/`），已提交 |
 | BGM | ❌ **0 个**。需求 9 条，见 `sfx_asset_manifest.md` §K |
 | 环境音 | ❌ **0 个**。需求 3 条（30s loop），见 `sfx_asset_manifest.md` §L |
-| 角色语音 | 🟡 **3 个文件已落盘**（`Art/audio/sfx/voice_benny_*.mp3`，32kHz mono 128kbps） |
-| 已接线的语音 cue | 🟡 **4 个**：`voice_heal` / `select_player` / `fracture_apply` / `bleed_apply`（其中 `bleed_apply` 文件待录） |
+| 角色语音 | 🟡 **5 个文件已落盘**（`Art/audio/sfx/voice_benny_*.mp3`；3 条旧 32kHz/128kbps + `cutin_in_01` / `hit_01` 44.1kHz/256kbps） |
+| 已接线的语音 cue | 🟡 **6 个**：`voice_heal` / `select_player` / `fracture_apply` / `bleed_apply` / `battle_cutin_in` / `voice_hit`（其中 `bleed_apply` 文件待录） |
 | 语音播放通道 | ✅ **独立人声通道**（`BattleSfx.play_voice()`），新语音自动掐断上一条，连点不叠加 |
-| TTS 管线 | ✅ 已跑通（官方 API 直连，44.1kHz FLAC），但**音色不达标** |
+| TTS 管线 | ✅ 声线基准为 `voice_benny_fracture_01`（`Sweet_Lady`，预设见 `tools/tts_voice_benny_selected.json`），44.1kHz FLAC 生产、44.1kHz MP3 入库 |
 | 真人配音 | 🔲 需求单已出（`benny_vo_brief.md`），**等录音** |
 
 **当前最关键的两条结论**（别再重复踩）：
 
-1. **代码侧接了 4 个语音 cue，其余触发点还没接。** 音频录好了不接代码不会响。详见第 4 节。
+1. **代码侧接了 6 个语音 cue，其余触发点还没接。** 音频录好了不接代码不会响。详见第 4 节。
 2. **语音质量问题的根因是"挑音色"这条路走不通** —— MiniMax 的 303 个系统音色是通用播音/角色声库，中文女性音色里没有一条符合 Benny 的规格。详见第 3 节。
 
 ---
@@ -79,6 +79,10 @@
 
 **结论**：继续试 TTS 时，走 `timbre_weights` 混合 + `voice_modify` 精修，而不是在系统音色里挑。同时推进真人配音与账号认证（认证是复刻的前置开关）。
 
+**2026-10-20 声线基准**：以正式目录 `voice_benny_fracture_01.mp3` 为准。实际请求为 `Chinese (Mandarin)_Sweet_Lady` / `sad` / `speed 1.1` / `vol 0.95` / `pitch 0`，32kHz/128kbps MP3；不使用混合音色。预设见 `tools/tts_voice_benny_selected.json`，生成时加 `--voice-preset`。E1 已弃用。
+
+`voice_benny_cutin_in_01` 最终版以 H1 为母带，后期插入 0.65s 间隔 + 0.35s 低音量气声，并降 0.6 半音；不是纯 TTS 直出。
+
 ---
 
 ## 4. 语音 cue 接线现状（代码侧）
@@ -126,13 +130,13 @@
 | `units.benny.select_player` | `Script/battlefield.gd:1113` 选中自己进入移动态 `_sfx.play_voice(&"select_player", {"attacker": player})` | `voice_benny_select_01`，**概率 20%** | ✅ 已落盘 |
 | `units.benny.fracture_apply` | `Script/battle/battle_cut_in.gd` `show_result()` → `_play_status_voice()` | `voice_benny_fracture_01` | ✅ 已落盘 |
 | `units.benny.bleed_apply` | 同上 | `voice_benny_bleed_01` | ❌ 文件未落盘（绑定已就位，文件到位即生效） |
+| `units.benny.battle_cutin_in` | `Script/battle/battle_cut_in.gd:53` `_sfx.play(&"battle_cutin_in", ...)` | `voice_benny_cutin_in_01` | ✅ 已落盘（走 cut-in 音效通道；`play_attack_lead_in()` 等语音播完再开枪） |
+| `units.benny.voice_hit` | `Script/battle/battle_cut_in.gd` `show_result()` → `_play_hit_voice()` | `voice_benny_hit_01` | ✅ 已落盘（痛呼；有骨折/流血语音时等待痛呼结束再播） |
 
 ### 待接（触发点存在，但没有 voice 通道）
 
 | 目标 cue | 可用的触发点 | 备注 |
 |---|---|---|
-| `units.benny.hit` | `battle_cut_in.gd` `show_result()` 里 `_sfx.play(&"hit", ...)` | **与音效 `sfx_hit_benny` 撞名**，需独立 voice cue 名（如 `voice_hit`） |
-| `units.benny.battle_cutin_in` | `battle_cut_in.gd:53` `_sfx.play(&"battle_cutin_in", ...)` | cue 通道已存在，`sfx_bindings.json` 里 `default.battle_cutin_in` 为空、`units.benny` 无此项 → **加绑定即生效** |
 | `units.benny.unit_down` | `battlefield.gd:1540` / `battle_cut_in.gd:89` | **与音效 `sfx_unit_down` 撞名**，需独立 voice cue 名；且两条路径上下文不一致（一条用 `attacker` 传倒地者、一条用 `victim`） |
 | `player_voice.battle_victory` | `battlefield.gd` `_end_battle_as_success()` | `player_voice` 段在 JSON 与 `resolve_binding()` 里**都不存在**，需新建 |
 | `player_voice.battle_defeat` | `battlefield.gd` `_end_battle_as_failure()` | 同上 |

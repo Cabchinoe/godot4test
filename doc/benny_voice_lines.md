@@ -37,6 +37,13 @@
 
 **统一要求**：全部使用普通话；同一角色所有台词语音保持同一音色；不要烘焙长混响，空间感交给游戏总线处理。
 
+> **定稿声线基准（2026-10-20）**：以正式目录 `voice_benny_fracture_01.mp3` 为准。
+> 实际请求：`voice_id: Chinese (Mandarin)_Sweet_Lady`，`emotion: sad`，`speed 1.1`，
+> `vol 0.95`，`pitch 0`，32kHz/128kbps MP3。
+> 预设文件：`tools/tts_voice_benny_selected.json`；生成时加
+> `--voice-preset tools/tts_voice_benny_selected.json`。
+> E1（`blend_E1_pressed_fluent`）已弃用。
+
 ---
 
 ## 2. 命名与 cue 映射
@@ -48,11 +55,11 @@
 | 游戏 cue | 默认文件 / line ID | 场景 | 生产状态 | 代码绑定 |
 |---|---|---|---|---|
 | `units.benny.select_player` | `voice_benny_select_01` | 选中角色 / 进入移动 | ✅ 已落盘 | ✅ **已接**（`battlefield.gd:1113`，选中自己进入移动态时；**概率 20%** 触发） |
-| `units.benny.hit` | `voice_benny_hit_01` | 受击 | 待生产 | ❌ 未接（与音效 `hit` 撞名，需独立 voice cue） |
+| `units.benny.hit` | `voice_benny_hit_01` | 受击 | ✅ 已落盘 | ✅ **已接**（`battle_cut_in.gd` `show_result()` → `play_voice(&"voice_hit")`；痛呼播完再播状态语音） |
 | `units.benny.bleed_apply` | `voice_benny_bleed_01` | 流血施加 | 待生产 | ✅ **已接**（`battle_cut_in.gd` `show_result()` → `_play_status_voice()`），文件未录 |
 | `units.benny.fracture_apply` | `voice_benny_fracture_01` | 骨折施加 | ✅ 已落盘 | ✅ **已接**（同上） |
 | `units.benny.voice_heal` | `voice_benny_heal_01` | 医疗道具生效 | ✅ 已落盘 | ✅ **已接**（`battlefield.gd:870`） |
-| `units.benny.battle_cutin_in` | `voice_benny_cutin_in_01` | 战斗遮罩入场 | 待生产 | ❌ 未接（通道已在，加绑定即生效） |
+| `units.benny.battle_cutin_in` | `voice_benny_cutin_in_01` | 战斗遮罩入场 | ✅ 已落盘 | ✅ **已接**（cut-in 音效通道；开枪前等待语音播完） |
 | `units.benny.unit_down` | `voice_benny_down_01` | 倒地 / 死亡 | 待生产 | ❌ 未接（与音效 `unit_down` 撞名） |
 | `player_voice.battle_victory` | `voice_benny_victory_01` | 胜利结算 | 待生产 | ❌ 未接（`player_voice` 段不存在） |
 | `player_voice.battle_defeat` | `voice_benny_defeat_01` | 失败结算 | 待生产 | ❌ 未接（同上） |
@@ -112,7 +119,7 @@
 
 | line ID | 台词 | TTS 备注 |
 |---|---|---|
-| `voice_benny_hit_01` | 「……唔。」 | 短闷哼，不拖长 |
+| `voice_benny_hit_01` | 「呃！」 | 短促痛呼，更硬、不拖长 |
 | `voice_benny_hit_02` | 「没事，擦到了。」 | 吸气后压住 |
 | `voice_benny_hit_03` | 「别管我，继续。」 | 硬撑，清晰 |
 | `voice_benny_hit_04` | 「……还能动。」 | 低声，带喘息 |
@@ -144,7 +151,7 @@
 
 | line ID | 台词 | TTS 备注 |
 |---|---|---|
-| `voice_benny_cutin_in_01` | 「我先进去，你压后。」 | 果断，短 |
+| `voice_benny_cutin_in_01` | 「瞄准！射击！」 | 短促、清晰，射击指令 |
 | `voice_benny_cutin_in_02` | 「让开，这条路线我要了。」 | 咬字变硬 |
 | `voice_benny_cutin_in_03` | 「别拖时间。跟上。」 | 战斗语速 |
 | `voice_benny_cutin_in_04` | 「人我带出来，东西再说。」 | 平静但不容置疑 |
@@ -262,11 +269,11 @@
 | line ID | 台词 | emotion | speed | 停顿标记 | 语气词标签 | voice_modify |
 |---|---|---|---|---|---|---|
 | `voice_benny_select_01` | 我在这儿。路线我来带。 | `fluent` | 1.0 | `<#0.30#>` | — | `intensity:-20, timbre:8` |
-| `voice_benny_hit_01` | ……唔。 | `surprised` | 1.05 | — | `(pant)` | — |
+| `voice_benny_hit_01` | 呃！ | `angry` | 1.1 | — | — | `intensity:-25, timbre:0` |
 | `voice_benny_bleed_01` | 伤口裂开了……先包一下。 | `sad` | 0.98 | `<#0.35#>` | `(inhale)` | — |
-| `voice_benny_fracture_01` | 骨头……有点不对劲。 | `fearful` | 0.95 | `<#0.40#>` | — | — |
+| `voice_benny_fracture_01` | 骨头……有点不对劲。 | `sad` | 1.1 | — | — | — |
 | `voice_benny_heal_01` | 好多了。谢谢。 | `happy` | 0.98 | `<#0.20#>` | — | — |
-| `voice_benny_cutin_in_01` | 我先进去，你压后。 | `angry` | 1.1 | `<#0.25#>` | `(breath)` | `intensity:-35, timbre:8` |
+| `voice_benny_cutin_in_01` | 瞄准！射击！ | `angry` | 1.1 | 后期 0.65s | — | `intensity:-35, timbre:5` |
 | `voice_benny_down_01` | ……先走。别等我。 | `sad` | 0.92 | `<#0.30#>` | `(exhale)` | — |
 | `voice_benny_victory_01` | 结束了。先把伤员带回去。 | `happy` | 1.0 | `<#0.30#>` | — | — |
 | `voice_benny_defeat_01` | 是我没算好路线…… | `sad` | 0.95 | — | — | — |
@@ -282,5 +289,5 @@
 - `voice_modify.timbre`：接近 -100 浑厚，接近 +100 清脆。Benny 规格要「清亮」故取小幅正值。
 - `emotion` 的 `fluent`（生动）仅 2.6/2.8 可用，用于工作／日常语气。
 
-**注意**：以上是**当前可用音色下的最优解**。音色本身不达标时，调参只能有限改善。音色选型与生产路线见 [`audio_pipeline.md`](audio_pipeline.md) 第 3 节。
+**注意**：以上是 `Sweet_Lady` 基准声线下的逐条演绎参数。音色身份由 `tools/tts_voice_benny_selected.json` 统一提供；上表的 `emotion / speed / voice_modify` 只负责单条表演。基准条 `fracture_01` 与 `cutin_in_01` 使用 `vol:0.95`，其余条目默认 `vol:1.0`。`cutin_in_01` 的最终文件以 H1 为母带，后期插入 0.65s 间隔 + 0.35s 低音量气声，并降 0.6 半音；上表是母带前的 TTS 参数。若后续更换声线，12 条需要整体重生成。
 
