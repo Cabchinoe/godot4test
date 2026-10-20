@@ -27,11 +27,14 @@
 |---|---|
 | [game_design.md](game_design.md) | 企划设计书：项目定位、世界观、核心玩法闭环、武器装备与改装系统 |
 | [character_design.md](character_design.md) | 干员体系通用规则与核心干员档案（当前：贝妮），含星级/等级成长、武器数值与视觉资产规格 |
+| [benny_voice_lines.md](benny_voice_lines.md) | 贝妮独立语音文档：性格锚点、cue 映射、分场景台词与 TTS 参数 |
 | [crafting_design.md](crafting_design.md) | 合成与生产表：Lv0~Lv8 二合树、战场物资包、工厂棋盘、居民订单、交易行 |
 | [inventory_workbench_reuse_guide.md](inventory_workbench_reuse_guide.md) | 物品容器工作台的设计、服务层 API、复用路线图与风险点 |
 | [battlefield_inventory_implementation_plan.md](battlefield_inventory_implementation_plan.md) | 战场角色面板与临时物资容器（`TemporaryContainer`）的接入方案 |
 | [warehouse_art_manifest.md](warehouse_art_manifest.md) | 入仓物品清单、用途与图标目标路径 |
 | [inventory_background_colors.md](inventory_background_colors.md) | 物品图标 Lv0~Lv8 背景色（tier）规范与处理流程 |
+| [sfx_asset_manifest.md](sfx_asset_manifest.md) | 音效 cue、绑定、落盘状态与系统级音频接入规则 |
+| [item_sfx_manifest.md](item_sfx_manifest.md) | 道具绑定 / 场景动作绑定音效：拾取兜底、装备共用、二合音高、容器与交易 |
 | `openspec/` | 能力规格（`specs/`）与历次变更归档（`changes/archive/`） |
 
 改动上述任一规范时，需同步更新其声明依赖的文件（例如 tier 色卡对应 `apply_tier_backgrounds*.py` 的 `TIER_COLORS` 与 `doc/assets/tier_bg_palette.png`）。

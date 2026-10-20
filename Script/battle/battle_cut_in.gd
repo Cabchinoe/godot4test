@@ -98,7 +98,6 @@ func finish_round() -> void:
 func end_session() -> void:
 	if not _root.visible:
 		return
-	_sfx.play(&"battle_cutin_out", _sfx_context(&"battle_cutin_out"))
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_property(_root, "modulate:a", 0.0, _seconds("session_out_seconds", 0.18))

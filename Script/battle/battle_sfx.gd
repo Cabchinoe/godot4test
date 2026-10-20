@@ -46,6 +46,16 @@ func play(cue: StringName, context: Dictionary = {}) -> AudioStreamPlayer:
 	return player
 
 
+func play_optional(cue: StringName, context: Dictionary = {}) -> AudioStreamPlayer:
+	var resolved: String = resolve_binding(cue, context)
+	if resolved.is_empty():
+		return null
+	var path := AUDIO_BASE + resolved + AUDIO_EXT
+	if not ResourceLoader.exists(path):
+		return null
+	return play(cue, context)
+
+
 func resolve_binding(cue: StringName, context: Dictionary = {}) -> String:
 	var cue_name := str(cue)
 	# 1) 开火按武器:同一把武器,谁拿都是同一个音。

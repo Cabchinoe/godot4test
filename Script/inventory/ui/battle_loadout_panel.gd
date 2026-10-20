@@ -576,6 +576,19 @@ func _try_transfer(source: ItemLocation, target: ItemLocation, refresh_after: bo
 		_set_status("未装备可安装配件的武器。")
 		return false
 	if WarehouseService.transfer_item(inventory, source, target, player_data):
+		if target.container_id == ItemLocation.EQUIPMENT:
+			if target.slot_id == "weapon":
+				UiSfx.play(&"equip_weapon")
+			elif target.slot_id in ["helmet", "armor", "backpack"]:
+				UiSfx.play(&"equip_gear")
+		elif source.container_id == ItemLocation.EQUIPMENT and source.slot_id in ["helmet", "armor", "backpack"]:
+			UiSfx.play(&"equip_gear")
+		if source.container_id == ItemLocation.TEMPORARY and target.container_id == ItemLocation.BACKPACK:
+			UiSfx.play(&"item_pickup")
+		if target.container_id == ItemLocation.WEAPON_ATTACHMENT:
+			UiSfx.play(&"attachment_install")
+		elif source.container_id == ItemLocation.WEAPON_ATTACHMENT:
+			UiSfx.play(&"attachment_remove")
 		if target.container_id == ItemLocation.WEAPON_ATTACHMENT:
 			_selected_weapon_uid = target.owner_id
 			_selected_uid = target.owner_id

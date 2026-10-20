@@ -9,7 +9,13 @@
     "ui_close": true,
     "ui_confirm": true,
     "ui_cancel": true,
-    "ui_error": true
+    "ui_error": true,
+    "equip_weapon": true,
+    "equip_gear": true,
+    "item_pickup": true,
+    "attachment_install": true,
+    "attachment_remove": true,
+    "item_merge": true
   },
   "error_markers": [
     "无法",

@@ -1,6 +1,7 @@
 # 音效资产清单(SFX Asset Manifest)
 
-> 版本 v1.4(2026-09-30)· 配套 `Script/battle/battle_sfx.gd` + `conf/battle/sfx_bindings.json`
+> 版本 v1.39(2026-10-20)· 配套 `Script/battle/battle_sfx.gd` + `conf/battle/sfx_bindings.json`
+> 道具逐项音效需求见 [`doc/item_sfx_manifest.md`](item_sfx_manifest.md);Benny 台词与 TTS 资产见 [`doc/benny_voice_lines.md`](benny_voice_lines.md)。
 > 全表 cue 命名严格沿用 `BattleSfx.play(cue, context)` 现有约定,后续接音频时无需改 GDScript。
 > v1.1 修订:A.1 已落盘(2 个 cue,源 mp3 → ffmpeg 切 wav);补 §6 实测经验(AI 音频模型对纯工业音效的输出特点 + 切片策略)。
 > v1.2 修订:**B 章节移除独立 cue**,回合过渡复用 A.1 的 `sfx_cutin_in` / `sfx_cutin_out`(横幅与遮罩共用一对反向 cue,语义一致且避免冗余);撤销已生成的 `sfx_turn_player/enemy/evacuation`;总 cue 数 92 → **89**;批次 1 从 26 → **23**;BattleSfx 接入真实播放(AudioStreamPlayer 池 + host 注入)。
@@ -21,6 +22,26 @@
 > v1.17 修订(2026-10-10):**受击/倒地细化 + benny 走 TTS**——`unit_down` 由全局单个改为**按角色**(`units[<art_key>].unit_down` 6 个,`default.unit_down` 仅兜底);benny 受击**留空**(女声素材网络池不可用,改走 **TTS 模型**路线待做),benny 倒地待定;已选待收录:infantry hit←`Oof` / scout hit←`Enemy hurt 1` / hound hit←`Bark and Growl`、infantry down←`Hurt light 1` / bulwark down←`Damage Hurt ooh!` / hound down←`Small Dog Cry`、whiz←`subsonic flyby`;**重搜**:bulwark hit / sentry hit(小爆炸)/ scout down / sentry down(较大爆炸)/ bulwark_shield_miss;总 cue 数 104 → **109**;详见 §A.4。
 > v1.18 修订(2026-10-10):**A.4 选型推进**——sentry hit←`Explosion (Pixel SFX)` / sentry down←`EXPLOSION_SFX1`(取前 1.2s)/ `bulwark_shield_miss`←`deepcrash`(均已选待收录);人形单位(掠夺系)的**命中 / 倒地 = 痛呼人声**方向,bulwark hit / scout down 重搜候选试听中;benny 仍走 TTS。
 > v1.19 修订(2026-10-10):**A.3 / A.4 收录 12 件**(落盘即生效)——hit×5(infantry←`Oof` / scout←`Enemy hurt 1` / bulwark←`Head Impact Grunt` 取 0.6s→ / hound←`Bark and Growl` / sentry←`Explosion (Pixel)`)+ unit_down×5(infantry←`Hurt light 1` / scout←`Character Death` / bulwark←`Damage Hurt ooh!` / hound←`Small Dog Cry` / sentry←`EXPLOSION_SFX1` 取前 1.2s)+ `bullet_whiz`←`subsonic flyby` + `bulwark_shield_miss`←`deepcrash`;benny 的 hit / down 留空(TTS / 待定);已落盘 25 → **37**;详见 §6.13。
+> v1.20 修订(2026-10-19):**角色表现改为「语音台词优先」**——贝妮相关语音统一走**人物配音 / TTS**,不使用 `game-sfx-search` 搜网络素材;人形敌人(`raider_infantry` / `raider_scout` / `raider_bulwark`)的遮罩台词可用 `game-sfx-search` 搜人声候选;非人形(`pyroxene_hound` / `pyroxene_sentry`)保持兽类 / 机械音。**G 战斗结算 5 个 cue 重构为 Player 语音台词槽**,每个事件支持多条可选台词,后续用 TTS 生成。详见 §A.4 / §A.5 / §G / §N。
+> v1.21 修订(2026-10-19):**撤销 A.5 退场与网搜人声方案**——A.5 只保留每个角色的 `battle_cutin_in`,删除全部 `battle_cutin_out` cue 及 `BattleCutIn.end_session()` 播放接入点;A.5 由 12 个降为 **6 个**。战斗遮罩台词(含人形敌人)后续统一走 **TTS**,不再用 `game-sfx-search` 搜英文人声;hound / sentry 仍按兽类 / 机械 SFX 处理。A.1 回合横幅的 `turn_in` / `turn_out` 不受影响。当前有效 cue 去重口径 **104 → 98**。
+> v1.22 修订(2026-10-19):**D 类收口**——`sfx_move_blocked_benny` 改为通用 `sfx_move_blocked`,复用 `sfx_ui_error` 并接入移动受阻分支;`sfx_select_unit` 改为 `sfx_select_player`,按 player 绑定、后续 TTS;删除 `sfx_context_open`(现有 `ui_open` 已覆盖)与 `sfx_turn_end`(回合转换已有音效)。当前有效 cue **98 → 96**。
+> v1.23 修订(2026-10-19):**删除 `sfx_select_enemy`**——选中敌人会打开 `UnitStatusWidget`,已通过 `UiSfx.attach_panel()` 播 `ui_open`,不再单独做选中敌人 cue。当前有效 cue **96 → 95**。
+> v1.24 修订(2026-10-20):**E 类收口**——`sfx_bleed_apply` / `sfx_fracture_apply` 改为按受害者 `art_key` 绑定的 TTS 短语音;`sfx_bleed_tick` 标记为可选待定(实际触发在角色**回合开始**,不是回合结束);删除 `sfx_armor_break` 与 `sfx_status_removed`,状态移除复用 `sfx_heal_tick`。当前有效 cue **95 → 93**。
+> v1.25 修订(2026-10-20):**医疗道具拆成两个接入点**——`sfx_heal_tick` 只在医疗道具消耗成功后、效果结算前播放;新增 `voice_heal`,在医疗效果实际生效后按角色播 TTS 语音。两个接入点已写进 `Battlefield._on_consumable_use_requested()`;音频 / TTS 未生成时用 `BattleSfx.play_optional()` 静默跳过。当前有效 cue **93 → 94**。
+> v1.26 修订(2026-10-20):**文档拆分与 heal_tick 待生产**——`sfx_heal_tick` 本轮候选全部否决并清理,状态改为**待生产**;新增 `doc/item_sfx_manifest.md` 盘点全部道具音效需求;Benny 台词与 TTS 资产移入 `doc/benny_voice_lines.md`,本表只保留系统规则。有效 cue 数仍为 **94**。
+> v1.27 修订(2026-10-20):**道具音效收口**——头甲背包穿 / 脱 / 丢弃合并为 `sfx_equip_gear`;删除拖拽 / 整理 / 容器搜索 / 空箱 / 商店不足独立 cue;`sfx_item_merge` 按产出等级移调到 C 大调;居民订单改居民 TTS;拾取改为物品覆盖 + 默认兜底;配件安装 / 拆卸各自共用。`doc/item_sfx_manifest.md` 精简为「道具绑定 / 场景动作绑定」两张表。当前有效 cue **94 → 86**。
+> v1.28 修订(2026-10-20):**B1 道具基础 SFX 收录**——`sfx_item_pickup` / `sfx_equip_gear` / `sfx_equip_weapon` 落盘;三个食物/AP 物品改为物品级 `use_sfx`(压缩口粮 / 强化野战餐 / 热量餐包各一条,`sfx_item_use` 按 1 个 cue 族计)。已落盘 **37 → 41 cue / 43 个 mp3**;新增 §6.14 记录来源、规格与接线。下一批定为 **B2 道具 / 装备闭环**(附件装拆、二合、开箱、医疗 use)。
+> v1.29 修订(2026-10-20):**B2 口径修正**——`sfx_heal_tick` 改为按 **7 个医疗物品**分别搜索 / 绑定 `heal_sfx`,不再做单一通用文件;`sfx_heal_tick` 保留为语义族名。B2 由 5 个 cue 调整为 **11 个搜索组**(4 个通用 cue + 7 个医疗物品变体)。
+> v1.30 修订(2026-10-20):**B2 通用项收录**——`sfx_attachment_install` / `sfx_attachment_remove` 落盘并接入仓库 / 战斗配装面板;`sfx_item_merge` 改为 ffmpeg 合成的单条 C 基频“咚”(0.750s,C4 261.63Hz),按 Lv1~Lv8 做 C 大调移调。已落盘 **41 → 44 cue / 46 个 mp3**;剩余 B2 为 7 个医疗物品 `heal_sfx` 候选。
+> v1.31 修订(2026-10-20):**B2 医疗 3/7 收录**——`consumable_dried_medicine_02` / `consumable_debridement_dressing_03` / `consumable_sterile_bandage_04` 三个 `heal_sfx` 落盘并接入;其余 4 个医疗物品仍待搜。已落盘 **44 / 86 cue + 49 个 mp3**。
+> v1.32 修订(2026-10-20):**B2 医疗 4/7 收录**——`consumable_frontline_rescue_08` 使用 `ECG sim ×6 @1.5×` 落盘;剩余急救包 / 战地医疗箱 / 创伤处理包 3 个 `heal_sfx`。已落盘 **44 / 86 cue + 50 个 mp3**。
+> v1.33 修订(2026-10-20):**B2 医疗 7/7 收录**——急救包 = `Box Latch` + Water Squirt 后 50% ×3 @0.75× 降 4 半音;战地医疗箱 = `Box Latch` + 绷带撕开;创伤处理包 = `Zipper Zipping` + 同款注射;肾上腺素单独使用同款注射。已落盘 **44 / 86 cue + 54 个 mp3**。B2 仅剩 `sfx_container_open`。
+> v1.34 修订(2026-10-20):**B2 完成**——`sfx_container_open` 收录 Freesound `PLASTIC_BRIEFCASE_OPENING_4`(CC0),接 `BattleContainer.begin_search()` 的 `opened_now` 分支。已落盘 **45 / 86 cue + 55 个 mp3**;下一批 B3 存档 / 商店。
+> v1.35 修订(2026-10-20):**无菌绷带组改 x2**——`sfx_heal_tick_consumable_sterile_bandage_04.mp3` 改为两段绷带缠绕、120ms 间隔,成品 1.164s;`sfx_item_merge` 重做候选试听中(旧版偏混)。
+> v1.36 修订(2026-10-20):**`sfx_item_merge` 定稿为脆叮**——采用 `crisp_tick3`(C5 523.25Hz + C6/C7 泛音 + 短高频起振),成品 0.400s;旧 0.750s 低频“咚”版本替换。注意:当前基础音为 C5,按半音表移调后实际音区为 C5~C6。
+> v1.37 修订(2026-10-20):**`sfx_item_merge` 降八度定稿**——`crisp_tick3` 整体降八度,基础音回到 C4 261.63Hz,实际音区 C4~C5,符合原 MIDI 60 口径;成品 0.395s,峰值 -1.3dBFS。
+> v1.38 修订(2026-10-20):**二合预制 8 个变体**——以 Lv1 C4 脆叮为基础,生成 `sfx_item_merge_lv1~lv8.mp3`,对应 C4 / D4 / E4 / F4 / G4 / A4 / B4 / C5;8 个 binding 已写入 `default.item_merge_lv*`。mp3 总数 55 → **62**。
+> v1.39 修订(2026-10-20):**二合备用 2 级**——追加 `sfx_item_merge_lv9.mp3`(D5)与 `sfx_item_merge_lv10.mp3`(E5),继续 C 大调;绑定同步到 `default.item_merge_lv9/lv10`。mp3 总数 62 → **64**。
 
 ---
 
@@ -28,8 +49,8 @@
 
 | 项 | 值 |
 |---|---|
-| 总 cue 数 | **109** |
-| 已落盘 | **37**(A.1 turn_in/out 2 个 + A.2 `defender9` / `hare_hopper` / `dawn_pulse` / `raider_infantry` / `raider_scout` / `raider_bulwark` / `hound_bite` / `sentry_laser` / `attack_fire_default` 9 个 + C 类 UI 7 个 + D.7 移动悬停 1 个 + M 类脚步 6 个 + A.3 / A.4 命中倒地 12 个) |
+| 总 cue 数 | **86**(当前有效 cue,已去重 D/M 的 `sfx_move_step_benny`;A.5 只保留 in;D/E/F/H/J 类已按 v1.27 收口) |
+| 已落盘 | **45 / 86 cue + 64 个 mp3**(A.1 turn_in/out 2 + A.2 开火 9 + A.3 未命中 2 + A.4 命中倒地 10 + C 类 UI 7 + D.7 移动悬停 1 + M 类脚步 6 + F 拾取/物品使用/二合/开箱 4 + H 武器装备/头甲背包/配件装拆 4;另有 `sfx_item_use` 3 个物品变体、`sfx_heal_tick` 7/7 个医疗物品变体、`sfx_item_adrenaline` 1 个、`sfx_item_merge` 10 个等级变体) |
 | 分类数 | **12**(A、C~M) |
 | 命名风格 | `sfx_<scene>_<verb>` / `bgm_<scene>` / `amb_<scene>` |
 | 采样规格(目标) | SFX 48kHz/16bit 单声道;BGM 48kHz/24bit 立体声;时长 ≤2.5s(SFX)/60~120s(BGM)/10~30s(loop 环境音) |
@@ -37,7 +58,7 @@
 | 文件位置 | `res://Art/audio/sfx/`、`res://Art/audio/bgm/`、`res://Art/audio/amb/` |
 | 绑定方式 | `conf/battle/sfx_bindings.json`(`weapons` / `units` / `default`) |
 | UI 音效入口 | autoload **`UiSfx`**(`Script/ui/ui_sfx.gd`)+ `conf/audio/ui_sfx.json`;战斗演出仍由 `TurnTransition` / `BattleCutIn` 各自持有的 `BattleSfx` 播放 |
-| 优先级 | 批次 1(23 个)→ 批次 2(51 个)→ 批次 3(12 个) |
+| 优先级 | 批次 1 已完成;B1 道具基础 SFX 已完成;下一批 **B2 道具 / 装备闭环**(5 个 SFX,+1 可选);其余见 §2 |
 
 ---
 
@@ -94,14 +115,14 @@
 
 > **命中**与**受击**合并为一个 cue:被打中的是谁 → 播谁(`absorbed` / `damage` 都走它),不再分"打击音 + 语音"两层,也不再分护甲/入肉。
 > **`unit_down` 同样按角色(v1.17)**:`units[<art_key>].unit_down`,在**真正死亡时**播放(击倒落定 + debuff 流血致死,挂 `Unit.defeated` 信号);`default.unit_down` 仅兜底。
-> **benny 特例**:受击**留空**——女声素材网络池不可用,改走 **TTS 模型**路线(待做);benny 倒地待定。
+> **benny 特例(v1.21 定案)**:贝妮的受击 / 倒地统一走 **人物配音 / TTS**,不再用 `game-sfx-search` 搜网络素材;`sfx_hit_benny` / `sfx_unit_down_benny` 暂留空,台词与 TTS 资产见 [`doc/benny_voice_lines.md`](benny_voice_lines.md)。人形敌人已落盘的 hit / down 人声素材保留;后续新增角色语音统一 TTS,不再网搜英文人声。hound / sentry 保持兽类 / 机械音。
 > **v1.18 方向**:人形单位(掠夺系)的**命中 / 倒地 = 痛呼人声**(网络素材);非人形按各自语义(hound 兽类、sentry 爆炸/机械)。
 
 **hit(命中 / 受击)**
 
 | cue key | 时长 | 描述 | 绑定 | 状态 / 选型 |
 |---|---|---|---|---|
-| `sfx_hit_benny` | 0.50s | 贝妮被击中 | `units[benny].hit` | ⏳ 留空(TTS 路线,待做) |
+| `sfx_hit_benny` | 0.50s | 贝妮被击中 | `units[benny].hit` | ⏳ 人物配音 / TTS(禁止 `game-sfx-search`) |
 | `sfx_hit_raider_infantry` | 0.45s(实落 0.27s) | 掠夺兵被击中 | `units[raider_infantry].hit` | ✅ 已落盘(`unfa · Oof`,详见 §6.13) |
 | `sfx_hit_raider_scout` | 0.45s(实落 1.43s) | 斥候被击中 | `units[raider_scout].hit` | ✅ 已落盘(`K27K_Mike · Enemy hurt 1`) |
 | `sfx_hit_raider_bulwark` | 0.50s(实落 1.14s) | 护盾兵被击中 | `units[raider_bulwark].hit` | ✅ 已落盘(`Head Impact Grunt` 取 0.6s→尾) |
@@ -112,7 +133,7 @@
 
 | cue key | 时长 | 描述 | 绑定 | 状态 / 选型 |
 |---|---|---|---|---|
-| `sfx_unit_down_benny` | 1.20s | 贝妮倒下 | `units[benny].unit_down` | ⏳ 待定 |
+| `sfx_unit_down_benny` | 1.20s | 贝妮倒下 | `units[benny].unit_down` | ⏳ 人物配音 / TTS(台词待定) |
 | `sfx_unit_down_raider_infantry` | 1.00s(实落 0.43s) | 掠夺兵倒下 | `units[raider_infantry].unit_down` | ✅ 已落盘(`Kreha · Hurt light 1`) |
 | `sfx_unit_down_raider_scout` | 1.00s(实落 1.13s) | 斥候倒下 | `units[raider_scout].unit_down` | ✅ 已落盘(`randbsoundbites · Character Death`) |
 | `sfx_unit_down_raider_bulwark` | 1.20s(实落 1.06s) | 护盾兵倒下 | `units[raider_bulwark].unit_down` | ✅ 已落盘(`Damage Hurt ooh!`) |
@@ -121,23 +142,23 @@
 
 > 旧全局 cue `sfx_unit_down` 退役为 `default.unit_down` 兜底(可为空);`sfx_bullet_whiz` 已选 `subsonic flyby`、`bulwark_shield_miss` 已选 `deepcrash`(待收录)。
 
-### A.5 战斗遮罩过渡(按发起 attack 的角色绑定,v1.15 改设计)
+### A.5 战斗遮罩入场(按发起 attack 的角色绑定,v1.21 只保留 in)
 
 > 服务 `BattleCutIn`(战斗入场遮罩:左攻右守立绘 + 数值飘字)。
-> v1.15 起:**不再使用单个固定 cue**,入场/退场音按**发起 attack 的角色**绑定——`units[<attacker art_key>].battle_cutin_in / .battle_cutin_out`(复用 resolve_binding 的 units 通道;`BattleCutIn._sfx_context` 已带 attacker,**零代码改动**)。
-> `default.battle_cutin_in / out` 保留为兜底(可为空)。旧固定 cue `sfx_battle_cutin_in/out` 弃用。
-> 与 A.1 横幅语义不同:横幅是轻提示,战斗遮罩是重头戏——每个角色一副"开门 + 关门"的质感,同一角色 in/out 保持同材质。
+> v1.15 起:入场音按**发起 attack 的角色**绑定——`units[<attacker art_key>].battle_cutin_in`(复用 resolve_binding 的 units 通道;`BattleCutIn._sfx_context` 已带 attacker)。
+> **v1.21 起:退场 `battle_cutin_out` 全部取消**——`BattleCutIn.end_session()` 不再播任何 cue;`conf/battle/sfx_bindings.json` 同步删除 `battle_cutin_out` 兜底项。旧固定 cue `sfx_battle_cutin_in/out` 弃用。
+> **v1.21 表演路线**:保留的 in cue 中,「角色台词」和「过渡底音」仍分两层。贝妮与人形敌人的台词后续统一走 **TTS**,不再用 `game-sfx-search` 搜英文人声;Benny 台词见 [`doc/benny_voice_lines.md`](benny_voice_lines.md)。hound / sentry 保持兽类 / 机械音,可走 SFX。若遮罩仍需要 whoosh / 金属冲击底音,再单独做 SFX 层,不要与台词混成一个 cue。
 
-| 角色(art_key) | 入场 cue | 退场 cue | 描述 | 状态 |
+| 角色(art_key) | 入场 cue | 描述 | 表现路线 | 状态 |
 |---|---|---|---|---|
-| `benny` | `sfx_battle_cutin_in_benny` | `sfx_battle_cutin_out_benny` | 贝妮突入:轻快果断 + 短促金属 | ⏳ 待生成 |
-| `raider_infantry` | `sfx_battle_cutin_in_raider_infantry` | `sfx_battle_cutin_out_raider_infantry` | 掠夺兵:粗粝街头感 | ⏳ 待生成 |
-| `raider_scout` | `sfx_battle_cutin_in_raider_scout` | `sfx_battle_cutin_out_raider_scout` | 斥候:更尖更疾 | ⏳ 待生成 |
-| `raider_bulwark` | `sfx_battle_cutin_in_raider_bulwark` | `sfx_battle_cutin_out_raider_bulwark` | 护盾兵:低沉厚重 + 金属共鸣 | ⏳ 待生成 |
-| `pyroxene_hound` | `sfx_battle_cutin_in_pyroxene_hound` | `sfx_battle_cutin_out_pyroxene_hound` | 猎犬:兽性冲刺 | ⏳ 待生成 |
-| `pyroxene_sentry` | `sfx_battle_cutin_in_pyroxene_sentry` | `sfx_battle_cutin_out_pyroxene_sentry` | 哨戒机:机械上电 / 断电 | ⏳ 待生成 |
+| `benny` | `sfx_battle_cutin_in_benny` | 贝妮突入:轻快果断 + 短促金属 | 人物配音 / TTS | ⏳ 台词待定 |
+| `raider_infantry` | `sfx_battle_cutin_in_raider_infantry` | 掠夺兵:粗粝街头感 | TTS 台词 | ⏳ 台词待定 |
+| `raider_scout` | `sfx_battle_cutin_in_raider_scout` | 斥候:更尖更疾 | TTS 台词 | ⏳ 台词待定 |
+| `raider_bulwark` | `sfx_battle_cutin_in_raider_bulwark` | 护盾兵:低沉厚重 + 金属共鸣 | TTS 台词 | ⏳ 台词待定 |
+| `pyroxene_hound` | `sfx_battle_cutin_in_pyroxene_hound` | 猎犬:兽性冲刺 | 兽类非人声 | ⏳ 后续搜 SFX |
+| `pyroxene_sentry` | `sfx_battle_cutin_in_pyroxene_sentry` | 哨戒机:机械上电 | 机械 / 电子音 | ⏳ 后续搜 SFX |
 
-> 触发点不变:`BattleCutIn.begin_session()` / `end_session()`;绑定值在音频收录时回填 `units[<art_key>]`。
+> 触发点:`BattleCutIn.begin_session()`;绑定值在音频收录时回填 `units[<art_key>]`。`BattleCutIn.end_session()` 只做遮罩淡出,不再播放 cue。
 
 ---
 
@@ -182,76 +203,121 @@
 
 ---
 
-## D. 战场地图交互(7)
+## D. 战场地图交互(4)
 
-> v1.9 补充:**移动类 cue 全部按角色自身绑定**——D.1 更名 `sfx_move_step_benny`(绑 `units[benny].move_step`)、D.2 更名 `sfx_move_blocked_benny`(绑 `units[benny].move_blocked`);5 类敌人脚步见 §M(`units[<art_key>].move_step`)。
-> v1.14 补充:新增 D.7 `sfx_move_hover_benny`(**移动预览悬停可移动格**的轻提示音,绑 `units[benny].move_hover`);触发前提为"已选中移动 + 仍有剩余 AP",格子不可达 / 无 AP 时不出声。
+> v1.21 收口:**移动被阻挡不再按角色拆 cue**——`sfx_move_blocked_benny` 改为通用 **`sfx_move_blocked`**,直接复用已落盘的 `sfx_ui_error`(`default.move_blocked → sfx_ui_error`),不新增音频。
+> `sfx_select_unit` 改为 **`sfx_select_player`**,按 player 自身绑定(`units[<player art_key>].select_player`);不同 player 以后发出不同语音,走后续 TTS,不做网搜。
+> **`sfx_context_open` 删除**:`BattleContextMenu` 是 `PopupPanel`,现有 `UiSfx` 已自动播 `ui_open`。
+> **`sfx_turn_end` 删除**:回合转换已有 `turn_in` / `turn_out` 横幅音,不再单独做结束回合 cue。
+> **`sfx_select_enemy` 删除**:选中敌人会打开 `UnitStatusWidget`,已通过 `UiSfx.attach_panel()` 播 `ui_open`,不再单独做选中敌人 cue。
 
-| cue key | 时长 | 描述 | 触发点 |
+| cue key | 时长 | 描述 | 触发点 / 绑定 |
 |---|---|---|---|
 | `sfx_move_step_benny` | 0.25s | 单格脚步:贝妮兔耳短靴在废墟地面的"嗒" | 玩家每格移动(`Unit._step_to_next`),绑 `units[benny].move_step` |
-| `sfx_move_blocked_benny` | 0.18s | 移动被阻挡/AP 不足:短"咚" | AP 不足或目标格不可达,绑 `units[benny].move_blocked` |
-| `sfx_move_hover_benny` | 0.10s(实落 0.150s) | 移动预览悬停:指针移到/滑过**可移动格**上的轻提示(比 `ui_hover` 更短更收,连续扫格不疲劳) | `Battlefield` 移动态(`MOVE_STATE`):悬停格变化且可达、`action_points > 0`;绑 `units[benny].move_hover` |
-| `sfx_select_unit` | 0.15s | 选中玩家单位:青蓝聚焦"叮" | `_change_state(MOVE_STATE)` |
-| `sfx_select_enemy` | 0.18s | 选中敌人:橙红聚焦警示音 | `unit_status_widget.show_for(enemy)` |
-| `sfx_context_open` | 0.20s | 右键菜单弹出:轻快划动 | `BattleContextMenu.popup()` |
-| `sfx_turn_end` | 0.40s | 结束轮次:面板回弹 + 短合音 | `BattleStatusBar.end_turn_pressed` |
+| `sfx_move_blocked` | 复用 `sfx_ui_error` | 移动被阻挡 / AP 不足:直接复用低音错误提示 | `default.move_blocked → sfx_ui_error`;不新增文件 |
+| `sfx_move_hover_benny` | 0.10s(实落 0.150s) | 移动预览悬停:指针移到/滑过**可移动格**上的轻提示 | 绑 `units[benny].move_hover` |
+| `sfx_select_player` | 0.15s(语音长度待定) | 选中玩家单位:按当前 player 播专属短语音 | `_change_state(MOVE_STATE)`;绑 `units[<player art_key>].select_player`,后续 TTS |
 
-> **D.7 状态**:✅ 已落盘(2026-10-10,Freesound loganzsound `Lightswitch Flick_02` CC0,实落 0.150s);`conf/battle/sfx_bindings.json` 已回填 `units[benny].move_hover`;接线在 `Script/battlefield.gd` 移动悬停变化处调 `_sfx.play(&"move_hover", {"attacker": player})`(60ms 冷却);详见 §6.12。
+> **已落盘 / 已接**:`sfx_move_step_benny`、`sfx_move_hover_benny`;`sfx_move_blocked` 复用 `sfx_ui_error`,无需新音频,已在 `Battlefield` 的移动态对“可达范围外的可行走格 / AP 不足”播放。`sfx_select_player` 等 TTS;选中敌人复用 `ui_open`,不再单独做 cue。
 
 ---
 
-## E. 状态效果 / 数值反馈(6)
+## E. 状态效果 / 数值反馈(5)
 
-| cue key | 时长 | 描述 | 触发点 |
+> v1.24 收口:`sfx_bleed_apply` / `sfx_fracture_apply` 不再做通用 SFX,改为按**受害者** `art_key` 绑定的 TTS 短语音。
+> `sfx_bleed_tick` 的实际触发点是**角色回合开始**(`BattleCombatResolver.begin_turn()` 按层数扣 5 点真伤),不是回合结束;当前先标为**可选待定**,不排进下一批。
+> `sfx_armor_break` 删除;`sfx_status_removed` 删除,状态移除统一复用 `sfx_heal_tick`。
+> **v1.25 医疗道具双接入点**:① 消耗成功、效果结算前播 `sfx_heal_tick`;② `BattleItemUseResolver.apply()` 返回且确有治疗 / 状态移除后,按当前角色播 `voice_heal`(TTS)。两处均只在医疗道具上触发,AP 恢复类食物不触发。
+
+| cue key | 时长 | 描述 | 触发点 / 绑定 |
 |---|---|---|---|
-| `sfx_bleed_apply` | 0.45s | 流血状态触发:液体滴落 + 短促痛叫 | `unprotected_debuffs[bleeding]` 触发 |
-| `sfx_bleed_tick` | 0.30s | 流血持续伤害(每回合):滴答血滴 | 回合结算时流血 damage |
-| `sfx_fracture_apply` | 0.55s | 骨折触发:骨裂脆响 + 装备震动 | `unprotected_debuffs[fractured]` 触发 |
-| `sfx_heal_tick` | 0.40s | 治疗反馈(道具 / 状态):轻恢复光粒音 |
-| `sfx_armor_break` | 0.50s | 护甲破碎:金属碎裂 + 警示"叮" |
-| `sfx_status_removed` | 0.25s | 状态移除:状态净化光粒音 |
+| `sfx_bleed_apply` | 0.45s(语音长度待定) | 流血触发:角色痛呼 / 短台词 | `unprotected_debuffs[bleeding]` 触发;绑 `units[<victim art_key>].bleed_apply`,后续 TTS |
+| `sfx_bleed_tick` | 0.30s(可选) | 流血持续伤害:每层在持有者回合开始扣 5 点 | `BattleCombatResolver.begin_turn()`;当前有受伤飘字 / 状态脉冲,是否保留待定 |
+| `sfx_fracture_apply` | 0.55s(语音长度待定) | 骨折触发:角色痛呼 / 短台词 | `unprotected_debuffs[fractured]` 触发;绑 `units[<victim art_key>].fracture_apply`,后续 TTS |
+| `sfx_heal_tick` | 0.30~0.50s(按物品) | 医疗道具使用音效;按 7 个医疗物品拆 item-bound 变体 | `Battlefield._on_consumable_use_requested()`:消耗成功后、`BattleItemUseResolver.apply()` 前;按物品 `heal_sfx` |
+| `voice_heal` | TTS 长度待定 | 医疗效果生效后的角色短语音 | `BattleItemUseResolver.apply()` 后且 `_has_medical_effect()` 为真;绑 `units[<actor art_key>].voice_heal`,具体角色文件见角色语音文档 |
+
+> **接入状态**:两个代码接入点已落地;`sfx_heal_tick` 改为按 7 个医疗物品分别搜索 / 绑定 `heal_sfx`(B2 进行中);`voice_heal` 的角色 TTS 尚未生成。当前通过 `BattleSfx.play_optional()` 静默跳过,不会刷 missing 警告。
+>
+> **heal_sfx 进度(2026-10-20)**:7/7 医疗物品已落盘;急救包 / 战地医疗箱 / 创伤处理包 / 前线救援套件均为物品级 `heal_sfx`。
 
 ---
 
-## F. 道具 / 容器(7)
+## F. 道具 / 容器(4)
 
-| cue key | 时长 | 描述 | 触发点 |
-|---|---|---|---|
-| `sfx_item_pickup` | 0.20s | 拾取物品:清脆"叮"+ 短回响 | 地面掉落物被收进背包 |
-| `sfx_item_use` | 0.45s | 使用消耗品:打开 → 倒 → 落 + 效果触发 | `BattleItemUseResolver.apply()` |
-| `sfx_item_discard` | 0.30s | 丢弃:撕扯布 + 物品落地 | `battle_loadout_panel.discard_requested` |
-| `sfx_container_open` | 0.55s | 开战利品箱:箱盖吱呀 + 弹簧 | `BattleContainer.opened` 信号 |
-| `sfx_container_search` | 0.65s | 搜刮完成:物品翻动 + 短总结 | 搜刮 AP 消耗后产出 |
-| `sfx_container_empty` | 0.40s | 空箱:箱内沙沙 + 失落"嗡" | `is_depleted` |
-| `sfx_item_merge` | 0.80s | 二合合并:辉光合拢 + 提升"叮" | 同级同种 2 → 1 高 1 级 |
+> 逐项道具音效需求(消耗品、材料、容器、交易、订单)见 [`doc/item_sfx_manifest.md`](item_sfx_manifest.md)。
 
----
+| cue key | 时长 | 描述 | 触发点 | 状态 |
+|---|---|---|---|---|
+| `sfx_item_pickup` | 0.19s | 默认拾取兜底；短咔哒,不区分物品 | 临时容器 → 背包成功转移 | ✅ 已落盘(CC0;`loganzsound · Deep Click`) |
+| `sfx_item_use` | 0.30~0.60s | 非医疗消耗品使用；按物品 `use_sfx` 选择文件 | 食物 / 口粮 / 热量餐包;肾上腺素另走 `sfx_item_adrenaline` | ✅ 已落盘 3 个物品变体(见下) |
+| `sfx_item_merge` | 0.36~0.39s | 二合成功；清脆“叮”，已预制 Lv1~Lv10 C 大调变体（Lv9~Lv10 备用） | 同级同种 2 → 1 高 1 级 | ✅ 已落盘 10 个变体(ffmpeg 合成；C4 261.63Hz 起) |
+| `sfx_container_open` | 0.33s | 开战利品箱:塑料硬箱卡扣开启 | `BattleContainer.begin_search()` 的 `opened_now` 分支 | ✅ 已落盘(CC0;`TomaszBuga · PLASTIC_BRIEFCASE_OPENING_4`) |
 
-## G. 战斗结算(5)
-
-| cue key | 时长 | 描述 | 触发点 |
-|---|---|---|---|
-| `sfx_battle_victory` | 3.00s | 胜利:鼓点上扬 + 短号角 + 余韵 | `_end_battle_as_victory` |
-| `sfx_battle_defeat` | 3.50s | 失败:低沉心碎 + 警报衰减 | `_end_battle_as_failure` |
-| `sfx_evac_success` | 2.50s | 撤离成功:撤离舱启动 + 远景引擎 + 胜利提示 | 撤离点成功撤离 |
-| `sfx_evac_fail` | 2.80s | 撤离失败:撤离舱告警 + 爆炸衰减 | 撤离中死亡 |
-| `sfx_evac_confirm` | 0.30s | 撤离确认:警报提示 + 红色警示 | `evacuation_confirmation.popup_centered()` |
+> 物品丢弃已合并到头甲背包穿 / 脱的 `sfx_equip_gear`；`sfx_container_search` / `sfx_container_empty` 已删除。
+>
+> **物品级 `use_sfx`(2026-10-20 B1)**:
+> - `consumable_compressed_ration_04` → `sfx_item_use_consumable_compressed_ration_04.mp3`(0.592s)
+> - `consumable_field_meal_06` → `sfx_item_use_consumable_field_meal_06.mp3`(0.388s)
+> - `consumable_calorie_meal_05` → `sfx_item_use_consumable_calorie_meal_05.mp3`(0.511s)
+>
+> `sfx_item_use` 仍按 1 个 cue 族计入 86;三条文件为 item-bound 变体。`conf/items/consumable.json` 已写入 `use_sfx` 字段,`Battlefield._on_consumable_use_requested()` 按字段播放。
 
 ---
 
-## H. 装备 / 背包(8)
+## G. 战斗结算(5)—重构为 Player 语音台词槽
 
-| cue key | 时长 | 描述 | 触发点 |
-|---|---|---|---|
-| `sfx_equip_weapon` | 0.40s | 装备武器:咔哒装填 + 金属上膛 | `operator_equipment_slot` 安装武器 |
-| `equip_armor` | 0.35s | 装备护甲/头盔:绑带扣紧 | 装备方式改 |
-| `sfx_unequip` | 0.30s | 卸下:松开卡扣 | 卸下装备 |
-| `sfx_attachment_install` | 0.40s | 安装配件:导轨啮合 + 卡入 | `weapon_attachment_slot` 安装 |
-| `sfx_attachment_remove` | 0.35s | 移除配件:卡扣弹出 | 卸下配件 |
-| `sfx_drag_start` | 0.10s | 拖拽开始:轻"嘿" | `InventorySlot.gd::_get_drag_data` |
-| `sfx_drag_drop` | 0.20s | 拖拽放下:落槽"咔哒" | `InventorySlot.gd::_drop_data` |
-| `sfx_inventory_sort` | 0.50s | 整理:物品归位 + 短合音 | 整理背包动作 |
+> **v1.20 重构**:本节 5 个 cue 不再按通用 SFX 设计,统一绑定 **Player 语音**。每个事件对应一个「台词槽」,槽内可配置 1~N 条可选台词;运行时随机选一条并避免连续重复。具体台词见角色文档,音频后续用 **TTS** 生成,当前不落盘、不接入播放代码。
+>
+> cue key 暂时保留原值,便于现有触发点映射;实际播放走 Player 语音槽,不走 `BattleSfx` 的 `Art/audio/sfx/` 目录。TTS 生成并经用户「收录」后,再按台词槽接入代码。
+>
+> 当前代码只有 `_end_battle_as_success` / `_end_battle_as_failure` 两个终局函数;`sfx_battle_victory` 与 `sfx_evac_success` 的触发边界需在接线时确认,避免同一事件叠两条语音。
+
+| cue key | 触发点 | 语音槽 | 可选台词 | 状态 |
+|---|---|---|---|---|
+| `sfx_battle_victory` | 胜利结算(当前代码未单独接线) | `player_voice.battle_victory` | 建议 2~3 条,待定稿 | ⏳ 后续 TTS |
+| `sfx_battle_defeat` | `_end_battle_as_failure` | `player_voice.battle_defeat` | 建议 2~3 条,待定稿 | ⏳ 后续 TTS |
+| `sfx_evac_success` | `_end_battle_as_success` / 撤离点成功撤离 | `player_voice.evac_success` | 建议 2~3 条,待定稿 | ⏳ 后续 TTS |
+| `sfx_evac_fail` | 强制撤离 / 时限耗尽 / 干员生命归零 | `player_voice.evac_fail` | 建议 2~3 条,待定稿 | ⏳ 后续 TTS |
+| `sfx_evac_confirm` | `evacuation_confirmation.popup_centered()` | `player_voice.evac_confirm` | 建议 1~2 条,待定稿 | ⏳ 后续 TTS |
+
+> **建议配置形态**(仅记录,未创建文件):
+> ```json
+> {
+>   "player_voice": {
+>     "battle_victory": ["line_id_1", "line_id_2"],
+>     "battle_defeat": ["line_id_1"],
+>     "evac_success": ["line_id_1", "line_id_2"],
+>     "evac_fail": ["line_id_1"],
+>     "evac_confirm": ["line_id_1"]
+>   },
+>   "lines": {
+>     "line_id_1": {
+>       "text": "台词文本",
+>       "tts_voice": "benny",
+>       "audio": "",
+>       "status": "pending_tts"
+>     }
+>   }
+> }
+> ```
+
+---
+
+## H. 装备 / 背包(4)
+
+> 逐项装备音效需求(武器、护甲、头盔、背包、配件)见 [`doc/item_sfx_manifest.md`](item_sfx_manifest.md)。
+
+| cue key | 时长 | 描述 | 触发点 | 状态 |
+|---|---|---|---|---|
+| `sfx_equip_weapon` | 0.42s | 武器装备;短金属 / 卡扣 | 武器槽装备成功 | ✅ 已落盘(CC0;`BaggoNotes · Rifle_Equip1`) |
+| `sfx_equip_gear` | 0.60s | 头甲背包穿 / 脱 / 物品丢弃共用 | 护甲、头盔、背包、丢弃 | ✅ 已落盘(CC0;`brandondelehoy · Jacket/Cloth Rustle 7`) |
+| `sfx_attachment_install` | 0.35s | 所有武器配件安装共用 | `weapon_attachment_slot` 安装 | ✅ 已落盘(CC-BY 4.0;`smill.and.welson · G3 Bolt Slap`) |
+| `sfx_attachment_remove` | 0.71s | 所有武器配件拆卸共用 | 卸下配件 | ✅ 已落盘(CC-BY 4.0;`smill.and.welson · Stoner 63 Mag Out`) |
+
+> `sfx_item_discard`、`sfx_unequip`、`sfx_equip_armor` 已合并为 `sfx_equip_gear`。拖拽开始 / 放下 / 整理不再单独做音效。
+>
+> **接线(v1.28)**:`WarehouseScreen` 与 `BattleLoadoutPanel` 在装备 / 卸下 / 丢弃成功分支播 `equip_gear` 或 `equip_weapon`;绑定在 `conf/battle/sfx_bindings.json` 的 `default.*`。
 
 ---
 
@@ -267,15 +333,16 @@
 
 ---
 
-## J. 商店 / 订单(5)
+## J. 商店 / 订单(4)
 
 | cue key | 时长 | 描述 | 触发点 |
 |---|---|---|---|
 | `sfx_shop_open` | 0.40s | 进入商店:推门铃 + 商贩招呼 | `TradingPost` `_ready` |
 | `sfx_shop_buy` | 0.30s | 购买成功:硬币落袋 + 物品落手 | `trading_post._buy_item` 成功 |
-| `sfx_shop_insufficient` | 0.35s | 金币不足:钱袋空响 + 提示 | 信用点不足时 |
-| `sfx_quest_accept` | 0.45s | 接取订单:纸张展开 + 印章 | 接取居民援助 |
-| `sfx_quest_turn_in` | 0.55s | 交付订单:物品交递 + 居民感谢 + 奖励"叮" | 完成援助交付 |
+| `sfx_quest_accept` | 居民 TTS | 接取订单：居民角色短语音 | 接取居民援助 |
+| `sfx_quest_turn_in` | 居民 TTS | 交付订单：居民角色短语音 | 完成援助交付 |
+
+> `sfx_shop_insufficient` 已删除，信用点不足复用 `sfx_ui_error`。`sfx_quest_accept` / `sfx_quest_turn_in` 不再是通用 SFX，后续按居民角色 TTS 处理。
 
 ---
 
@@ -312,7 +379,7 @@
 ## M. 角色移动脚步(补充,v1.9)
 
 > v1.9 新增。**移动脚步按角色绑**:`units[<art_key>].move_step`,复用 v1.6 定案的 units 通道(零代码改动)。
-> 现状:D 类只有 `sfx_move_step_benny`(v1.9 更名)一个,仅描述贝妮;5 类敌人移动没有任何脚步 cue——本章补齐;移动类(含 `sfx_move_blocked_benny`)全部按角色自身绑定,不走 default。
+> 现状:D 类只有 `sfx_move_step_benny`(v1.9 更名)一个,仅描述贝妮;5 类敌人移动没有任何脚步 cue——本章补齐;`move_blocked` 已于 v1.21 改为通用 cue 并复用 `sfx_ui_error`,不再按角色绑定。
 > 触发点统一是 `Unit._step_to_next()`(`Script/unit.gd:419`,所有单位共用);敌人移动经 `enemy_ai` → `battlefield_tactics.execute_move` 驱动,步进节拍 `move_interval = 0.3s`(`Script/unit.gd:51`)。
 > 建议排期:与 D 类同批(批次 2)。
 
@@ -328,6 +395,39 @@
 - 单格节拍 0.3s,脚步 cue 建议 ≤0.3s;规格沿用 §3(48kHz / 单声道 / MP3 96kbps)。
 - **接线已落地(v1.13)**:`Battlefield` 监听每单位 `grid_position_changed`(每次移动起播一次)+ `movement_finished` 后最短保底 450ms 再 80ms 淡出停止;当前按「每次移动播一段」策略——3~5s 段落与单格节拍不匹配,若要严格逐格同步需把段落切成单步。
 - 现成 CC0 参考(pgi 库,前轮已核对授权):`mech_step_001.ogg`(1.60s)、`mech_step_002.ogg`(1.70s)、`sand_step.ogg`(0.59s)——sentry / 步兵类候选,可切片。
+
+---
+
+## N. 角色语音 / TTS 台词(v1.20 定案)
+
+> 目的:把「角色台词」和「动作 / 环境 SFX」分开。角色说人话的 cue 不再用普通 SFX 搜索或 AI 音效生成替代。
+
+| 范围 | 处理方式 | 素材来源 | 当前状态 |
+|---|---|---|---|
+| Benny 全部角色语音(选中 / 受击 / 倒地 / 流血 / 骨折 / 医疗 / 遮罩 / 结算) | 独立角色文档维护 | **禁止** `game-sfx-search` | 见 [`doc/benny_voice_lines.md`](benny_voice_lines.md) |
+| `sfx_select_player` | 按 player 绑定的短语音 | **禁止** `game-sfx-search` | ⏳ 后续 TTS |
+| `sfx_bleed_apply` / `sfx_fracture_apply` | 按受害者 `art_key` 绑定的短痛呼 / TTS | **禁止** `game-sfx-search` | ⏳ 台词待定稿 |
+| `sfx_bleed_tick` | 可选,触发在角色回合开始 | 待定 | ⏳ 可选 |
+| `voice_heal` | 医疗效果生效后按当前角色播 TTS | **禁止** `game-sfx-search` | ⏳ TTS 待生成 |
+| 人形敌人 A.5 `battle_cutin_in` | TTS 台词 | **禁止** `game-sfx-search` 搜英文人声 | ⏳ 台词待定稿 |
+| `pyroxene_hound` A.5 | 兽类非人声 | 可用 `game-sfx-search` 搜 SFX | ⏳ 待处理 |
+| `pyroxene_sentry` A.5 | 机械 / 电子音 | 可用 `game-sfx-search` 搜 SFX | ⏳ 待处理 |
+| 居民订单接取 / 交付 | 居民角色 TTS | **禁止** `game-sfx-search` | ⏳ TTS 待生成 |
+| A.5 `battle_cutin_out` | **已取消**,不生成、不绑定 | — | ✅ 接入点已移除 |
+| G 战斗结算 5 个事件 | Player 语音槽,每个事件 1~N 条可选台词 | 后续 TTS | ⏳ 待 TTS |
+
+**规则**
+
+- 所有 player 与人形敌人(`raider_infantry` / `raider_scout` / `raider_bulwark`)的角色语音只用人物配音 / TTS,不走 `game-sfx-search`,也不走 `batch_text_to_music` 之类的音效生成路线。Benny 的具体台词见独立角色文档。
+- 流血 / 骨折的施加语音按受害者绑定 TTS;`sfx_bleed_tick` 的实际触发点在回合开始,当前仅标记为可选。
+- 状态移除不再单独做 cue,统一复用 `sfx_heal_tick`;`sfx_armor_break` 已取消。
+- 居民订单接取 / 交付不再做通用 SFX,后续按居民角色 TTS 处理。
+- 医疗道具使用音效 `sfx_heal_tick` 与生效后角色语音 `voice_heal` 是两个独立接入点,不要合并成一个 cue。
+- 战斗遮罩退场 `battle_cutin_out` 已取消;不要再补 cue、候选或绑定。
+- hound / sentry 不套人声台词;hound 用兽类叫声,sentry 用机械 / 电子音。
+- 台词层与底音层分开;如果遮罩需要 whoosh / 金属冲击,另建 SFX cue,不要和角色台词混在一起。
+- 用户说「收录」后,再按选定台词 / 音频做代码接入;按当前约定不跑验证,并清理 `_review/` 临时资源。
+- A.4 已落盘的人形敌人 `hit` / `unit_down` 人声素材暂不重做;若后续要改成完整台词,按 TTS 规则处理,不再网搜英文人声。
 
 ---
 
@@ -365,8 +465,10 @@
 > **绑定策略(v1.6 修订)**
 > - **开火 `fire`(贝妮)**:按 `weapons[weapon_id]`——同一把武器,谁拿都是同一个音。
 > - **开火 `fire`(敌人)**:敌人没有装备系统,**按 `units[<art_key>].attack_fire` 绑**——同一类敌人 = 同一把武器,语义等价,且零代码改动。
-> - **移动 `move_step` / `move_blocked` / `move_hover`(v1.9 / v1.14)**:移动类**全部按角色自身绑**——`units[<art_key>].move_step`(贝妮 + 5 类敌人)、`units[benny].move_blocked`、`units[benny].move_hover`(移动预览悬停可移动格的提示音);不走 default 兜底。
-> - **战斗遮罩 `battle_cutin_in/out`(v1.15)**:按**发起 attack 的角色**绑——`units[<attacker art_key>].battle_cutin_in` / `.battle_cutin_out`(`BattleCutIn._sfx_context` 已带 attacker,零代码改动);`default.*` 仅作兜底。
+> - **移动 `move_step` / `move_hover`**:按角色自身绑——`units[<art_key>].move_step`(贝妮 + 5 类敌人)、`units[benny].move_hover`。
+> - **移动被阻挡 `move_blocked`(v1.21)**:通用 cue,走 `default.move_blocked → sfx_ui_error`,复用 C 类错误提示音,不按角色拆。
+> - **选中玩家 `select_player`(v1.21)**:按当前 player 绑 `units[<player art_key>].select_player`;不同 player 后续用不同 TTS 语音。
+> - **战斗遮罩入场 `battle_cutin_in`(v1.21)**:按**发起 attack 的角色**绑——`units[<attacker art_key>].battle_cutin_in`(`BattleCutIn._sfx_context` 已带 attacker);`default.battle_cutin_in` 仅作兜底。**退场 `battle_cutin_out` 已取消**,不再绑定。
 > - **受击 `hit` / `unit_down`(v1.16 / v1.17)**:命中与受击**合并为每角色一个**——`units[<victim art_key>].hit`(absorbed / damage 都走它,不分护甲/入肉、不分打击/语音两层);**`unit_down` 亦按角色**(`units[<art_key>].unit_down`,真正死亡时播,含 debuff 致死);benny 受击留空走 **TTS**。
 > - **`miss`**:全局 `default.miss` 兜底(目前 `sfx_bullet_whiz` 兼用);**只有 `raider_bulwark` 一个角色有 `units[*].miss` 特殊覆盖**(`sfx_bulwark_shield_miss`,格挡反弹音,体现护盾机制)。
 > - **解析路径**(`Script/battle/battle_sfx.gd::resolve_binding`):**`weapons[weapon_id].<cue>` → `units[attacker_or_victim.cutin_art_key].<cue>` → `default.<cue>`**。命中侧(A.3 / A.4)的 context 用 `victim` 代替 `attacker`。
@@ -376,24 +478,26 @@
 
 ## 2. 批次工作流
 
-### 批次 1 — MVP 战斗体感(24 个)
+### 批次 1 — MVP 战斗体感(13 个)
 
 | 类别 | 数量 | cue |
 |---|---:|---|
-| A 战斗核心 | 19 | A.1(横幅,2 个已落盘)+ A.2(开火,9 个)+ A.3(未命中/特殊,2 个)+ A.4(按角色命中 + 倒下,7 个)+ A.5(战斗遮罩,按角色 12 个待生成) |
+| A 战斗核心 | 8 | A.4 贝妮 hit / down 2 个 + A.5 战斗遮罩入场 6 个 |
 | G 战斗结算 | 5 | 全部 |
 
-### 批次 2 — UI 与流程(52 个)
+### 批次 2 — UI 与流程(v1.27 历史口径)
+
+> 下表保留 v1.27 排期;实际执行状态以 `v1.28 当前剩余与 B2` 为准。
 
 | 类别 | 数量 | cue |
 |---|---:|---|
 | C UI 通用 | 7 | 全部 |
-| D 战场交互 | 7 | 全部 |
-| E 状态 / 数值 | 6 | 全部 |
-| F 道具 / 容器 | 7 | 全部 |
-| H 装备 / 背包 | 8 | 全部 |
+| D 战场交互 | 4 | `move_blocked` 复用 `ui_error`;`select_player` 等 TTS;选中敌人复用 `ui_open` |
+| E 状态 / 数值 | 5 | `bleed_apply` / `fracture_apply` / `voice_heal` 走 TTS;`heal_tick` 做医疗道具 SFX;`bleed_tick` 可选待定 |
+| F 道具 / 容器 | 4 | 拾取 / 使用 / 二合 / 开箱 |
+| H 装备 / 背包 | 4 | 武器 / 头甲背包共用 / 配件装 / 配件拆 |
 | I 存档 | 5 | 全部 |
-| J 商店 / 订单 | 5 | 全部 |
+| J 商店 / 订单 | 4 | 商店 2 个 + 居民订单 TTS 2 个 |
 | L 环境音(可放批次 3 也可提前) | 3 | — |
 
 ### 批次 3 — 氛围(12 个)
@@ -402,6 +506,35 @@
 |---|---:|
 | K BGM | 9 |
 | L 环境音(若批次 2 没做) | 3 |
+
+### v1.28 当前剩余与 B2
+
+> 以 86 个有效 cue 为口径;TTS、BGM、环境音不计入 B2。
+
+| 批次 / 类别 | 内容 | 数量 |
+|---|---|---:|
+| **B2 已完成** | `sfx_attachment_install` / `sfx_attachment_remove` / `sfx_item_merge` / `sfx_container_open` + 7 个医疗 `heal_sfx` + `sfx_item_adrenaline` | **12** |
+| **B2 剩余** | 无 | **0** |
+| B2 可选增补 | `sfx_item_adrenaline` | 1 |
+| B3 存档 / 商店 | `sfx_save_success` / `sfx_save_fail` / `sfx_load_success` / `sfx_load_fail` / `sfx_delete_confirm` / `sfx_shop_open` / `sfx_shop_buy` | 7 |
+| B4 战斗遮罩非人声 | `sfx_battle_cutin_in_pyroxene_hound` / `sfx_battle_cutin_in_pyroxene_sentry` | 2 |
+| B5 氛围 | K BGM 9 + L 环境音 3 | 12 |
+| 可选增补 | `sfx_bleed_tick` / 5 个专属拾取变体 | 6 |
+
+> TTS 并行项(不计入 SFX 批次):Benny / 人形敌人 `battle_cutin_in`、`sfx_select_player`、`sfx_bleed_apply` / `sfx_fracture_apply`、`voice_heal`、G 战斗结算 5 个、居民订单接取 / 交付 2 个。
+
+**B2 逐项清单(建议下一批)**
+
+| cue | 目标时长 | 用途 | 生产要点 |
+|---|---:|---|---|
+| `sfx_attachment_install` | 0.40s | 所有武器配件安装共用 | 金属卡扣 + 短滑动;不要枪声 |
+| `sfx_attachment_remove` | 0.35s | 所有武器配件拆卸共用 | 卡扣释放 + 短金属滑动 |
+| `sfx_item_merge` | 0.36~0.39s | 二合成功 | 已预制 Lv1~Lv10 C 大调变体(Lv9~Lv10 备用),按产出等级直接选文件 |
+| `sfx_container_open` | 0.55s | 战利品箱开启 | 箱盖吱呀 + 弹簧 / 卡扣;不做 search / empty 独立音 |
+| `sfx_heal_tick` | 0.30~0.50s | 7 个医疗物品使用瞬间 | 按物品分别搜 `heal_sfx`;轻恢复 / 光粒,不要人声,`voice_heal` 另走 TTS |
+| `sfx_item_adrenaline` | 0.30s | 肾上腺素使用(可选) | 短注射 / 气流;与医疗 `heal_tick` 分开 |
+
+> 医疗 `heal_sfx` 7 项:`consumable_dried_medicine_02` / `consumable_debridement_dressing_03` / `consumable_sterile_bandage_04` / `consumable_medkit_01` / `consumable_field_medical_case_06` / `consumable_trauma_kit_07` / `consumable_frontline_rescue_08`。每条按物品单独搜索,不复用同一文件。
 
 ---
 
@@ -428,6 +561,7 @@
 ### 4.1 进度(v1.4)
 
 - **已完成**:第 1 步的 C 类资源;第 2 步的 UI 部分——autoload `UiSfx` 复用同一个 `BattleSfx`(相同 binding 表 + 播放器池),C 类 7 个 cue 全场景自动生效。
+- **B1 接线(2026-10-20)**:`item_pickup` 接在临时容器→背包成功转移;`equip_gear` 接头甲背包穿 / 脱 / 丢弃;`equip_weapon` 接武器装备;三个食物/AP 物品按 `use_sfx` 字段播放。
 - **未完成**:第 3 步三总线布局(当前 `audio_bus` 写 `SFX` 会回落 `Master`)、第 4 步音量配置与 UI。
 - **验证**:叠音规则测过 4 个用例(对话框 OK 只出 confirm / Cancel 只出 cancel / 对话框内自定义按钮照常 click / 菜单项 click 后 popup_hide 不叠 close,无点击时 close 延一帧照出);静默规则测过 7 个用例(普通按钮 click+hover / 三类格子全静音 / 收起按钮只出 close / Viewport 下的 Popup 不绑定 / Control 下的 PopupPanel 正常 open+close);系统驱动作用域测过 6 个场景(玩家操作有声 / 作用域内全静音含 `report_status` / 结束后恢复 / 嵌套计数 / owner 释放自动归零 / 禁用按钮 hover 静音);`Godot --headless --path . --import` 无脚本错误;MainMenu / Warehouse / TradingPost / CommandCenter / Battlefield 五个场景 headless 跑 60 帧无报错;单独校验过 Button / PopupPanel / ConfirmationDialog / `attach_panel` 的信号连接数与 7 个 cue 的 binding 解析。
 
@@ -438,14 +572,23 @@
 - [x] **批次 1 / A.1**:turn_in + turn_out(2 个)✅ 横幅专用
 - [x] **批次 2 / C**:UI 通用 7 个 ✅(click / hover / open / close / confirm / cancel / error)
 - [x] **C 类接线**:autoload `UiSfx` + `conf/audio/ui_sfx.json`,全场景按钮/悬停/面板开关/对话框/失败文案已挂钩
-- [x] **D.7 移动悬停接线**:`sfx_move_hover_benny`(CC0)落盘 + `units[benny].move_hover` 绑定 + `Battlefield` hover 接线 ✅
+- [x] **D 移动悬停接线**:`sfx_move_hover_benny`(CC0)落盘 + `units[benny].move_hover` 绑定 + `Battlefield` hover 接线 ✅
+- [x] **D 移动阻挡复用**:`sfx_move_blocked_benny` → `sfx_move_blocked`,绑定 `default.move_blocked → sfx_ui_error`,不新增音频;已接 `Battlefield` 移动受阻分支 ✅
 - [x] 批次 1:A.2 开火 9 个 ✅(defender9 / hare_hopper / dawn_pulse / raider_infantry / raider_scout / raider_bulwark / hound_bite / sentry_laser / attack_fire_default)
 - [x] 批次 1:A.3 未命中 / 特殊 2 个 ✅(bullet_whiz ← subsonic flyby;bulwark 特殊 miss ← deepcrash)
-- [ ] 批次 1:A.4 命中 / 倒下(10/12 已落盘;benny 的 hit/down 留空待 TTS / 待定)
-- [ ] 批次 1:A.5 战斗遮罩过渡(按角色 v1.15:6 角色 × 入/退 = 12 个)
-- [ ] 批次 1:G 战斗结算 5 个
-- [ ] 批次 2:D~J 全部 45 个
-- [ ] 批次 2:L 环境音 3 个
+- [ ] 批次 1:A.4 命中 / 倒下(10/12 已落盘;benny 的 hit/down 改为人物配音 / TTS,禁止 `game-sfx-search`)
+- [ ] 批次 1:A.5 战斗遮罩入场(贝妮 / 人形敌人走 TTS;hound / sentry 走兽类 / 机械 SFX;退场 cue 已取消)
+- [ ] 批次 1:G 战斗结算 5 个事件重构为 Player 可选语音台词槽(TTS 后续生成)
+- [x] **B1 道具基础 SFX**:`sfx_item_pickup` / `sfx_equip_gear` / `sfx_equip_weapon` + 3 个食物/AP 物品 `use_sfx` ✅
+- [x] **B2 通用项**:`sfx_attachment_install` / `sfx_attachment_remove` / `sfx_item_merge` ✅
+- [x] **B2 医疗 3/7**:干燥药包 / 清创敷料 / 无菌绷带组 `heal_sfx` ✅
+- [x] **B2 医疗 4/7**:前线救援套件 `ECG sim ×6 @1.5×` ✅
+- [x] **B2 医疗 7/7**:急救包 / 战地医疗箱 / 创伤处理包 `heal_sfx` ✅
+- [x] **B2 可选增补**:`sfx_item_adrenaline` ✅
+- [x] **B2 剩余**:`sfx_container_open` ✅
+- [ ] **B3 存档 / 商店**:7 个 SFX
+- [ ] **B4 战斗遮罩非人声**:hound / sentry 入场 2 个 SFX
+- [ ] **B5 氛围**:K BGM 9 + L 环境音 3
 - [x] M 类:角色移动脚步 6 个 ✅(benny / raider_scout / raider_bulwark / pyroxene_hound / pyroxene_sentry / raider_infantry)
 - [ ] 批次 3:K BGM 9 个
 - [x] `Script/battle/battle_sfx.gd` 切换为真实播放实现 ✅(AudioStreamPlayer 池 + host 注入)
@@ -680,4 +823,108 @@ Mixkit + Freesound 混合源(均 CC0 / Mixkit License)。**注意:实落为"步�
 
 ---
 
-> **下一步**:A.2 **9/9** ✅、A.3 **2/2** ✅、A.4 **10/12**(benny 的 hit/down 留 TTS/待定)、M 类 **6/6** ✅、D.7 ✅;接着 A.5 战斗遮罩(按角色,12 个)与 G 结算(5)。`sfx_turn_out` 如果你也想重做(走 Freesound cinematic impact 但**比 turn_in 更"敌对"**——比如 "industrial bass boom" / "epic explosion" / "synth drop")告诉我。
+### 6.14 B1 道具基础 SFX 收录(2026-10-20)
+
+用户听选 5 条候选 + 上一轮 `sfx_equip_weapon`,本轮共落盘 6 个 mp3。全部转 48kHz / 单声道 / MP3 96kbps,尾部 30ms 淡出;旧 B1 候选已从 `_review/` 清理。
+
+| cue / 物品 | 正式文件 | 来源 | 时长 | 峰值 | 授权 |
+|---|---|---|---:|---:|---|
+| `sfx_item_pickup` | `sfx_item_pickup.mp3` | Freesound loganzsound #874468 `Deep Click` | 0.190s | -1.4dBFS | CC0 |
+| `sfx_equip_gear` | `sfx_equip_gear.mp3` | Freesound brandondelehoy #494793 `Jacket/Cloth Rustle 7` | 0.604s | -1.1dBFS | CC0 |
+| `sfx_equip_weapon` | `sfx_equip_weapon.mp3` | Freesound BaggoNotes #784753 `Rifle_Equip1` | 0.416s | -0.9dBFS | CC0 |
+| `consumable_compressed_ration_04` | `sfx_item_use_consumable_compressed_ration_04.mp3` | Freesound ImmergoMedia #689661 `PlasticScrunch05` | 0.592s | -1.6dBFS | CC0 |
+| `consumable_field_meal_06` | `sfx_item_use_consumable_field_meal_06.mp3` | Freesound fleurescence #573120 `opening a cap` | 0.388s | -1.2dBFS | CC0 |
+| `consumable_calorie_meal_05` | `sfx_item_use_consumable_calorie_meal_05.mp3` | Sonilo `Snack Wrapper Tear Open` | 0.511s | -1.2dBFS | Sonilo Library License |
+
+- **绑定**:`default.item_pickup` / `default.equip_gear` / `default.equip_weapon`;三个 `item_use_consumable_*` 绑定。
+- **物品字段**:`conf/items/consumable.json` 三个食物/AP 物品写入 `use_sfx`;`Battlefield._on_consumable_use_requested()` 非医疗分支按字段播放。
+- **接线**:`BattleLoadoutPanel._try_transfer()` 在临时容器→背包成功时播 `item_pickup`;装备/卸下头甲背包播 `equip_gear`;`Battlefield._on_discard_requested()` 丢弃成功播 `equip_gear`;`WarehouseScreen` 装备/卸下同样播 `equip_gear` / `equip_weapon`。
+- **注意**:`sfx_equip_gear` 成品 0.604s,超出 0.25~0.45s 目标,按用户选中的候选原长保留。Sonilo 免费账号为 10 MP3/月、需署名、仅自有社交频道;游戏/商业使用需付费计划,发布前确认许可。
+- **文档**:`doc/item_sfx_manifest.md` 同步更新为物品级 `use_sfx`;未执行 Godot import 命令。
+
+---
+
+### 6.15 B2 通用项收录(2026-10-20)
+
+| cue | 正式文件 | 来源 / 配方 | 时长 | 峰值 | 授权 |
+|---|---|---|---:|---:|---|
+| `sfx_attachment_install` | `sfx_attachment_install.mp3` | Freesound smill.and.welson #858721 `G3 Bolt Slap (2)` | 0.348s | -0.8dBFS | CC-BY 4.0 |
+| `sfx_attachment_remove` | `sfx_attachment_remove.mp3` | Freesound smill.and.welson #858785 `Stoner 63 Mag Out` | 0.710s | -0.7dBFS | CC-BY 4.0 |
+| `sfx_item_merge_lv1~lv10` | `sfx_item_merge_lv1~lv10.mp3` | 以 `sfx_item_merge.mp3`(C4 脆叮)为 Lv1,按 C 大调半音表预制 10 个变体(Lv9~Lv10 备用) | 0.358~0.395s | -1.0~-1.6dBFS | 自制,无第三方授权 |
+
+- **二合音阶**:当前成品基础音为 **C4(261.63Hz)**;Lv1~Lv8 按 `MIDI = 60 + [0,2,4,5,7,9,11,12][level-1]` 移调,实际音区为 **C4 / D4 / E4 / F4 / G4 / A4 / B4 / C5**,与原口径一致。
+
+| Lv | 音名 | 文件 |
+|---:|---|---|
+| 1 | C4 | `sfx_item_merge_lv1.mp3` |
+| 2 | D4 | `sfx_item_merge_lv2.mp3` |
+| 3 | E4 | `sfx_item_merge_lv3.mp3` |
+| 4 | F4 | `sfx_item_merge_lv4.mp3` |
+| 5 | G4 | `sfx_item_merge_lv5.mp3` |
+| 6 | A4 | `sfx_item_merge_lv6.mp3` |
+| 7 | B4 | `sfx_item_merge_lv7.mp3` |
+| 8 | C5 | `sfx_item_merge_lv8.mp3` |
+| 9 | D5 | `sfx_item_merge_lv9.mp3` |
+| 10 | E5 | `sfx_item_merge_lv10.mp3` |
+
+- **接线**:`WarehouseScreen` 与 `BattleLoadoutPanel` 的配件安装 / 拆卸成功分支播 `attachment_install` / `attachment_remove`;绑定在 `conf/battle/sfx_bindings.json` 的 `default.*`。`sfx_item_merge_lv1~lv10` 绑定已就位,但仓库代码目前没有二合执行入口,尚无触发点。
+- **CC-BY 4.0**:允许商用、修改、再分发,但必须署名作者、附许可链接并注明修改;裁剪 / 降噪 / 转码不改变署名义务,不能靠后期处理规避。两条配件音正式发布前需写入 credits。
+- **B2 剩余(当时)**:`sfx_container_open` + 7 个医疗物品 `heal_sfx` 候选;其中 3 个已在 §6.16 收录。
+
+---
+
+### 6.16 B2 医疗 heal_sfx 收录 3/7(2026-10-20)
+
+| 物品 | 正式文件 | 来源 | 时长 | 峰值 | 授权 |
+|---|---|---|---:|---:|---|
+| `consumable_dried_medicine_02` | `sfx_heal_tick_consumable_dried_medicine_02.mp3` | Freesound AvillivA #859670 `Pills_1` | 0.543s | -0.8dBFS | CC0 |
+| `consumable_debridement_dressing_03` | `sfx_heal_tick_consumable_debridement_dressing_03.mp3` | Freesound SecureSubset #800275 `Tape Bandages Rip` | 0.813s | -1.4dBFS | CC0 |
+| `consumable_sterile_bandage_04` | `sfx_heal_tick_consumable_sterile_bandage_04.mp3` | Freesound Frostnox #796014 `Bandage Wrap Heal 1` ×2(120ms 间隔) | 1.164s | -0.8dBFS | CC-BY 4.0 |
+
+- **绑定**:`default.heal_tick_consumable_dried_medicine_02` / `debridement_dressing_03` / `sterile_bandage_04`;三个物品写入 `heal_sfx` 字段。
+- **接线**:`Battlefield._on_consumable_use_requested()` 医疗分支优先读 `heal_sfx`,缺失时回落 `heal_tick`。
+- **剩余(当时)**:急救包 / 战地医疗箱 / 创伤处理包 / 前线救援套件 4 个 `heal_sfx` 待搜;前线救援已在 §6.17 收录。
+
+---
+
+### 6.17 B2 前线救援套件 heal_sfx 收录(2026-10-20)
+
+| 物品 | 正式文件 | 来源 / 配方 | 时长 | 峰值 | 授权 |
+|---|---|---|---:|---:|---|
+| `consumable_frontline_rescue_08` | `sfx_heal_tick_consumable_frontline_rescue_08.mp3` | Freesound univ_lyon3 #201849 `ECG sim` ×6 @1.5× | 2.383s | -1.2dBFS | CC0 |
+
+- **配方**:`cand_b2_freesound_ecg_sim.mp3` 连续 6 次 → `atempo=1.5` 加速 → 48kHz 单声道 MP3 96kbps。
+- **绑定**:`default.heal_tick_consumable_frontline_rescue_08`;物品写入 `heal_sfx`。
+- **剩余(当时)**:急救包 / 战地医疗箱 / 创伤处理包 3 个医疗 `heal_sfx`;已在 §6.18 完成。
+
+---
+
+### 6.18 B2 医疗 heal_sfx 收尾 + 肾上腺素(2026-10-20)
+
+| cue / 物品 | 正式文件 | 配方 | 时长 | 峰值 | 授权 |
+|---|---|---|---:|---:|---|
+| `consumable_medkit_01` | `sfx_heal_tick_consumable_medkit_01.mp3` | `Box Latch` 0.45s + Water Squirt 后 50% ×3 @0.75× 降 4 半音 | 2.048s | -1.5dBFS | CC0 |
+| `consumable_field_medical_case_06` | `sfx_heal_tick_consumable_field_medical_case_06.mp3` | `Box Latch` 0.45s + 绷带撕开 0.60s | 1.130s | -1.5dBFS | CC0 |
+| `consumable_trauma_kit_07` | `sfx_heal_tick_consumable_trauma_kit_07.mp3` | `Zipper Zipping` 0.50s + 同款注射 | 2.098s | -0.9dBFS | CC0 / CC-BY 4.0 |
+| `sfx_item_adrenaline` | `sfx_item_adrenaline.mp3` | Water Squirt 后 50% ×3 @0.75× 降 4 半音 | 1.548s | -1.9dBFS | CC0 |
+
+- **注射配方**:Water Squirt 后 50%(0.259s)→ 0.75× 速度 → 降 4 半音 → ×3、260ms 间隔。
+- **绑定**:三个医疗物品写入 `heal_sfx`;肾上腺素写入 `use_sfx = item_adrenaline`,并绑定 `default.item_adrenaline`。
+- **B2 状态(当时)**:医疗 `heal_sfx` 7/7 + 肾上腺素完成;`sfx_container_open` 已在 §6.19 收录。
+
+---
+
+### 6.19 B2 收尾:`sfx_container_open`(2026-10-20)
+
+| cue | 正式文件 | 来源 | 时长 | 峰值 | 授权 |
+|---|---|---|---:|---:|---|
+| `sfx_container_open` | `sfx_container_open.mp3` | Freesound TomaszBuga #728897 `PLASTIC_BRIEFCASE_OPENING_4` | 0.325s | -1.2dBFS | CC0 |
+
+- **配方**:96kHz/24bit 原始录音 → 48kHz 单声道 MP3 96kbps,尾部 30ms 淡出。
+- **绑定**:`default.container_open → sfx_container_open`。
+- **接线**:`Battlefield._search_container()` 在 `BattleContainer.begin_search()` 返回 `opened_now = true` 时播放。
+- **B2 状态**:**完成**;下一批 B3 存档 / 商店 7 个 SFX。
+
+---
+
+> **下一步(v1.34)**:B2 已完成。下一批 **B3 存档 / 商店**:`sfx_save_success` / `sfx_save_fail` / `sfx_load_success` / `sfx_load_fail` / `sfx_delete_confirm` / `sfx_shop_open` / `sfx_shop_buy`。TTS、BGM、环境音不混入本批。

@@ -822,6 +822,7 @@ func _on_consumable_use_requested(source: ItemLocation, item_uid: String) -> voi
 	if not (item_data is Dictionary):
 		return
 	var use_data := item_data as Dictionary
+	var is_medical := _is_medical_item(use_data)
 	if not BattleItemUseResolver.can_use(player, use_data):
 		battle_loadout_panel.refresh_after_battle_action(BattleItemUseResolver.get_unavailable_reason(player, use_data))
 		return
@@ -833,6 +834,16 @@ func _on_consumable_use_requested(source: ItemLocation, item_uid: String) -> voi
 		player.action_points += ap_cost
 		battle_loadout_panel.refresh_after_battle_action("物品已不在背包中。")
 		return
+	if is_medical and _sfx != null:
+		var heal_sfx := str(use_data.get("heal_sfx", ""))
+		if not heal_sfx.is_empty():
+			_sfx.play_optional(StringName(heal_sfx))
+		else:
+			_sfx.play_optional(&"heal_tick")
+	elif _sfx != null:
+		var use_sfx := str(use_data.get("use_sfx", ""))
+		if not use_sfx.is_empty():
+			_sfx.play_optional(StringName(use_sfx))
 	var use_result := BattleItemUseResolver.apply(player, use_data)
 	var messages: Array[String] = []
 	if int(use_result.get("healed", 0)) > 0:
@@ -855,6 +866,30 @@ func _on_consumable_use_requested(source: ItemLocation, item_uid: String) -> voi
 		"：" + detail if not detail.is_empty() else "",
 	])
 	status_bar.refresh()
+	if is_medical and _has_medical_effect(use_result) and _sfx != null:
+		_sfx.play_optional(&"voice_heal", {"attacker": player})
+
+
+func _is_medical_item(item_data: Dictionary) -> bool:
+	var battle_use: Dictionary = item_data.get("battle_use", {})
+	if battle_use.is_empty():
+		return false
+	if battle_use.has("heal") or bool(battle_use.get("heal_full", false)):
+		return true
+	var remove_statuses: Variant = battle_use.get("remove_statuses", [])
+	if remove_statuses is Array and not (remove_statuses as Array).is_empty():
+		return true
+	var remove_stacks: Variant = battle_use.get("remove_status_stacks", {})
+	if remove_stacks is Dictionary and not (remove_stacks as Dictionary).is_empty():
+		return true
+	return false
+
+
+func _has_medical_effect(use_result: Dictionary) -> bool:
+	if int(use_result.get("healed", 0)) > 0:
+		return true
+	var removed_statuses: Variant = use_result.get("removed_statuses", [])
+	return removed_statuses is Array and not (removed_statuses as Array).is_empty()
 
 func _on_context_menu_hide():
 	_context_search_container = null
@@ -1057,7 +1092,13 @@ func _handle_left_click():
 						pending_recalc_range = true
 					else:
 						reachable_cells = []
+				elif _sfx != null:
+					_sfx.play(&"move_blocked")
+			elif _sfx != null:
+				_sfx.play(&"move_blocked")
 		else:
+			if _sfx != null and not click_node.is_empty() and not _is_same_node(click_node, player_node):
+				_sfx.play(&"move_blocked")
 			_change_state(State.IDLE)
 		return
 
@@ -1400,6 +1441,8 @@ func _search_container(container: BattleContainer) -> void:
 	var search_result := container.begin_search(player, bullet_range)
 	if search_result.is_empty():
 		return
+	if bool(search_result.get("opened_now", false)) and _sfx != null:
+		_sfx.play_optional(&"container_open")
 	battle_loadout_panel.open_search_container(
 		container.resource_id,
 		container.display_name,
@@ -1444,6 +1487,8 @@ func _on_discard_requested(source: ItemLocation, item_uid: String) -> void:
 	):
 		battle_loadout_panel.refresh_after_battle_action("无法丢弃该物品。")
 		return
+	if _sfx != null:
+		_sfx.play(&"equip_gear")
 	pile.mark_loot_seeded()
 	battle_loadout_panel.refresh_after_battle_action("物品已丢弃到当前格。")
 

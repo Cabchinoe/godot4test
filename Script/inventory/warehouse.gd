@@ -420,6 +420,7 @@ func _on_inventory_item_double_clicked(item_uid: String) -> void:
 			if equipment_slot.is_empty() or not WarehouseService.get_equipped_uid(inventory, equipment_slot, OPERATOR_ID).is_empty():
 				continue
 			if WarehouseService.equip_item(inventory, equipment_slot, item_uid, SaveManager.current_data.player):
+				_play_equip_sfx(equipment_slot)
 				call_deferred("_focus_equipped_item", equipment_slot, item_uid, true)
 			return
 		if target_type == "backpack":
@@ -481,6 +482,7 @@ func _on_backpack_item_dropped(data: Dictionary, _target_uid: String, target_pos
 		var target_data := _get_item_data(target_item)
 		if str(source_data.get("type", "")) == "WEAPON_ATTACHMENT" and str(target_data.get("type", "")) == "WEAPON":
 			if WarehouseService.attach_item(inventory, _target_uid, source_uid, str(source_data.get("slot", ""))):
+				_play_attachment_sfx(true)
 				_focus_attachment_target_weapon(_target_uid, "配件已装入背包中的武器。")
 				return
 			_set_status("无法替换：目标接口不兼容或仓库没有空位。")
@@ -492,7 +494,10 @@ func _on_backpack_item_dropped(data: Dictionary, _target_uid: String, target_pos
 			_refresh_all()
 		return
 	if source_kind == "equipped_item":
-		if WarehouseService.move_equipped_item_to_backpack(inventory, str(data.get("source_slot", "")), backpack_uid, target_position, SaveManager.current_data.player):
+		var equipped_slot := str(data.get("source_slot", ""))
+		if WarehouseService.move_equipped_item_to_backpack(inventory, equipped_slot, backpack_uid, target_position, SaveManager.current_data.player):
+			if equipped_slot != "weapon":
+				_play_equip_sfx(equipped_slot)
 			_selected_equip_slot = ""
 			_set_status("装备已放入背包。")
 			_refresh_all()
@@ -506,6 +511,7 @@ func _on_backpack_item_dropped(data: Dictionary, _target_uid: String, target_pos
 		var target_data := _get_item_data(target_item)
 		if source_backpack_uid == backpack_uid and str(source_data.get("type", "")) == "WEAPON_ATTACHMENT" and str(target_data.get("type", "")) == "WEAPON":
 			if WarehouseService.attach_backpack_item_to_weapon(inventory, backpack_uid, source_position, _target_uid, str(source_data.get("slot", ""))):
+				_play_attachment_sfx(true)
 				_focus_attachment_target_weapon(_target_uid, "背包配件已装入背包中的武器。")
 				return
 			_set_status("无法替换：目标接口不兼容或仓库没有空位。")
@@ -520,11 +526,13 @@ func _on_backpack_item_dropped(data: Dictionary, _target_uid: String, target_pos
 		var target_data := _get_item_data(target_item)
 		if str(target_data.get("type", "")) == "WEAPON":
 			if WarehouseService.move_attachment(inventory, source_weapon_uid, source_attachment_slot, _target_uid, source_attachment_slot):
+				_play_attachment_sfx(true)
 				_focus_attachment_target_weapon(_target_uid, "配件已装入背包中的武器。")
 				return
 			_set_status("无法替换：目标接口不兼容或仓库没有空位。")
 			return
 		if WarehouseService.move_attachment_to_backpack(inventory, source_weapon_uid, source_attachment_slot, backpack_uid, target_position):
+			_play_attachment_sfx(false)
 			_set_status("配件已放入背包。")
 			_refresh_all()
 
@@ -547,6 +555,7 @@ func _on_inventory_item_dropped(data: Dictionary, target_uid: String, target_pos
 		var backpack_target_data := _get_item_data(backpack_target_item)
 		if str(source_backpack_data.get("type", "")) == "WEAPON_ATTACHMENT" and str(backpack_target_data.get("type", "")) == "WEAPON":
 			if WarehouseService.attach_backpack_item_to_weapon(inventory, source_backpack_uid, source_backpack_position, target_uid, str(source_backpack_data.get("slot", ""))):
+				_play_attachment_sfx(true)
 				_focus_attachment_target_weapon(target_uid, "背包配件已装入目标武器。")
 				return
 			_set_status("无法替换：目标接口不兼容或仓库没有空位。")
@@ -560,6 +569,7 @@ func _on_inventory_item_dropped(data: Dictionary, target_uid: String, target_pos
 		var attached_target_data := _get_item_data(attached_target)
 		if str(attached_target_data.get("type", "")) == "WEAPON":
 			if WarehouseService.move_attachment(inventory, source_weapon_uid, source_attachment_slot, target_uid, source_attachment_slot):
+				_play_attachment_sfx(true)
 				_selected_weapon_uid = target_uid
 				_attachment_target_slot = source_attachment_slot
 				_select_item(target_uid, -1)
@@ -578,6 +588,7 @@ func _on_inventory_item_dropped(data: Dictionary, target_uid: String, target_pos
 	if str(source_data.get("type", "")) == "WEAPON_ATTACHMENT" and str(target_data.get("type", "")) == "WEAPON":
 		var attachment_slot := str(source_data.get("slot", ""))
 		if WarehouseService.attach_item(inventory, target_uid, source_uid, attachment_slot):
+			_play_attachment_sfx(true)
 			_selected_weapon_uid = target_uid
 			_attachment_target_slot = attachment_slot
 			_select_item(target_uid, -1)
@@ -608,6 +619,7 @@ func _on_equipment_item_dropped(slot: String, data: Dictionary) -> void:
 		if str(backpack_item_data.get("type", "")) == "WEAPON_ATTACHMENT":
 			var equipped_weapon_uid := WarehouseService.get_equipped_uid(inventory, "weapon", OPERATOR_ID)
 			if slot == "weapon" and WarehouseService.attach_backpack_item_to_weapon(inventory, backpack_uid, backpack_position, equipped_weapon_uid, str(backpack_item_data.get("slot", ""))):
+				_play_attachment_sfx(true)
 				_focus_attachment_target_weapon(equipped_weapon_uid, "背包配件已装入当前武器。")
 				return
 			_set_status("无法替换：目标接口不兼容或仓库没有空位。")
@@ -625,6 +637,7 @@ func _on_equipment_item_dropped(slot: String, data: Dictionary) -> void:
 		var source_weapon_uid := str(data.get("source_weapon_uid", ""))
 		var source_attachment_slot := str(data.get("source_attachment_slot", ""))
 		if slot == "weapon" and WarehouseService.move_attachment(inventory, source_weapon_uid, source_attachment_slot, target_weapon_uid, source_attachment_slot):
+			_play_attachment_sfx(true)
 			_focus_attachment_target_weapon(target_weapon_uid, "配件已装入干员当前武器。")
 			return
 		_set_status("无法替换：目标接口不兼容或仓库没有空位。")
@@ -640,6 +653,7 @@ func _on_equipment_item_dropped(slot: String, data: Dictionary) -> void:
 		var equipped_weapon_uid := WarehouseService.get_equipped_uid(inventory, "weapon", OPERATOR_ID)
 		var attachment_slot := str(item_data.get("slot", ""))
 		if slot == "weapon" and WarehouseService.attach_item(inventory, equipped_weapon_uid, item_uid, attachment_slot):
+			_play_attachment_sfx(true)
 			_focus_attachment_target_weapon(equipped_weapon_uid, "%s 已装入当前武器。" % str(item_data.get("name", "配件")))
 			return
 		_set_status("请将配件拖到武器或武器装备栏。")
@@ -648,6 +662,7 @@ func _on_equipment_item_dropped(slot: String, data: Dictionary) -> void:
 	var is_matching_equipment_type := _type_to_slot(str(item_data.get("type", ""))) == slot
 	var replaced: bool = is_matching_equipment_type and has_equipped_item and WarehouseService.replace_equipped_item_from_warehouse(inventory, slot, item_uid, SaveManager.current_data.player)
 	if replaced or WarehouseService.equip_item(inventory, slot, item_uid, SaveManager.current_data.player):
+		_play_equip_sfx(slot)
 		_on_equipment_slot_pressed(slot, item_uid)
 		_set_status("%s 已装配至%s。" % [str(item_data.get("name", "物品")), _get_slot_name(slot)])
 		return
@@ -675,6 +690,7 @@ func _on_attachment_item_dropped(attachment_slot: String, data: Dictionary) -> v
 	elif source_kind == "weapon_attachment":
 		moved = WarehouseService.move_attachment(inventory, str(data.get("source_weapon_uid", "")), str(data.get("source_attachment_slot", "")), _selected_weapon_uid, attachment_slot)
 	if moved:
+		_play_attachment_sfx(true)
 		_focus_attachment_target_weapon(_selected_weapon_uid, "配件已装入%s接口。" % _get_attachment_slot_name(attachment_slot))
 		return
 	_set_status("无法替换：接口不兼容或仓库没有空位。")
@@ -696,6 +712,8 @@ func _return_equipment_to_warehouse(slot: String, item_uid: String, target_posit
 	elif not WarehouseService.unequip_item(inventory, slot, SaveManager.current_data.player):
 		_set_status("仓库空间不足，无法卸下%s。" % _get_slot_name(slot))
 		return
+	if slot != "weapon":
+		_play_equip_sfx(slot)
 	_move_returned_item_to_target(item_uid, target_position)
 	_selected_uid = item_uid
 	_selected_equip_slot = ""
@@ -719,6 +737,7 @@ func _return_attachment_to_warehouse(weapon_uid: String, attachment_slot: String
 	if not WarehouseService.detach_attachment(inventory, weapon_uid, attachment_slot):
 		_set_status("仓库空间不足，无法卸下配件。")
 		return
+	_play_attachment_sfx(false)
 	_move_returned_item_to_target(item_uid, target_position)
 	_selected_uid = item_uid
 	_attachment_target_slot = ""
@@ -919,6 +938,20 @@ func _set_status(text: String) -> void:
 	UiSfx.report_status(text)
 
 
+func _play_equip_sfx(slot: String) -> void:
+	if slot == "weapon":
+		UiSfx.play(&"equip_weapon")
+	elif slot in ["helmet", "armor", "backpack"]:
+		UiSfx.play(&"equip_gear")
+
+
+func _play_attachment_sfx(installed: bool) -> void:
+	if installed:
+		UiSfx.play(&"attachment_install")
+	else:
+		UiSfx.play(&"attachment_remove")
+
+
 func _show_item_info(item_uid: String) -> void:
 	var item := WarehouseService.get_item_by_uid(inventory, item_uid)
 	var item_data := _get_item_data(item)
@@ -955,6 +988,7 @@ func _on_info_action() -> void:
 	if _selected_uid.is_empty():
 		if not _pending_detach_attachment_slot.is_empty():
 			if WarehouseService.detach_attachment(inventory, _selected_weapon_uid, _pending_detach_attachment_slot):
+				_play_attachment_sfx(false)
 				_set_status("已卸下配件。")
 				_pending_detach_attachment_slot = ""
 				_refresh_all()
@@ -979,6 +1013,7 @@ func _on_info_action() -> void:
 	if not equipped:
 		equipped = WarehouseService.equip_backpack_item(inventory, _selected_backpack_uid, _selected_position, slot, SaveManager.current_data.player) if is_backpack_source else WarehouseService.equip_item(inventory, slot, _selected_uid, SaveManager.current_data.player)
 	if equipped:
+		_play_equip_sfx(slot)
 		_set_status("%s 已装配至%s。" % [str(item_data.get("name", "物品")), _get_slot_name(slot)])
 		call_deferred("_focus_equipped_item", slot, _selected_uid, false)
 	elif slot == "backpack" and has_equipped_item:
@@ -995,6 +1030,7 @@ func _attach_selected_item() -> void:
 	var is_backpack_source := not _selected_backpack_uid.is_empty() and str(backpack_items.get(_selected_position, "")) == _selected_uid
 	var attached := WarehouseService.attach_backpack_item_to_weapon(inventory, _selected_backpack_uid, _selected_position, _selected_weapon_uid, attachment_slot) if is_backpack_source else WarehouseService.attach_item(inventory, _selected_weapon_uid, _selected_uid, attachment_slot)
 	if attached:
+		_play_attachment_sfx(true)
 		_set_status("%s 已装入武器。" % str(attachment_data.get("name", "配件")))
 		_selected_position = -1
 		_refresh_all()
