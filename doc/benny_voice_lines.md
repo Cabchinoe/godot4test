@@ -45,20 +45,29 @@
 
 当前代码对单个 cue 只绑定一个文件；下表的「默认」先用于接线，其余条目作为后续随机 / 条件变体。若后续要启用多条，需要把 voice 绑定扩展为数组或台词槽。
 
-| 游戏 cue | 默认文件 / line ID | 场景 | 状态 |
-|---|---|---|---|
-| `units.benny.select_player` | `voice_benny_select_01` | 选中角色 / 进入移动 | 待 TTS |
-| `units.benny.hit` | `voice_benny_hit_01` | 受击 | 待 TTS |
-| `units.benny.bleed_apply` | `voice_benny_bleed_01` | 流血施加 | 待 TTS |
-| `units.benny.fracture_apply` | `voice_benny_fracture_01` | 骨折施加 | 待 TTS |
-| `units.benny.voice_heal` | `voice_benny_heal_01` | 医疗道具生效 | 待 TTS |
-| `units.benny.battle_cutin_in` | `voice_benny_cutin_in_01` | 战斗遮罩入场 | 待 TTS |
-| `units.benny.unit_down` | `voice_benny_down_01` | 倒地 / 死亡 | 待 TTS |
-| `player_voice.battle_victory` | `voice_benny_victory_01` | 胜利结算 | 待 TTS |
-| `player_voice.battle_defeat` | `voice_benny_defeat_01` | 失败结算 | 待 TTS |
-| `player_voice.evac_confirm` | `voice_benny_evac_confirm_01` | 撤离确认 | 待 TTS |
-| `player_voice.evac_success` | `voice_benny_evac_success_01` | 撤离成功 | 待 TTS |
-| `player_voice.evac_fail` | `voice_benny_evac_fail_01` | 撤离失败 | 待 TTS |
+| 游戏 cue | 默认文件 / line ID | 场景 | 生产状态 | 代码绑定 |
+|---|---|---|---|---|
+| `units.benny.select_player` | `voice_benny_select_01` | 选中角色 / 进入移动 | 待生产 | ❌ 未接 |
+| `units.benny.hit` | `voice_benny_hit_01` | 受击 | 待生产 | ❌ 未接（与音效 `hit` 撞名，需独立 voice cue） |
+| `units.benny.bleed_apply` | `voice_benny_bleed_01` | 流血施加 | 待生产 | ❌ 未接 |
+| `units.benny.fracture_apply` | `voice_benny_fracture_01` | 骨折施加 | 待生产 | ❌ 未接 |
+| `units.benny.voice_heal` | `voice_benny_heal_01` | 医疗道具生效 | 待生产 | ✅ **已接**（`battlefield.gd:870`） |
+| `units.benny.battle_cutin_in` | `voice_benny_cutin_in_01` | 战斗遮罩入场 | 待生产 | ❌ 未接（通道已在，加绑定即生效） |
+| `units.benny.unit_down` | `voice_benny_down_01` | 倒地 / 死亡 | 待生产 | ❌ 未接（与音效 `unit_down` 撞名） |
+| `player_voice.battle_victory` | `voice_benny_victory_01` | 胜利结算 | 待生产 | ❌ 未接（`player_voice` 段不存在） |
+| `player_voice.battle_defeat` | `voice_benny_defeat_01` | 失败结算 | 待生产 | ❌ 未接（同上） |
+| `player_voice.evac_confirm` | `voice_benny_evac_confirm_01` | 撤离确认 | 待生产 | ❌ 未接（同上） |
+| `player_voice.evac_success` | `voice_benny_evac_success_01` | 撤离成功 | 待生产 | ❌ 未接（同上） |
+| `player_voice.evac_fail` | `voice_benny_evac_fail_01` | 撤离失败 | 待生产 | ❌ 未接（同上） |
+
+> **cue 命名口径**：以本表（`units.<art_key>.<cue>` / `player_voice.<cue>`）为准。
+> `doc/sfx_asset_manifest.md` 里的 `sfx_hit_benny` / `sfx_battle_cutin_in_benny` 等是另一套写法，
+> 三套命名的映射见 [`audio_pipeline.md`](audio_pipeline.md) 第 4 节。
+>
+> **敌人台词不在本文档**：人形敌人的入场与受击／倒地台词见 [`enemy_voice_lines.md`](enemy_voice_lines.md)。
+>
+> **生产方式**：真人配音需求单见 [`benny_vo_brief.md`](benny_vo_brief.md)；
+> TTS 接法与实测权限见 [`minimax_tts_guide.md`](minimax_tts_guide.md)。
 
 以下场景目前没有独立 cue，先作为后续扩展台词库：攻击、回合开始、敌方压制、低血量、基地日常、交易、订单、背包、搜刮、羁绊、剧情回忆、小失误 / 调整 / 使命感。
 
@@ -237,6 +246,37 @@
 1. 先按「默认文件」生成 12 条用于接线的短语音：select、hit、bleed、fracture、heal、cutin_in、down、victory、defeat、evac_confirm、evac_success、evac_fail。
 2. 其余条目作为同一 cue 的变体，后续扩展随机 / 条件选择时再批量生成。
 3. 同一条 cue 的变体保持相同音色、语速和空间感；不要把不同情绪做成不同角色。
-4. 所有文件目标路径：`res://Art/audio/sfx/voice_benny_<scene>_<variant>.mp3`。
+4. 所有文件目标路径：`res://Art/audio/sfx/voice_benny_<scene>_<variant>.<ext>`。
 5. TTS 生成后先落 `_review/` 试听；用户说「收录」后再转正式文件、接绑定并清理临时资源。
+
+---
+
+## 5. 12 条默认语音的演绎参数（已与 `tools/tts_lines_benny.json` 对齐）
+
+> 该文件是实际生产用的机器可读清单，本表与之逐条对应。两者任一方改动都要同步另一方。
+
+| line ID | 台词 | emotion | speed | 停顿标记 | 语气词标签 | voice_modify |
+|---|---|---|---|---|---|---|
+| `voice_benny_select_01` | 我在这儿。路线我来带。 | `fluent` | 1.0 | `<#0.30#>` | — | `intensity:-20, timbre:8` |
+| `voice_benny_hit_01` | ……唔。 | `surprised` | 1.05 | — | `(pant)` | — |
+| `voice_benny_bleed_01` | 伤口裂开了……先包一下。 | `sad` | 0.98 | `<#0.35#>` | `(inhale)` | — |
+| `voice_benny_fracture_01` | 骨头……有点不对劲。 | `fearful` | 0.95 | `<#0.40#>` | — | — |
+| `voice_benny_heal_01` | 好多了。谢谢。 | `happy` | 0.98 | `<#0.20#>` | — | — |
+| `voice_benny_cutin_in_01` | 我先进去，你压后。 | `angry` | 1.1 | `<#0.25#>` | `(breath)` | `intensity:-35, timbre:8` |
+| `voice_benny_down_01` | ……先走。别等我。 | `sad` | 0.92 | `<#0.30#>` | `(exhale)` | — |
+| `voice_benny_victory_01` | 结束了。先把伤员带回去。 | `happy` | 1.0 | `<#0.30#>` | — | — |
+| `voice_benny_defeat_01` | 是我没算好路线…… | `sad` | 0.95 | — | — | — |
+| `voice_benny_evac_confirm_01` | 确认撤离。我压后。 | `angry` | 1.05 | `<#0.25#>` | — | `intensity:-25, timbre:5` |
+| `voice_benny_evac_success_01` | 全员都在。……嗯，一个都没少。 | `happy` | 0.98 | `<#0.35#>` `<#0.20#>` | `(emm)` | — |
+| `voice_benny_evac_fail_01` | 出口被封了……换路线。 | `angry` | 1.1 | `<#0.30#>` | — | `intensity:-30, timbre:5` |
+
+**参数说明**
+
+- `<#x#>`：官方 API 的**停顿控制**标记，x 为秒数。必须夹在两段可发音文本之间，不可连续使用，不能放首尾。**这是「断句」问题的直接解** —— 用它替代引擎自带的句号长停顿。
+- `(breath)` `(pant)` `(inhale)` `(exhale)` `(emm)`：**语气词标签**，仅 `speech-2.8-hd` / `speech-2.8-turbo` 支持。2.8 不支持 `whisper` 情绪。
+- `voice_modify.intensity`：**接近 -100 才是「更刚劲」**，接近 +100 是「更轻柔」。战场干练取负值。
+- `voice_modify.timbre`：接近 -100 浑厚，接近 +100 清脆。Benny 规格要「清亮」故取小幅正值。
+- `emotion` 的 `fluent`（生动）仅 2.6/2.8 可用，用于工作／日常语气。
+
+**注意**：以上是**当前可用音色下的最优解**。音色本身不达标时，调参只能有限改善。音色选型与生产路线见 [`audio_pipeline.md`](audio_pipeline.md) 第 3 节。
 

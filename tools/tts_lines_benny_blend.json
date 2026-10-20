@@ -1,0 +1,57 @@
+[
+  {
+    "line_id": "blend_B1",
+    "text": "我先进去<#0.25#>你压后。跟紧我，别掉队。",
+    "voice_id": "",
+    "speed": 1.1, "emotion": "angry",
+    "timbre_weights": [
+      {"voice_id": "Chinese (Mandarin)_Crisp_Girl", "weight": 40},
+      {"voice_id": "Arrogant_Miss", "weight": 35},
+      {"voice_id": "Chinese (Mandarin)_Warm_Bestie", "weight": 25}
+    ],
+    "voice_modify": { "intensity": -35, "timbre": 5 },
+    "output": "blend_B1_crisp_arrogant_bestie.flac",
+    "_note": "清脆(40)+嚣张自信(35)+温暖清脆(25)，去掉甜味加自信干练"
+  },
+  {
+    "line_id": "blend_B2",
+    "text": "我先进去<#0.25#>你压后。跟紧我，别掉队。",
+    "voice_id": "",
+    "speed": 1.1, "emotion": "angry",
+    "timbre_weights": [
+      {"voice_id": "Chinese (Mandarin)_Crisp_Girl", "weight": 55},
+      {"voice_id": "Arrogant_Miss", "weight": 45}
+    ],
+    "voice_modify": { "intensity": -40, "timbre": 0 },
+    "output": "blend_B2_crisp_arrogant.flac",
+    "_note": "清脆(55)+嚣张自信(45)，两音色对比更强"
+  },
+  {
+    "line_id": "blend_B3",
+    "text": "我先进去<#0.25#>你压后。跟紧我，别掉队。",
+    "voice_id": "",
+    "speed": 1.1, "emotion": "angry",
+    "timbre_weights": [
+      {"voice_id": "Chinese (Mandarin)_Crisp_Girl", "weight": 45},
+      {"voice_id": "Chinese (Mandarin)_Pure-hearted_Boy", "weight": 20},
+      {"voice_id": "Arrogant_Miss", "weight": 35}
+    ],
+    "voice_modify": { "intensity": -45, "timbre": 0 },
+    "output": "blend_B3_crisp_pureheart_arrogant.flac",
+    "_note": "清脆(45)+认真清澈(20,男)+嚣张自信(35)，掺男声加硬朗"
+  },
+  {
+    "line_id": "blend_B4",
+    "text": "我先进去<#0.25#>你压后。跟紧我，别掉队。",
+    "voice_id": "",
+    "speed": 1.08, "emotion": "fluent",
+    "timbre_weights": [
+      {"voice_id": "Chinese (Mandarin)_Crisp_Girl", "weight": 50},
+      {"voice_id": "Arrogant_Miss", "weight": 25},
+      {"voice_id": "Chinese (Mandarin)_Warm_Bestie", "weight": 25}
+    ],
+    "voice_modify": { "intensity": -25, "timbre": 10 },
+    "output": "blend_B4_balanced_fluent.flac",
+    "_note": "B1 配比但情绪改 fluent，更日常可靠不 angry"
+  }
+]

@@ -2,3 +2,10 @@
 .godot/
 /android/
 .DS_Store
+
+# 音频试听暂存区（候选音色/音效样本，用完即清，不入库）
+/Art/audio/sfx/_review/
+
+# TTS 运行时缓存（断点续跑用）
+.tts_cache.json
+__pycache__/

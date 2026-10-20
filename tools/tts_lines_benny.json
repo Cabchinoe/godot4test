@@ -1,0 +1,119 @@
+[
+  {
+    "line_id": "voice_benny_select_01",
+    "text": "我在这儿<#0.30#>路线我来带。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 1.0, "vol": 1.0, "pitch": 0,
+    "emotion": "fluent",
+    "voice_modify": { "intensity": -20, "timbre": 8 },
+    "output": "voice_benny_select_01.flac",
+    "_note": "选中/移动。工作语气，句中 0.3s 换气"
+  },
+  {
+    "line_id": "voice_benny_hit_01",
+    "text": "……唔。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 1.05, "vol": 1.0, "pitch": 0,
+    "emotion": "surprised",
+    "tags": "(pant)",
+    "output": "voice_benny_hit_01.flac",
+    "_note": "受击。短促闷哼不拖长；(pant)=喘气"
+  },
+  {
+    "line_id": "voice_benny_bleed_01",
+    "text": "伤口裂开了<#0.35#>先包一下。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 0.98, "vol": 1.0, "pitch": 0,
+    "emotion": "sad",
+    "tags": "(inhale)",
+    "output": "voice_benny_bleed_01.flac",
+    "_note": "流血。吸气后实用语气；(inhale)=吸气"
+  },
+  {
+    "line_id": "voice_benny_fracture_01",
+    "text": "骨头<#0.40#>有点不对劲。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 0.95, "vol": 1.0, "pitch": 0,
+    "emotion": "fearful",
+    "output": "voice_benny_fracture_01.flac",
+    "_note": "骨折。压低、0.4s 停顿"
+  },
+  {
+    "line_id": "voice_benny_heal_01",
+    "text": "好多了<#0.20#>谢谢。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 0.98, "vol": 1.0, "pitch": 0,
+    "emotion": "happy",
+    "output": "voice_benny_heal_01.flac",
+    "_note": "医疗生效。松一口气后道谢"
+  },
+  {
+    "line_id": "voice_benny_cutin_in_01",
+    "text": "我先进去<#0.25#>你压后。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 1.1, "vol": 1.0, "pitch": 0,
+    "emotion": "angry",
+    "tags": "(breath)",
+    "voice_modify": { "intensity": -35, "timbre": 8 },
+    "output": "voice_benny_cutin_in_01.flac",
+    "_note": "战斗入场。intensity=-35 更刚劲"
+  },
+  {
+    "line_id": "voice_benny_down_01",
+    "text": "……先走<#0.30#>别等我。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 0.92, "vol": 1.0, "pitch": 0,
+    "emotion": "sad",
+    "tags": "(exhale)",
+    "output": "voice_benny_down_01.flac",
+    "_note": "倒地。气声、句尾下沉"
+  },
+  {
+    "line_id": "voice_benny_victory_01",
+    "text": "结束了<#0.30#>先把伤员带回去。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 1.0, "vol": 1.0, "pitch": 0,
+    "emotion": "happy",
+    "output": "voice_benny_victory_01.flac",
+    "_note": "胜利。不庆祝，先处理现场"
+  },
+  {
+    "line_id": "voice_benny_defeat_01",
+    "text": "是我没算好路线……",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 0.95, "vol": 1.0, "pitch": 0,
+    "emotion": "sad",
+    "output": "voice_benny_defeat_01.flac",
+    "_note": "失败。自责但不消沉"
+  },
+  {
+    "line_id": "voice_benny_evac_confirm_01",
+    "text": "确认撤离<#0.25#>我压后。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 1.05, "vol": 1.0, "pitch": 0,
+    "emotion": "angry",
+    "voice_modify": { "intensity": -25, "timbre": 5 },
+    "output": "voice_benny_evac_confirm_01.flac",
+    "_note": "撤离确认。清晰果断"
+  },
+  {
+    "line_id": "voice_benny_evac_success_01",
+    "text": "全员都在<#0.35#>嗯<#0.20#>一个都没少。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 0.98, "vol": 1.0, "pitch": 0,
+    "emotion": "happy",
+    "tags": "(emm)",
+    "output": "voice_benny_evac_success_01.flac",
+    "_note": "撤离成功。先确认，再松气；(emm)=嗯"
+  },
+  {
+    "line_id": "voice_benny_evac_fail_01",
+    "text": "出口被封了<#0.30#>换路线。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 1.1, "vol": 1.0, "pitch": 0,
+    "emotion": "angry",
+    "voice_modify": { "intensity": -30, "timbre": 5 },
+    "output": "voice_benny_evac_fail_01.flac",
+    "_note": "撤离失败。紧迫但不慌"
+  }
+]

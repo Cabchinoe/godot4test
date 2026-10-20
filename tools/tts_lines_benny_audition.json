@@ -1,0 +1,71 @@
+[
+  {
+    "line_id": "cand_select_01_plain",
+    "text": "我在这儿，路线我来带。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 1.0, "emotion": "fluent",
+    "output": "cand_select_01_plain.flac",
+    "_note": "基线。无停顿标记、fluent 情绪"
+  },
+  {
+    "line_id": "cand_select_01_pause030",
+    "text": "我在这儿<#0.30#>路线我来带。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 1.0, "emotion": "fluent",
+    "output": "cand_select_01_pause030.flac",
+    "_note": "加 0.30s 句中停顿，验证断句控制"
+  },
+  {
+    "line_id": "cand_select_01_breath",
+    "text": "(breath)我在这儿<#0.30#>路线我来带。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 1.0, "emotion": "fluent",
+    "output": "cand_select_01_breath.flac",
+    "_note": "加 (breath) 语气词（2.8 专属）+ 停顿"
+  },
+  {
+    "line_id": "cand_select_01_dry",
+    "text": "我在这儿<#0.30#>路线我来带。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 1.02, "emotion": "fluent",
+    "voice_modify": { "intensity": -35, "timbre": 8 },
+    "output": "cand_select_01_dry.flac",
+    "_note": "intensity=-35 更刚劲 + 略清脆，战场干练方向"
+  },
+  {
+    "line_id": "cand_select_01_hard",
+    "text": "我在这儿<#0.30#>路线我来带。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 1.05, "emotion": "angry",
+    "voice_modify": { "intensity": -50, "timbre": 5 },
+    "output": "cand_select_01_hard.flac",
+    "_note": "更硬的极限：angry + intensity=-50"
+  },
+  {
+    "line_id": "cand_select_01_rewrite",
+    "text": "跟紧我<#0.25#>别掉队。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 1.1, "emotion": "angry",
+    "voice_modify": { "intensity": -35, "timbre": 8 },
+    "output": "cand_select_01_rewrite.flac",
+    "_note": "改写版：去主语、祈使句、7 字，战场口吻"
+  },
+  {
+    "line_id": "cand_cutin_in_battle",
+    "text": "我先进去<#0.25#>你压后。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 1.1, "emotion": "angry",
+    "voice_modify": { "intensity": -35, "timbre": 8 },
+    "output": "cand_cutin_in_battle.flac",
+    "_note": "文档原句 cutin_in_01 的战场版，参照用"
+  },
+  {
+    "line_id": "cand_select_01_rewrite2",
+    "text": "路我看过<#0.25#>走。",
+    "voice_id": "Chinese (Mandarin)_Crisp_Girl",
+    "speed": 1.08, "emotion": "angry",
+    "voice_modify": { "intensity": -40, "timbre": 10 },
+    "output": "cand_select_01_rewrite2.flac",
+    "_note": "改写版二：极短促，6 字"
+  }
+]

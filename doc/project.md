@@ -35,6 +35,11 @@
 | [inventory_background_colors.md](inventory_background_colors.md) | 物品图标 Lv0~Lv8 背景色（tier）规范与处理流程 |
 | [sfx_asset_manifest.md](sfx_asset_manifest.md) | 音效 cue、绑定、落盘状态与系统级音频接入规则 |
 | [item_sfx_manifest.md](item_sfx_manifest.md) | 道具绑定 / 场景动作绑定音效：拾取兜底、装备共用、二合音高、容器与交易 |
+| [audio_pipeline.md](audio_pipeline.md) | **音频总入口与交接说明**：现状、三条生产路线、语音 cue 接线现状、可执行命令、待办与阻塞关系、已知坑位 |
+| [enemy_voice_lines.md](enemy_voice_lines.md) | 人形敌人语音：三个掠夺者的音色方向、受击/倒地中文台词、入场台词待决策 |
+| [minimax_tts_guide.md](minimax_tts_guide.md) | MiniMax TTS 官方 API 接法、可用能力实测、混合音色、账号权限与解锁条件 |
+| [benny_vo_brief.md](benny_vo_brief.md) | 贝妮真人配音需求单（可直接交给配音演员）＋ [录音工作表](benny_vo_lines.csv) |
+| `tools/` | 音频生产脚本：TTS 客户端、音色设计客户端、台词清单、系统音色参考表 |
 | `openspec/` | 能力规格（`specs/`）与历次变更归档（`changes/archive/`） |
 
 改动上述任一规范时，需同步更新其声明依赖的文件（例如 tier 色卡对应 `apply_tier_backgrounds*.py` 的 `TIER_COLORS` 与 `doc/assets/tier_bg_palette.png`）。

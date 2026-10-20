@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://jtoycl28hu67"
+
+[deps]
+
+files=["res://doc/benny_vo_lines.cue.translation", "res://doc/benny_vo_lines.text.translation", "res://doc/benny_vo_lines.delivery.translation", "res://doc/benny_vo_lines.priority.translation"]
+
+source_file="res://doc/benny_vo_lines.csv"
+dest_files=["res://doc/benny_vo_lines.cue.translation", "res://doc/benny_vo_lines.text.translation", "res://doc/benny_vo_lines.delivery.translation", "res://doc/benny_vo_lines.priority.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
