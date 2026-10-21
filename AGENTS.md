@@ -64,7 +64,40 @@
 
 ---
 
-## 三、常用校验命令
+## 三、音乐生成（BGM）
+
+> **任何 Agent 工具接 BGM 任务，先读 [`doc/music_generation.md`](doc/music_generation.md)。**
+> 那里有完整的 API 地址、请求头 / 请求体 / 响应格式、可直接粘贴的 curl 与 Python 示例、
+> prompt 写法模板、入库流水线。本节是入口索引。
+
+```bash
+# 官方 API 直连（推荐：prompt 可到 2000 字符，带 is_instrumental 无人声硬开关）
+export MINIMAX_API_KEY=sk-xxxx
+python3 tools/music_gen.py --out-dir Art/audio/bgm/_raw --direct --to-mp3 --prompt "Instrumental. …"
+
+# Connector 代理（无需密钥：prompt ≤300 字符，单次 ≤5 条，没有 is_instrumental 开关）
+python3 tools/music_gen.py --out-dir Art/audio/bgm/_raw --prompt "Instrumental. …" --prompt "Instrumental. …"
+
+# 剪成无缝循环（60~120s）
+python3 tools/build_bgm_loop.py --src cand.wav --out out.mp3 --target 90
+```
+
+三条铁律（详见 doc）：
+
+1. **人声**：能走官方直连就用 `is_instrumental: true`（硬开关）。只能走代理时，prompt 开头写
+   `Instrumental.` 且**全篇不出现 vocals / choir / voice / humming / lyrics** —— 写排除清单反而更容易
+   生成人声（实测 3/3 命中，纯正面写法 4/5 干净）。
+2. **不预筛**：不跑 `listen_audio` / `audios_understand` 做"有无人声"判定后自行丢弃候选。全部原样交付。
+3. **入库规格**：48kHz / 立体声 / MP3 128kbps / -16 LUFS / TP -1.5 dBTP / 零削波 / 60~120s，
+   命名 `bgm_<scene>.mp3` 落 `Art/audio/bgm/`，`.import` 的 `loop` 置 `true`。
+   改了播放规则要同时改 `doc/sfx_asset_manifest.md` §K、`doc/audio_pipeline.md`、`doc/project.md` 三处。
+   例外：`bgm_battlefield` 是用户指定的 34.7s 截取段，**不要**自作主张给它做无缝循环（见 §K.3）。
+
+Mavis / Claude Code 一类读 SKILL.md 的工具，另见 `.minimax/skills/music-generation/`。
+
+---
+
+## 四、常用校验命令
 
 ```bash
 # 音频客观体检：格式 / 采样率 / 峰值 / 削波
@@ -80,7 +113,7 @@ godot --headless --path . --import
 
 ---
 
-## 四、提交前自检
+## 五、提交前自检
 
 - [ ] 多媒体产出物**未经 Agent 自评择优**，成品与备选均已交付用户
 - [ ] 客观参数符合 `doc/sfx_asset_manifest.md` §3（采样率 / 声道 / 码率 / 峰值 / 命名 / 路径）

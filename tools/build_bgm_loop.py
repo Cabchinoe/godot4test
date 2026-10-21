@@ -202,6 +202,52 @@ def clipped_samples(path: Path) -> int:
     return int(np.sum(np.all(sat, axis=1)))
 
 
+def rotation_candidates(pcm: np.ndarray, count: int = 4, min_gap_s: float = 0.5) -> list[int]:
+    """挑出若干「低能量」切点（采样偏移），供把文件边界挪到波形安静处。
+
+    MP3 编码器在文件首尾帧的重建误差与该处信号电平正相关：边界落在安静处，
+    首尾解码误差就小，循环接缝台阶也更小。整曲是周期无缝的，任何切点都合法。
+
+    入参 pcm 必须是**单个循环单元**（而不是整曲）：整曲是同一单元的若干次重复，
+    在整曲上找极小值会得到等效切点（互差一个单元长度），搜不出不同音乐位置。
+    """
+    env = envelope(pcm.mean(axis=1))
+    if env.size == 0:
+        return [0]
+    # 局部极小
+    idx = np.where((env[1:-1] < env[:-2]) & (env[1:-1] <= env[2:]))[0] + 1
+    if idx.size == 0:
+        idx = np.arange(env.size)
+    order = idx[np.argsort(env[idx])]
+    min_gap = int(min_gap_s / FRAME)
+    picked: list[int] = []
+    for i in order:
+        if all(abs(int(i) - j) >= min_gap for j in picked):
+            picked.append(int(i))
+        if len(picked) >= count:
+            break
+    return [int(i * FRAME * SR) % len(pcm) for i in picked]
+
+
+def rotate_pcm(pcm: np.ndarray, offset: int) -> np.ndarray:
+    """循环移位：把切点挪到 offset 采样处。"""
+    if offset % len(pcm) == 0:
+        return pcm
+    return np.roll(pcm, -offset, axis=0)
+
+
+def write_wav(pcm: np.ndarray, dst: Path) -> None:
+    """把 float32 立体声 PCM 写成 48kHz WAV。"""
+    res = subprocess.run(
+        ["ffmpeg", "-y", "-v", "error", "-f", "f32le", "-ar", str(SR), "-ac", "2", "-i", "-",
+         "-c:a", "pcm_s16le", str(dst)],
+        input=pcm.astype(np.float32).tobytes(),
+        capture_output=True,
+    )
+    if res.returncode != 0:
+        raise RuntimeError(f"写 WAV 失败：\n{res.stderr.decode(errors='ignore')}")
+
+
 # --------------------------------------------------------------------------- #
 def main() -> int:
     ap = argparse.ArgumentParser(description="BGM 无缝循环入库构建")
@@ -213,6 +259,12 @@ def main() -> int:
     ap.add_argument("--bitrate", default="128k", help="MP3 码率")
     ap.add_argument("--start", type=float, default=None, help="正文起点（秒）；缺省=整曲起点")
     ap.add_argument("--end", type=float, default=None, help="正文终点（秒）；缺省=自动裁掉尾部淡出")
+    ap.add_argument("--seam-crossfade", type=float, default=1.5,
+                    help="文件级接缝交叉淡化长度（秒），用于修 MP3 编解码首尾帧误差")
+    ap.add_argument("--seam-trials", type=int, default=4,
+                    help="接缝修复时尝试的切点数量（越少越快）")
+    ap.add_argument("--no-seam-fix", dest="seam_fix", action="store_false",
+                    help="接缝检测不通过时不自动修复（默认自动修复）")
     ap.add_argument("--keep-temp", action="store_true", help="保留中间 WAV")
     args = ap.parse_args()
 
@@ -258,11 +310,40 @@ def main() -> int:
     # 4) 响度归一 + 编码
     loudnorm_two_pass(full_wav, out, args.loudness, args.bitrate)
 
+    # 4.5) 文件级接缝修复。
+    #      MP3 编码器在文件首尾帧的重建误差与该处信号电平正相关 → 边界落在安静处时，
+    #      「文件末尾 → 文件开头」的台阶最小。整曲是周期无缝的，任何切点都合法，
+    #      因此可以旋转到低能量点并用「尾部 C 秒 × 开头 C 秒」等功率交叉淡化，
+    #      再用解码回绕跳变客观选优。
+    seam = seam_check(out)
+    if not seam["seam_ok"] and args.seam_fix:
+        print("       接缝检测未通过 → 搜索更优的文件边界切点")
+        base_pcm = decode_pcm(full_wav)
+        total = len(base_pcm) / SR
+        unit_pcm = base_pcm[: int(unit_len * SR)]  # 只在单个循环单元里找切点，避免等效候选
+        best: tuple[float, dict, Path] | None = None
+        for off in rotation_candidates(unit_pcm, count=args.seam_trials):
+            cand_wav = tmp / f"cand_{off}.wav"
+            cand_mp3 = tmp / f"cand_{off}.mp3"
+            write_wav(rotate_pcm(base_pcm, off), cand_wav)
+            build_unit(cand_wav, tmp / f"seam_{off}.wav", 0.0, total, args.seam_crossfade)
+            loudnorm_two_pass(tmp / f"seam_{off}.wav", cand_mp3, args.loudness, args.bitrate)
+            s = seam_check(cand_mp3)
+            flag = "OK" if s["seam_ok"] else "不连续"
+            print(f"         切点 {off / SR:7.2f}s → 回绕跳变 {s['wrap_jump']} / P95 {s['p95_jump']} → {flag}")
+            if best is None or s["wrap_jump"] < best[0]:
+                best = (s["wrap_jump"], s, cand_mp3)
+        if best is not None:
+            out.write_bytes(best[2].read_bytes())
+            seam = best[1]
+            print(f"       采用最优切点版本 ｜ 时长 {probe_duration(out):.2f}s ｜ "
+                  f"回绕跳变 {seam['wrap_jump']} / 曲内 P95 {seam['p95_jump']}"
+                  f" → {'连续 OK' if seam['seam_ok'] else '仍不连续，需人工检查'}")
+
     # 5) 客观体检
     dur = probe_duration(out)
     pk = peak_db(out)
     clip = clipped_samples(out)
-    seam = seam_check(out)
     probe = run([
         "ffprobe", "-v", "error", "-show_entries",
         "stream=codec_name,sample_rate,channels,bit_rate", "-of", "default=noprint_wrappers=1", str(out),
