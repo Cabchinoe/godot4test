@@ -6,6 +6,9 @@
 # 音频试听暂存区（候选音色/音效样本，用完即清，不入库）
 /Art/audio/sfx/_review/
 
+# BGM 原始产出与备选候选（评审阶段，定稿后清理，不入库）
+/Art/audio/bgm/_raw/
+
 # TTS 运行时缓存（断点续跑用）
 .tts_cache.json
 __pycache__/

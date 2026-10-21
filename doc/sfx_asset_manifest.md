@@ -1,6 +1,6 @@
 # 音效资产清单(SFX Asset Manifest)
 
-> 版本 v1.39(2026-10-20)· 配套 `Script/battle/battle_sfx.gd` + `conf/battle/sfx_bindings.json`
+> 版本 v1.40(2026-10-21)· 配套 `Script/battle/battle_sfx.gd` + `conf/battle/sfx_bindings.json`
 > 道具逐项音效需求见 [`doc/item_sfx_manifest.md`](item_sfx_manifest.md);Benny 台词与 TTS 资产见 [`doc/benny_voice_lines.md`](benny_voice_lines.md)。
 > 全表 cue 命名严格沿用 `BattleSfx.play(cue, context)` 现有约定,后续接音频时无需改 GDScript。
 > v1.1 修订:A.1 已落盘(2 个 cue,源 mp3 → ffmpeg 切 wav);补 §6 实测经验(AI 音频模型对纯工业音效的输出特点 + 切片策略)。
@@ -43,6 +43,7 @@
 > v1.38 修订(2026-10-21):**状态语音改到玩家回合开始**——`sfx_bleed_apply` / `sfx_fracture_apply` 不再在受击结算播放;玩家回合开始、状态结算后从当前负面状态随机播一条。同步修复 `Unit.add_status()` 在已有状态时漏加新状态的问题。
 > v1.38 修订(2026-10-20):**二合预制 8 个变体**——以 Lv1 C4 脆叮为基础,生成 `sfx_item_merge_lv1~lv8.mp3`,对应 C4 / D4 / E4 / F4 / G4 / A4 / B4 / C5;8 个 binding 已写入 `default.item_merge_lv*`。mp3 总数 55 → **62**。
 > v1.39 修订(2026-10-20):**二合备用 2 级**——追加 `sfx_item_merge_lv9.mp3`(D5)与 `sfx_item_merge_lv10.mp3`(E5),继续 C 大调;绑定同步到 `default.item_merge_lv9/lv10`。mp3 总数 62 → **64**。
+> v1.40 修订(2026-10-21):**新增启动页随机 BGM 2 条**——`bgm_boot_a`(62.0s,战斗向电子-管弦)/ `bgm_boot_b`(49.2s,工业电子向),均由音乐模型生成后转 MP3(48kHz/立体声/128kbps/-16 LUFS);`BgmPlayer` 新增 `play_random()`,`Boot._ready()` 随机选曲,`MainMenu` 保留启动曲继续放;BGM 已落盘 1 → **3**。同时记入**模型人声坑**:prompt 写 `no vocals/choir/humming` 反而更易出人声,改为开头 `Instrumental.` + 纯正面乐器名后 5 选 4 无人声;详见 §K.2 与 `audio_pipeline.md` 已知坑。
 
 ---
 
@@ -353,7 +354,9 @@
 
 | cue key | 时长 | 场景 | 风格基调 | 落盘状态 |
 |---|---|---|---|---|
-| `bgm_main_menu` | 120s | 主菜单 | 钢琴 + 弦乐 + 缓慢 Pad;战后废墟中"家"的温度 | ✅ 91.5s，**当前唯一在用**：接在指挥中心 |
+| `bgm_main_menu` | 120s | 主菜单 | 钢琴 + 弦乐 + 缓慢 Pad;战后废墟中"家"的温度 | ✅ 91.5s，**接在指挥中心** |
+| `bgm_boot_a` | 62s | 启动页(Boot→主菜单) | 冷峻电子-管弦:脉冲贝斯+金属质感+弦乐 ostinato+弱音铜管+工业打击 | ✅ 62.0s，**启动时随机播** |
+| `bgm_boot_b` | 49s | 启动页(Boot→主菜单) | 工业电子:金属颗粒质感+暗色合成器纹理+警报合成器 | ✅ 49.2s，**启动时随机播** |
 | `bgm_battlefield_enemy` | 80s | 敌方回合 | 慢节奏紧张 Pad + 低频心跳 + 警报 | ⬜ 未生成 |
 | `bgm_battlefield_tense` | 60s | 紧张战斗(玩家回合击杀残血) | 鼓点 + 弦乐急推 + 危机感 | ⬜ 未生成 |
 | `bgm_trading_post` | 75s | 贸易站 | 轻快原声吉他 + 街区市井感 | ⬜ 未生成 |
@@ -361,7 +364,7 @@
 | `bgm_victory` | 60s | 胜利结算 | 鼓号齐鸣 + 升华旋律 | ⬜ 未生成 |
 | `bgm_defeat` | 60s | 失败结算 | 慢板沉郁 + 弦乐余音 + 寄望 | ⬜ 未生成 |
 
-> **当前取舍（2026-10-21）**：只保留 `bgm_main_menu` 一条，**接在指挥中心**播放；启动界面（Boot / 主菜单）保持无声。
+> **当前取舍（2026-10-21）**：保留 `bgm_main_menu`（接在指挥中心）+ `bgm_boot_a` / `bgm_boot_b`（**启动页随机播**）共 3 条。
 > 战场、仓库、交易行等场景不单独配 BGM —— 由 `BgmPlayer`（autoload）延续上一首，进战场即沿用指挥中心的曲子。
 > 曾生成过的 `bgm_command_center` / `bgm_battlefield_player` 及其备选版本**已废弃删除**，不在库内。
 
@@ -369,8 +372,8 @@
 
 | 场景 | BGM |
 |---|---|
-| 启动（Boot） | 无声 |
-| 主菜单 | 无声（`_ready` 里 `stop()`，从别处回主菜单时淡出） |
+| 启动（Boot） | **随机播 `bgm_boot_a` / `bgm_boot_b` 之一**（`BgmPlayer.play_random()`，每次启动重新掷骰） |
+| 主菜单 | **保留启动曲继续放**；从战场/指挥中心回来则 `stop()` 淡出（`current_cue()` 在启动曲名单外才停） |
 | 指挥中心 | `bgm_main_menu` 循环（1.2s 淡入） |
 | 战场 | **无声**（`_ready` 里 `stop()`，离开指挥中心即淡出） |
 | 仓库 / 交易行 | 沿用进入时的状态（从指挥中心进 → 继续放指挥中心那首） |
@@ -413,6 +416,16 @@ python3 tools/build_bgm_loop.py \
 > `--start` / `--end` 可指定循环正文区间（秒）。默认整曲,只自动裁掉尾部淡出到静音的一段。
 > **产出物一律由用户评审**（见 `AGENTS.md` 一）,Agent 不做主观择优。
 > 模型原始产出与备选版本留在 `Art/audio/bgm/_raw/`（已 gitignore）,确认定稿后清理。
+
+### K.2 启动页随机 BGM 的制作方式（2026-10-21）
+
+- **生成**:`batch_text_to_music`（music 模型），纯器乐不传 `lyrics`。一次出 5 版，用户试听后选定 2 版。
+- **prompt 写法（关键）**:开头写 `Instrumental.`,之后**纯正面罗列乐器名**;**不要写 `no vocals` / `no choir` / `no humming`** —— 实测写了排除清单反而更容易生成人声（详见 `audio_pipeline.md` 已知坑）。单条上限 300 字符,排除项用 `a/b/c` 紧凑写法。
+- **不做人声预筛**:命中排除项的候选**照样原样交付**,由用户自己试听判断（`AGENTS.md` 一）。不跑 `listen_audio` / `audios_understand` 做缺陷判定后自行丢弃。
+- **本批产出**:`cand_combat_v2_P4`（65.2s,截取**前 62s**）→ `bgm_boot_a.mp3`;`cand_combat_v2_P5`（49.2s,全取）→ `bgm_boot_b.mp3`。
+- **入库规格**:48kHz / 立体声 / MP3 128kbps / EBU R128 两遍响度归一(-16 LUFS,TP -1.5dBTP) —— 归一顺带消掉了模型输出的削波(原始 P4 有 3.5 万个满幅采样,入库版 0)。
+- **接线**:`BgmPlayer.play_random(cues)` 新增（自动剔除缺文件条目,全缺则 warning 跳过）→ `Boot._ready()` 调 `play_random(BOOT_BGM_CUES)` → `MainMenu._ready()` **只在 `current_cue()` 不在启动曲名单内时才 `stop()`**（启动曲在主菜单继续放,从战场/指挥中心回来则静默）。
+- **循环**:`.import` 的 `loop` 置 `true`（运行时 `BgmPlayer` 再设一次,双保险）。`bgm_boot_a` 的 62s 截点回绕跳变 0.047,小于曲内最大瞬态 0.69,循环处无突兀爆音。
 
 ---
 

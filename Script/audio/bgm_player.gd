@@ -81,6 +81,19 @@ func play(cue: StringName, fade: float = FADE_TIME) -> void:
 	_current_cue = cue
 
 
+## 从候选列表里随机挑一首播放（每次调用重新掷骰）。
+## 缺文件的条目自动剔除；全部缺失时给出 warning 并静默跳过。
+func play_random(cues: Array[StringName], fade: float = FADE_TIME) -> void:
+	var available: Array[StringName] = []
+	for cue in cues:
+		if ResourceLoader.exists(BGM_DIR + String(cue) + ".mp3"):
+			available.append(cue)
+	if available.is_empty():
+		push_warning("BgmPlayer: 候选 BGM 全部缺失（%s），跳过" % str(cues))
+		return
+	play(available[randi() % available.size()], fade)
+
+
 ## 停止 BGM（淡出）。
 func stop(fade: float = FADE_TIME) -> void:
 	if _current_cue == &"":

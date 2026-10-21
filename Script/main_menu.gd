@@ -4,6 +4,10 @@ const BACKGROUNDS_DIR := "res://Art/backgrounds/"
 const BG_PREFIX := "main_menu_"
 const BG_EXTENSIONS := ["jpg", "jpeg", "png", "webp"]
 
+## 启动曲 cue（游戏启动时由 Boot 随机播放）。当前正在放启动曲时主菜单保留它，
+## 否则从战场/指挥中心回到主菜单时停掉 BGM。
+const BOOT_BGM_CUES: Array[StringName] = [&"bgm_boot_a", &"bgm_boot_b"]
+
 @export var background_pool: Array[Texture2D] = []
 
 @onready var background: TextureRect = $Background
@@ -11,8 +15,9 @@ const BG_EXTENSIONS := ["jpg", "jpeg", "png", "webp"]
 
 
 func _ready() -> void:
-	# 启动界面保持无声：从战场/指挥中心回到主菜单时停掉 BGM
-	BgmPlayer.stop()
+	# 启动界面：游戏启动时随机播的启动曲继续放；从战场/指挥中心回来则停掉 BGM
+	if not BOOT_BGM_CUES.has(BgmPlayer.current_cue()):
+		BgmPlayer.stop()
 	_pick_random_background()
 
 

@@ -11,13 +11,13 @@
 | 项 | 状态 |
 |---|---|
 | 正式 SFX | ✅ **65 个 mp3 已落盘**（`Art/audio/sfx/`），已提交 |
-| BGM | 🟡 **1 个已落盘**（`Art/audio/bgm/bgm_main_menu.mp3`，91.5s），**接在指挥中心**循环播放；启动界面（Boot / 主菜单）无声；战场等场景沿用同一首。曾生成的指挥中心 / 战场专用曲已废弃删除，剩余需求见 `sfx_asset_manifest.md` §K |
+| BGM | 🟡 **3 个已落盘**（`bgm_main_menu.mp3` 91.5s 接在指挥中心；`bgm_boot_a.mp3` 62s + `bgm_boot_b.mp3` 49.2s **启动页随机播**）。战场等场景沿用指挥中心那首。曾生成的指挥中心 / 战场专用曲已废弃删除，剩余需求见 `sfx_asset_manifest.md` §K |
 | 环境音 | ❌ **0 个**。需求 3 条（30s loop），见 `sfx_asset_manifest.md` §L |
 | 角色语音 | 🟡 **6 个文件已落盘**（`Art/audio/sfx/voice_benny_*.mp3`；3 条旧 32kHz/128kbps + `cutin_in_01` / `hit_01` 44.1kHz/256kbps + `bleed_01` 24kHz/96kbps 立体声，规格待统一） |
 | 已接线的语音 cue | 🟡 **6 个**：`voice_heal` / `select_player` / `fracture_apply` / `bleed_apply` / `battle_cutin_in` / `voice_hit` |
 | 语音播放通道 | ✅ **独立人声通道**（`BattleSfx.play_voice()`），新语音自动掐断上一条，连点不叠加 |
 | TTS 管线 | ✅ 声线基准为 `voice_benny_fracture_01`（`Sweet_Lady`，预设见 `tools/tts_voice_benny_selected.json`），44.1kHz FLAC 生产、44.1kHz MP3 入库 |
-| BGM 播放系统 | ✅ `BgmPlayer`（autoload）循环播放 + 场景切换交叉淡化 |
+| BGM 播放系统 | ✅ `BgmPlayer`（autoload）循环播放 + 场景切换交叉淡化 + `play_random()` 随机选曲（启动页用） |
 | 真人配音 | 🔲 需求单已出（`benny_vo_brief.md`），**等录音** |
 
 **当前最关键的两条结论**（别再重复踩）：
@@ -282,4 +282,7 @@ python3 tools/build_bgm_loop.py \
 - **Godot 总线未布局**：`conf/audio/ui_sfx.json` 的 `audio_bus` 填 `SFX`，但项目还没有 SFX/BGM/AMB 总线布局，`BattleSfx._has_bus()` 找不到会回落 `Master`。要做音量滑条需先补总线。
 - **音乐模型出的是短曲**：`batch_text_to_music` 产出普遍 20~55s 且带尾部 fade-out，达不到 §K 的 60~120s 规格，**必须自己剪成无缝循环**（`tools/build_bgm_loop.py`）。别直接把模型输出当成品入库。
 - **模型不一定听 prompt 的"不要人声"**：`bgm_command_center` 连续两版都生成了明显女声合唱；`bgm_battlefield_player` 第一版被评"合成器音色廉价、低频发闷"，换 prompt 后才可用。**多版候选要留给人评审**（`AGENTS.md` 一），别让 Agent 自己打分定稿。
+- **写排除项反而可能"提示"出人声**（2026-10-21 实测）：`no vocals / no choir / no humming / no vocal pads` 这类长排除清单放进 prompt，**命中人声率反而高**——战斗 BGM 第一轮 3 条全带排除项，3/3 都生成了"啊"声人声；第二轮改成 **只在 prompt 开头写 `Instrumental.` + 纯正面罗列乐器名（不出现 choir/voice/humming/lyrics 任何字样）**，5 条里 4 条无任何人声（1 条仍出"啊"声）。**结论：靠 `Instrumental.` 标签 + 乐器正面描述，不要写 vocal 相关的排除词**；且模型行为有随机性，**必须逐条检测**。
+- **人声不要用模型预筛**：`AGENTS.md` 一规定多媒体产出物一律由用户评审，**不跑 `listen_audio` / `audios_understand` 做"有无人声"这类缺陷判定后自行丢弃候选**。命中排除项的候选**照样原样交付**，由用户自己听出来再返工。唯一该做的是客观技术体检（时长 / 峰值 / 削波 / 能否加载）。
+- **音乐模型产出会削波**：`batch_text_to_music` 输出普遍顶到 -0.0 dBFS，满幅采样从数百到数万不等。prompt 里写 `no clipping` 无效，**入库前必须过一遍 `alimiter` / `loudnorm`（TP -1.5 dBTP）**。
 - **Godot 退出时不回收活跃播放体**：进程退出时仍在播放的 `AudioStreamPlayback` 不会被释放（裸 `AudioStreamPlayer` 实测同样残留）。`BgmPlayer._exit_tree()` 里 `stop()` 之后留了一点延时让 AudioServer 完成一次 mix。战场场景 headless 跑仍会报 1 个残留，来源是它自己的回合横幅音效 `sfx_turn_in` 演出未收尾，与 BGM 无关。
