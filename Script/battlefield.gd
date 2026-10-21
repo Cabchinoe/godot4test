@@ -102,8 +102,8 @@ func _ready():
 	hover_sprite.visible = false
 	hover_sprite2.visible = false
 
-	# 战场暂无专属 BGM：停掉上一场景（指挥中心）的音乐
-	BgmPlayer.stop()
+	# 战场专属 BGM：从指挥中心切过来时交叉淡入
+	BgmPlayer.play(&"bgm_battlefield")
 
 	if ItemDB.get_all_items().is_empty():
 		ItemDB.load_from_dir("res://conf/items")

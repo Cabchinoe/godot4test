@@ -348,15 +348,17 @@
 
 ---
 
-## K. 背景音乐(9)
+## K. 背景音乐(10)
 
 > 全部 stereo / 48kHz / 24bit / 60~120s,可用 FMOD / Wwise 风格循环点剪辑。Godot 4 端通过 `AudioStreamPlayer.stream.loop = true` 处理。
+> 唯一例外:`bgm_battlefield` 为 34.7s 截取段（用户指定不拼接,见 §K.3）。
 
 | cue key | 时长 | 场景 | 风格基调 | 落盘状态 |
 |---|---|---|---|---|
 | `bgm_main_menu` | 120s | 主菜单 | 钢琴 + 弦乐 + 缓慢 Pad;战后废墟中"家"的温度 | ✅ 91.5s，**接在指挥中心** |
 | `bgm_boot_a` | 62s | 启动页(Boot→主菜单) | 冷峻电子-管弦:脉冲贝斯+金属质感+弦乐 ostinato+弱音铜管+工业打击 | ✅ 62.0s，**启动时随机播** |
 | `bgm_boot_b` | 49s | 启动页(Boot→主菜单) | 工业电子:金属颗粒质感+暗色合成器纹理+警报合成器 | ✅ 49.2s，**启动时随机播** |
+| `bgm_battlefield` | 35s | 战场 | 低音提琴+大提琴低音区旋律基底 + 中速克制电子鼓点 + 少量弦乐旋律;战场紧张、警惕克制 | ✅ 34.7s，**接在战场** |
 | `bgm_battlefield_enemy` | 80s | 敌方回合 | 慢节奏紧张 Pad + 低频心跳 + 警报 | ⬜ 未生成 |
 | `bgm_battlefield_tense` | 60s | 紧张战斗(玩家回合击杀残血) | 鼓点 + 弦乐急推 + 危机感 | ⬜ 未生成 |
 | `bgm_trading_post` | 75s | 贸易站 | 轻快原声吉他 + 街区市井感 | ⬜ 未生成 |
@@ -364,8 +366,8 @@
 | `bgm_victory` | 60s | 胜利结算 | 鼓号齐鸣 + 升华旋律 | ⬜ 未生成 |
 | `bgm_defeat` | 60s | 失败结算 | 慢板沉郁 + 弦乐余音 + 寄望 | ⬜ 未生成 |
 
-> **当前取舍（2026-10-21）**：保留 `bgm_main_menu`（接在指挥中心）+ `bgm_boot_a` / `bgm_boot_b`（**启动页随机播**）共 3 条。
-> 战场、仓库、交易行等场景不单独配 BGM —— 由 `BgmPlayer`（autoload）延续上一首，进战场即沿用指挥中心的曲子。
+> **当前取舍（2026-10-21）**：保留 `bgm_main_menu`（接在指挥中心）+ `bgm_boot_a` / `bgm_boot_b`（**启动页随机播**）+ `bgm_battlefield`（**接在战场**）共 4 条。
+> 仓库、交易行等场景不单独配 BGM —— **沿用进入时的状态**。
 > 曾生成过的 `bgm_command_center` / `bgm_battlefield_player` 及其备选版本**已废弃删除**，不在库内。
 
 **播放规则（BgmPlayer）· 按场景管音乐**
@@ -375,13 +377,13 @@
 | 启动（Boot） | **随机播 `bgm_boot_a` / `bgm_boot_b` 之一**（`BgmPlayer.play_random()`，每次启动重新掷骰） |
 | 主菜单 | **保留启动曲继续放**；从战场/指挥中心回来则 `stop()` 淡出（`current_cue()` 在启动曲名单外才停） |
 | 指挥中心 | `bgm_main_menu` 循环（1.2s 淡入） |
-| 战场 | **无声**（`_ready` 里 `stop()`，离开指挥中心即淡出） |
+| 战场 | `bgm_battlefield` 循环（1.2s 淡入） |
 | 仓库 / 交易行 | 沿用进入时的状态（从指挥中心进 → 继续放指挥中心那首） |
 
 > 规则：**进哪个场景就播哪个场景的曲子；没有曲子的场景就停**。
 > 每个场景在 `_ready` 里显式声明（`BgmPlayer.play(cue)` 或 `BgmPlayer.stop()`），不依赖上一场景残留。
 
-### K.1 已落盘三首的制作方式（2026-10-21）
+### K.1 已落盘曲目的制作方式（2026-10-21）
 
 - **生成**:`batch_text_to_music`（music 模型），每首单独一条 prompt，按上表的「风格基调」列写明配器 / 速度 / 调性 / 情绪,不加歌词（纯器乐）。
 - **原始产出是短曲**（19~54s,且带尾部 fade-out）,不满足 60~120s 规格 → 用 `tools/build_bgm_loop.py` 剪成可无缝循环的长曲。
@@ -414,6 +416,9 @@ python3 tools/build_bgm_loop.py \
 ```
 
 > `--start` / `--end` 可指定循环正文区间（秒）。默认整曲,只自动裁掉尾部淡出到静音的一段。
+> **接缝自动修复**:MP3 编码器在文件首尾帧的重建误差会让「文件末尾→文件开头」出现台阶。
+> 工具在接缝检测不通过时,会在单个循环单元内找低能量切点,各自旋转 + 文件级首尾交叉淡化后重新编码,
+> 用「回绕跳变 vs 曲内 P95」客观选优（`--seam-trials` / `--no-seam-fix`）。
 > **产出物一律由用户评审**（见 `AGENTS.md` 一）,Agent 不做主观择优。
 > 模型原始产出与备选版本留在 `Art/audio/bgm/_raw/`（已 gitignore）,确认定稿后清理。
 
@@ -426,6 +431,21 @@ python3 tools/build_bgm_loop.py \
 - **入库规格**:48kHz / 立体声 / MP3 128kbps / EBU R128 两遍响度归一(-16 LUFS,TP -1.5dBTP) —— 归一顺带消掉了模型输出的削波(原始 P4 有 3.5 万个满幅采样,入库版 0)。
 - **接线**:`BgmPlayer.play_random(cues)` 新增（自动剔除缺文件条目,全缺则 warning 跳过）→ `Boot._ready()` 调 `play_random(BOOT_BGM_CUES)` → `MainMenu._ready()` **只在 `current_cue()` 不在启动曲名单内时才 `stop()`**（启动曲在主菜单继续放,从战场/指挥中心回来则静默）。
 - **循环**:`.import` 的 `loop` 置 `true`（运行时 `BgmPlayer` 再设一次,双保险）。`bgm_boot_a` 的 62s 截点回绕跳变 0.047,小于曲内最大瞬态 0.69,循环处无突兀爆音。
+
+### K.3 战场 BGM 的制作方式（2026-10-21）
+
+- **prompt 写法（用户版 · 关键）**:开头 `Instrumental.`,之后**纯正面罗列乐器**,每个元素用「乐器 + 音区 + 奏法 + 密度词 + 角色词」表达,场景情绪置尾;**全篇不出现 vocals / choir / voice / humming / lyrics 任何字样**（写排除清单反而更容易生成人声,见 `audio_pipeline.md` 已知坑）。本条 267 字符,Connector 通路单条上限 300。
+  ```
+  Instrumental. Mid-tempo 4/4, D minor, 96 BPM. Continuous double bass and
+  low cello melody as the foundation. Muted electronic drum pulse under the
+  strings. A few sparse string melody notes above. ABCA form. Tense ruined
+  battlefield, cold vigilance, contained tension.
+  ```
+- **一次出 4 条独立样本**（同一 prompt 多次请求 = 多个独立生成）,全量交付由用户试听取舍,Agent 不预筛人声。
+- **本批产出**:候选 `cand_01`(39.7s) / `cand_02`(40.7s) / `cand_03`(16.8s) / `cand_04`(56.7s) → **用户选定 `cand_04`,取 22s 到结尾** → `bgm_battlefield.mp3`(34.71s)。
+- **未做无缝拼接**:用户明确要求「不用做拼接」,故本曲**不是** `build_bgm_loop.py` 的无缝循环产物,而是原始素材的截取段。`loop=true` 下每次循环的接缝落在「模型输出的尾部淡出（原始素材 54.15s 后有 2.56s 渐隐）→ 22s 处」之间,属于淡出接淡入,听感是自然的换气。
+- **入库规格**:48kHz / 立体声 / MP3 128kbps / EBU R128 两遍响度归一(-16 LUFS,TP -1.5dBTP) —— 实测 -16.4 LUFS / 峰值 -1.9 dBFS / 削波 0。
+- **接线**:`Battlefield._ready()` 由 `BgmPlayer.stop()` 改为 `BgmPlayer.play(&"bgm_battlefield")`(离开指挥中心时 1.2s 交叉淡入);`.import` 的 `loop` 置 `true`。
 
 ---
 

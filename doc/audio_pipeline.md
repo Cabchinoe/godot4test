@@ -11,7 +11,7 @@
 | 项 | 状态 |
 |---|---|
 | 正式 SFX | ✅ **65 个 mp3 已落盘**（`Art/audio/sfx/`），已提交 |
-| BGM | 🟡 **3 个已落盘**（`bgm_main_menu.mp3` 91.5s 接在指挥中心；`bgm_boot_a.mp3` 62s + `bgm_boot_b.mp3` 49.2s **启动页随机播**）。战场等场景沿用指挥中心那首。曾生成的指挥中心 / 战场专用曲已废弃删除，剩余需求见 `sfx_asset_manifest.md` §K |
+| BGM | 🟡 **4 个已落盘**（`bgm_main_menu.mp3` 91.5s 接在指挥中心；`bgm_boot_a.mp3` 62s + `bgm_boot_b.mp3` 49.2s **启动页随机播**；`bgm_battlefield.mp3` 34.7s 接在战场）。战场 `_ready` 里 `play(&"bgm_battlefield")`；仓库 / 交易行沿用进入时的状态。剩余需求见 `sfx_asset_manifest.md` §K |
 | 环境音 | ❌ **0 个**。需求 3 条（30s loop），见 `sfx_asset_manifest.md` §L |
 | 角色语音 | 🟡 **6 个文件已落盘**（`Art/audio/sfx/voice_benny_*.mp3`；3 条旧 32kHz/128kbps + `cutin_in_01` / `hit_01` 44.1kHz/256kbps + `bleed_01` 24kHz/96kbps 立体声，规格待统一） |
 | 已接线的语音 cue | 🟡 **6 个**：`voice_heal` / `select_player` / `fracture_apply` / `bleed_apply` / `battle_cutin_in` / `voice_hit` |
@@ -53,7 +53,12 @@
 |---|---|---|---|
 | **物理音**（枪声、UI、脚步、装备、容器、合成、门） | 音效库检索 | `game-sfx-search` skill（FreeSound / Mixkit / AudioPapkin 等） | 65 个已落盘，**继续用这条路** |
 | **人声**（角色台词、痛呼、喘息） | 真人配音 或 TTS | `benny_vo_brief.md` / `tools/tts_minimax.py` | **进行中** |
-| **BGM / 环境音** | 音乐模型 或 音效库 | `batch_text_to_music` / `game-sfx-search` | BGM 3 条已落盘，环境音 0 条 |
+| **BGM / 环境音** | 音乐模型 或 音效库 | `batch_text_to_music`（封装见 `tools/music_gen.py`）/ `game-sfx-search` | BGM 3 条已落盘，环境音 0 条 |
+
+> **BGM 生成走 [`doc/music_generation.md`](music_generation.md)**：接口地址、请求体 / 响应格式、
+> curl + Python 示例、prompt 写法（2000 字符上限、`is_instrumental` 无人声硬开关）、
+> wav→MP3→无缝循环→Godot 导入的完整流水线都在那里面。新 Agent 接手 BGM 任务先读它，
+> 别重新踩人声和削波的坑。Agent 侧的执行流程见 `.minimax/skills/music-generation/`。
 
 ### 为什么人声不能继续用音效库
 
@@ -216,6 +221,9 @@ python3 tools/build_bgm_loop.py \
 ```
 
 `build_bgm_loop.py` 会打印客观体检结果（正文区间 / 单元时长 / 峰值 / 削波 / 循环接缝连续性）。
+接缝检测不通过时工具会**自动修复**：MP3 编码器在文件首尾帧的重建误差与该处信号电平正相关，
+所以工具会在单个循环单元内找几个低能量切点，各自旋转 + 首尾交叉淡化后重新编码，
+用「回绕跳变 vs 曲内 P95」客观选优（`--seam-trials` 调候选数，`--no-seam-fix` 关闭）。
 细节见 [sfx_asset_manifest.md](sfx_asset_manifest.md) §K.1。
 
 ### 真人录音入库流程
@@ -282,7 +290,7 @@ python3 tools/build_bgm_loop.py \
 - **Godot 总线未布局**：`conf/audio/ui_sfx.json` 的 `audio_bus` 填 `SFX`，但项目还没有 SFX/BGM/AMB 总线布局，`BattleSfx._has_bus()` 找不到会回落 `Master`。要做音量滑条需先补总线。
 - **音乐模型出的是短曲**：`batch_text_to_music` 产出普遍 20~55s 且带尾部 fade-out，达不到 §K 的 60~120s 规格，**必须自己剪成无缝循环**（`tools/build_bgm_loop.py`）。别直接把模型输出当成品入库。
 - **模型不一定听 prompt 的"不要人声"**：`bgm_command_center` 连续两版都生成了明显女声合唱；`bgm_battlefield_player` 第一版被评"合成器音色廉价、低频发闷"，换 prompt 后才可用。**多版候选要留给人评审**（`AGENTS.md` 一），别让 Agent 自己打分定稿。
-- **写排除项反而可能"提示"出人声**（2026-10-21 实测）：`no vocals / no choir / no humming / no vocal pads` 这类长排除清单放进 prompt，**命中人声率反而高**——战斗 BGM 第一轮 3 条全带排除项，3/3 都生成了"啊"声人声；第二轮改成 **只在 prompt 开头写 `Instrumental.` + 纯正面罗列乐器名（不出现 choir/voice/humming/lyrics 任何字样）**，5 条里 4 条无任何人声（1 条仍出"啊"声）。**结论：靠 `Instrumental.` 标签 + 乐器正面描述，不要写 vocal 相关的排除词**；且模型行为有随机性，**必须逐条检测**。
+- **写排除项反而可能"提示"出人声**（2026-10-21 实测）：`no vocals / no choir / no humming / no vocal pads` 这类长排除清单放进 prompt，**命中人声率反而高**——敌方推进 BGM 第一轮 3 条全带排除项，3/3 都生成了"啊"声人声；第二轮改成 **只在 prompt 开头写 `Instrumental.` + 纯正面罗列乐器名（不出现 choir/voice/humming/lyrics 任何字样）**，5 条里 4 条无任何人声（1 条仍出"啊"声），且第二轮是唯一被用户接受入库的一轮。**结论：靠 `Instrumental.` 标签 + 乐器正面描述，不要写 vocal 相关的排除词**；模型行为有随机性，**一次多出几条备选、全量交给用户听**。完整证据表见 `.minimax/skills/music-generation/references/api-reference.md` §3。
 - **人声不要用模型预筛**：`AGENTS.md` 一规定多媒体产出物一律由用户评审，**不跑 `listen_audio` / `audios_understand` 做"有无人声"这类缺陷判定后自行丢弃候选**。命中排除项的候选**照样原样交付**，由用户自己听出来再返工。唯一该做的是客观技术体检（时长 / 峰值 / 削波 / 能否加载）。
 - **音乐模型产出会削波**：`batch_text_to_music` 输出普遍顶到 -0.0 dBFS，满幅采样从数百到数万不等。prompt 里写 `no clipping` 无效，**入库前必须过一遍 `alimiter` / `loudnorm`（TP -1.5 dBTP）**。
 - **Godot 退出时不回收活跃播放体**：进程退出时仍在播放的 `AudioStreamPlayback` 不会被释放（裸 `AudioStreamPlayer` 实测同样残留）。`BgmPlayer._exit_tree()` 里 `stop()` 之后留了一点延时让 AudioServer 完成一次 mix。战场场景 headless 跑仍会报 1 个残留，来源是它自己的回合横幅音效 `sfx_turn_in` 演出未收尾，与 BGM 无关。
