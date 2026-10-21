@@ -310,9 +310,9 @@ func add_status(effect_id: String, source_name: String = "") -> Dictionary:
 		if effect and effect.effect_id == effect_id:
 			effect.add_application(definition, source_name)
 			status_effects_changed.emit()
-		var existing_effect_data := effect.to_dictionary()
-		status_effect_applied.emit(existing_effect_data)
-		return existing_effect_data
+			var existing_effect_data := effect.to_dictionary()
+			status_effect_applied.emit(existing_effect_data)
+			return existing_effect_data
 	var new_effect := BattleStatusEffect.new(definition, source_name)
 	status_effects.append(new_effect)
 	status_effects_changed.emit()

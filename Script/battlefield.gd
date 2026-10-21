@@ -25,6 +25,10 @@ const BATTLE_CONTAINER_SPAWNER_SCRIPT := preload("res://Script/battle_container_
 const BATTLE_CONTAINER_ACTION_MENU_SCRIPT := preload("res://Script/ui/battle_container_action_menu.gd")
 const SIGNAL_FLARE_SPRITES := preload("res://Art/tilesets/urban_night/props/markers/signal_flare/signal_flare_sprites.tres")
 const LEVEL_CONFIG_PATH := "res://conf/levels/beginner_urban.json"
+const STATUS_VOICE_CUES := {
+	"bleeding": "bleed_apply",
+	"fractured": "fracture_apply",
+}
 
 const DRAG_THRESHOLD: float = 5.0
 const MOVE_RANGE_SOURCE_ID: int = 0
@@ -464,6 +468,7 @@ func _on_turn_started(turn: int):
 		evacuation_pending = false
 		status_bar.set_evacuation_pending(false)
 		print("[Evacuation] 已中断：干员未停留在撤离点。")
+	_play_player_status_voice()
 	status_bar.refresh()
 	_update_player_animation()
 	if not _battle_finished:
@@ -542,6 +547,29 @@ func _resolve_turn_status_feedback(unit: Unit) -> void:
 	if had_injury_damage:
 		await get_tree().create_timer(0.58).timeout
 	_is_resolving_turn_status = false
+
+
+func _play_player_status_voice() -> void:
+	if _sfx == null or player == null or player.is_defeated:
+		return
+	var cues: Array[StringName] = []
+	for effect_variant in player.get_status_effects():
+		var effect := effect_variant as BattleStatusEffect
+		if effect == null:
+			continue
+		var cue_name := str(STATUS_VOICE_CUES.get(effect.effect_id, ""))
+		if cue_name.is_empty():
+			continue
+		var cue := StringName(cue_name)
+		if not cues.has(cue):
+			cues.append(cue)
+	if cues.is_empty():
+		return
+	cues.shuffle()
+	for cue in cues:
+		var voice := _sfx.play_voice(cue, {"victim": player, "attacker": player})
+		if voice != null:
+			return
 
 
 func _flash_player_injury() -> void:

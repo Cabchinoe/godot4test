@@ -40,6 +40,7 @@
 > v1.35 修订(2026-10-20):**无菌绷带组改 x2**——`sfx_heal_tick_consumable_sterile_bandage_04.mp3` 改为两段绷带缠绕、120ms 间隔,成品 1.164s;`sfx_item_merge` 重做候选试听中(旧版偏混)。
 > v1.36 修订(2026-10-20):**`sfx_item_merge` 定稿为脆叮**——采用 `crisp_tick3`(C5 523.25Hz + C6/C7 泛音 + 短高频起振),成品 0.400s;旧 0.750s 低频“咚”版本替换。注意:当前基础音为 C5,按半音表移调后实际音区为 C5~C6。
 > v1.37 修订(2026-10-20):**`sfx_item_merge` 降八度定稿**——`crisp_tick3` 整体降八度,基础音回到 C4 261.63Hz,实际音区 C4~C5,符合原 MIDI 60 口径;成品 0.395s,峰值 -1.3dBFS。
+> v1.38 修订(2026-10-21):**状态语音改到玩家回合开始**——`sfx_bleed_apply` / `sfx_fracture_apply` 不再在受击结算播放;玩家回合开始、状态结算后从当前负面状态随机播一条。同步修复 `Unit.add_status()` 在已有状态时漏加新状态的问题。
 > v1.38 修订(2026-10-20):**二合预制 8 个变体**——以 Lv1 C4 脆叮为基础,生成 `sfx_item_merge_lv1~lv8.mp3`,对应 C4 / D4 / E4 / F4 / G4 / A4 / B4 / C5;8 个 binding 已写入 `default.item_merge_lv*`。mp3 总数 55 → **62**。
 > v1.39 修订(2026-10-20):**二合备用 2 级**——追加 `sfx_item_merge_lv9.mp3`(D5)与 `sfx_item_merge_lv10.mp3`(E5),继续 C 大调;绑定同步到 `default.item_merge_lv9/lv10`。mp3 总数 62 → **64**。
 
@@ -231,9 +232,9 @@
 
 | cue key | 时长 | 描述 | 触发点 / 绑定 |
 |---|---|---|---|
-| `sfx_bleed_apply` | 0.45s(语音长度待定) | 流血触发:角色痛呼 / 短台词 | `unprotected_debuffs[bleeding]` 触发;绑 `units[<victim art_key>].bleed_apply`,后续 TTS |
+| `sfx_bleed_apply` | 0.45s(语音长度待定) | 流血触发:角色痛呼 / 短台词 | 施加时只标记状态;角色语音改为玩家回合开始随机播(`Battlefield._play_player_status_voice()`) |
 | `sfx_bleed_tick` | 0.30s(可选) | 流血持续伤害:每层在持有者回合开始扣 5 点 | `BattleCombatResolver.begin_turn()`;当前有受伤飘字 / 状态脉冲,是否保留待定 |
-| `sfx_fracture_apply` | 0.55s(语音长度待定) | 骨折触发:角色痛呼 / 短台词 | `unprotected_debuffs[fractured]` 触发;绑 `units[<victim art_key>].fracture_apply`,后续 TTS |
+| `sfx_fracture_apply` | 0.55s(语音长度待定) | 骨折触发:角色痛呼 / 短台词 | 施加时只标记状态;角色语音改为玩家回合开始随机播(`Battlefield._play_player_status_voice()`) |
 | `sfx_heal_tick` | 0.30~0.50s(按物品) | 医疗道具使用音效;按 7 个医疗物品拆 item-bound 变体 | `Battlefield._on_consumable_use_requested()`:消耗成功后、`BattleItemUseResolver.apply()` 前;按物品 `heal_sfx` |
 | `voice_heal` | TTS 长度待定 | 医疗效果生效后的角色短语音 | `BattleItemUseResolver.apply()` 后且 `_has_medical_effect()` 为真;绑 `units[<actor art_key>].voice_heal`,具体角色文件见角色语音文档 |
 

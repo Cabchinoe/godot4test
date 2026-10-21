@@ -5,7 +5,6 @@
   "result_hold_seconds": 0.62,
   "attack_sfx_wait_max": 1.2,
   "hit_sfx_wait_max": 1.2,
-  "hit_voice_wait_max": 1.0,
   "cutin_voice_wait_max": 3.0,
   "cutin_voice_tail_padding": 0.05,
   "value_tween_seconds": 0.18,

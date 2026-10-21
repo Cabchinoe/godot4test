@@ -88,7 +88,7 @@ func show_result(applied: Dictionary, instantly: bool = false) -> void:
 	if bool(applied.get("hit", false)):
 		_shake(float(_config.get("shake_strength", 14.0)), instantly)
 		var hit_player := _sfx.play(&"hit", _sfx_context(&"hit"))
-		_play_hit_voice(applied)
+		_play_hit_voice()
 		if bool(applied.get("defeated", false)):
 			await _wait_sfx(hit_player, _seconds("hit_sfx_wait_max", 1.2))
 			_sfx.play(&"unit_down", _sfx_context(&"unit_down"))
@@ -245,49 +245,12 @@ func _sfx_context(cue: StringName = &"") -> Dictionary:
 
 func _is_victim_cue(cue: StringName) -> bool:
 	var s := str(cue)
-	return s == "hit" or s == "miss" or s == "unit_down" or s == "fracture_apply" or s == "bleed_apply" or s == "voice_hit"
+	return s == "hit" or s == "miss" or s == "unit_down" or s == "voice_hit"
 
 
-# 受击痛呼走独立 voice cue。若同一次受击还触发了骨折/流血语音，
-# 等痛呼播完再播状态语音，避免共用的人声通道互相掐断。
-func _play_hit_voice(applied: Dictionary) -> void:
-	var hit_voice := _sfx.play_voice(&"voice_hit", _sfx_context(&"voice_hit"))
-	if hit_voice == null:
-		_play_status_voice(applied)
-		return
-	if not _has_status_voice(applied):
-		return
-	var wait := 0.0
-	if hit_voice.stream:
-		wait = minf(hit_voice.stream.get_length(), _seconds("hit_voice_wait_max", 1.0))
-	if wait <= 0.0:
-		_play_status_voice(applied)
-		return
-	get_tree().create_timer(wait).timeout.connect(_play_status_voice.bind(applied), CONNECT_ONE_SHOT)
-
-
-func _has_status_voice(applied: Dictionary) -> bool:
-	for status_variant in applied.get("statuses", []):
-		if not (status_variant is Dictionary):
-			continue
-		var status_id := str((status_variant as Dictionary).get("id", ""))
-		if status_id == "fractured" or status_id == "bleeding":
-			return true
-	return false
-
-
-# 异常状态语音：被施加异常的是「被打的人」，所以按 victim 绑（谁中招谁开口）。
-# 走人声通道：与其它角色语音互斥，不会叠加；文件没录出来时静默跳过。
-func _play_status_voice(applied: Dictionary) -> void:
-	for status_variant in applied.get("statuses", []):
-		if not (status_variant is Dictionary):
-			continue
-		var status_id := str((status_variant as Dictionary).get("id", ""))
-		match status_id:
-			"fractured":
-				_sfx.play_voice(&"fracture_apply", _sfx_context(&"fracture_apply"))
-			"bleeding":
-				_sfx.play_voice(&"bleed_apply", _sfx_context(&"bleed_apply"))
+# 受击只播短痛呼；流血/骨折语音改到玩家回合开始，见 Battlefield._play_player_status_voice()。
+func _play_hit_voice() -> void:
+	_sfx.play_voice(&"voice_hit", _sfx_context(&"voice_hit"))
 
 
 func _seconds(key: String, fallback: float) -> float:

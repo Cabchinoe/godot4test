@@ -55,9 +55,9 @@
 | 游戏 cue | 默认文件 / line ID | 场景 | 生产状态 | 代码绑定 |
 |---|---|---|---|---|
 | `units.benny.select_player` | `voice_benny_select_01` | 选中角色 / 进入移动 | ✅ 已落盘 | ✅ **已接**（`battlefield.gd:1113`，选中自己进入移动态时；**概率 20%** 触发） |
-| `units.benny.hit` | `voice_benny_hit_01` | 受击 | ✅ 已落盘 | ✅ **已接**（`battle_cut_in.gd` `show_result()` → `play_voice(&"voice_hit")`；痛呼播完再播状态语音） |
-| `units.benny.bleed_apply` | `voice_benny_bleed_01` | 流血施加 | 待生产 | ✅ **已接**（`battle_cut_in.gd` `show_result()` → `_play_status_voice()`），文件未录 |
-| `units.benny.fracture_apply` | `voice_benny_fracture_01` | 骨折施加 | ✅ 已落盘 | ✅ **已接**（同上） |
+| `units.benny.hit` | `voice_benny_hit_01` | 受击 | ✅ 已落盘 | ✅ **已接**（`battle_cut_in.gd` `show_result()` → `play_voice(&"voice_hit")`；受击只播痛呼） |
+| `units.benny.bleed_apply` | `voice_benny_bleed_01` | 流血施加 | ✅ 已落盘 | ✅ **已接**（`battlefield.gd` 玩家回合开始 → `_play_player_status_voice()`；多状态随机一条；规格待统一） |
+| `units.benny.fracture_apply` | `voice_benny_fracture_01` | 骨折施加 | ✅ 已落盘 | ✅ **已接**（同上；多状态随机一条） |
 | `units.benny.voice_heal` | `voice_benny_heal_01` | 医疗道具生效 | ✅ 已落盘 | ✅ **已接**（`battlefield.gd:870`） |
 | `units.benny.battle_cutin_in` | `voice_benny_cutin_in_01` | 战斗遮罩入场 | ✅ 已落盘 | ✅ **已接**（cut-in 音效通道；开枪前等待语音播完） |
 | `units.benny.unit_down` | `voice_benny_down_01` | 倒地 / 死亡 | 待生产 | ❌ 未接（与音效 `unit_down` 撞名） |

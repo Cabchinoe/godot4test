@@ -13,8 +13,8 @@
 | 正式 SFX | ✅ **65 个 mp3 已落盘**（`Art/audio/sfx/`），已提交 |
 | BGM | ❌ **0 个**。需求 9 条，见 `sfx_asset_manifest.md` §K |
 | 环境音 | ❌ **0 个**。需求 3 条（30s loop），见 `sfx_asset_manifest.md` §L |
-| 角色语音 | 🟡 **5 个文件已落盘**（`Art/audio/sfx/voice_benny_*.mp3`；3 条旧 32kHz/128kbps + `cutin_in_01` / `hit_01` 44.1kHz/256kbps） |
-| 已接线的语音 cue | 🟡 **6 个**：`voice_heal` / `select_player` / `fracture_apply` / `bleed_apply` / `battle_cutin_in` / `voice_hit`（其中 `bleed_apply` 文件待录） |
+| 角色语音 | 🟡 **6 个文件已落盘**（`Art/audio/sfx/voice_benny_*.mp3`；3 条旧 32kHz/128kbps + `cutin_in_01` / `hit_01` 44.1kHz/256kbps + `bleed_01` 24kHz/96kbps 立体声，规格待统一） |
+| 已接线的语音 cue | 🟡 **6 个**：`voice_heal` / `select_player` / `fracture_apply` / `bleed_apply` / `battle_cutin_in` / `voice_hit` |
 | 语音播放通道 | ✅ **独立人声通道**（`BattleSfx.play_voice()`），新语音自动掐断上一条，连点不叠加 |
 | TTS 管线 | ✅ 声线基准为 `voice_benny_fracture_01`（`Sweet_Lady`，预设见 `tools/tts_voice_benny_selected.json`），44.1kHz FLAC 生产、44.1kHz MP3 入库 |
 | 真人配音 | 🔲 需求单已出（`benny_vo_brief.md`），**等录音** |
@@ -83,6 +83,8 @@
 
 `voice_benny_cutin_in_01` 最终版以 H1 为母带，后期插入 0.65s 间隔 + 0.35s 低音量气声，并降 0.6 半音；不是纯 TTS 直出。
 
+> 流血/骨折语音不再在受击结算播放。玩家回合开始、状态结算与伤害反馈结束后，由 `Battlefield._play_player_status_voice()` 从当前负面状态里随机播一条；受击时只播 `voice_hit`。当前没有 `sfx_bleed_tick` 文件，语音在状态伤害飘字/闪烁反馈结束后播。
+
 ---
 
 ## 4. 语音 cue 接线现状（代码侧）
@@ -128,8 +130,8 @@
 |---|---|---|---|
 | `units.benny.voice_heal` | `Script/battlefield.gd:870` `_sfx.play_voice(&"voice_heal", {"attacker": player})` | `voice_benny_heal_01` | ✅ 已落盘 |
 | `units.benny.select_player` | `Script/battlefield.gd:1113` 选中自己进入移动态 `_sfx.play_voice(&"select_player", {"attacker": player})` | `voice_benny_select_01`，**概率 20%** | ✅ 已落盘 |
-| `units.benny.fracture_apply` | `Script/battle/battle_cut_in.gd` `show_result()` → `_play_status_voice()` | `voice_benny_fracture_01` | ✅ 已落盘 |
-| `units.benny.bleed_apply` | 同上 | `voice_benny_bleed_01` | ❌ 文件未落盘（绑定已就位，文件到位即生效） |
+| `units.benny.fracture_apply` | `Script/battlefield.gd` `_on_turn_started()` → `_play_player_status_voice()` | `voice_benny_fracture_01` | ✅ 已落盘（玩家回合开始；多状态随机一条） |
+| `units.benny.bleed_apply` | 同上 | `voice_benny_bleed_01` | ✅ 已落盘（玩家回合开始；多状态随机一条；24kHz/96kbps 立体声，规格待统一） |
 | `units.benny.battle_cutin_in` | `Script/battle/battle_cut_in.gd:53` `_sfx.play(&"battle_cutin_in", ...)` | `voice_benny_cutin_in_01` | ✅ 已落盘（走 cut-in 音效通道；`play_attack_lead_in()` 等语音播完再开枪） |
 | `units.benny.voice_hit` | `Script/battle/battle_cut_in.gd` `show_result()` → `_play_hit_voice()` | `voice_benny_hit_01` | ✅ 已落盘（痛呼；有骨折/流血语音时等待痛呼结束再播） |
 
