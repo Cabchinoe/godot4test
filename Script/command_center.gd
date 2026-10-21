@@ -8,6 +8,7 @@ var _feedback_tweens: Dictionary = {}
 
 
 func _ready() -> void:
+	BgmPlayer.play(&"bgm_main_menu")
 	_update_local_time()
 	_refresh_currency()
 	_setup_button_feedback($BattleButton, $BattleCard, $BattleCard/Highlight)

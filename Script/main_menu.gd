@@ -11,6 +11,8 @@ const BG_EXTENSIONS := ["jpg", "jpeg", "png", "webp"]
 
 
 func _ready() -> void:
+	# 启动界面保持无声：从战场/指挥中心回到主菜单时停掉 BGM
+	BgmPlayer.stop()
 	_pick_random_background()
 
 

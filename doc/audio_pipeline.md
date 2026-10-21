@@ -11,12 +11,13 @@
 | 项 | 状态 |
 |---|---|
 | 正式 SFX | ✅ **65 个 mp3 已落盘**（`Art/audio/sfx/`），已提交 |
-| BGM | ❌ **0 个**。需求 9 条，见 `sfx_asset_manifest.md` §K |
+| BGM | 🟡 **1 个已落盘**（`Art/audio/bgm/bgm_main_menu.mp3`，91.5s），**接在指挥中心**循环播放；启动界面（Boot / 主菜单）无声；战场等场景沿用同一首。曾生成的指挥中心 / 战场专用曲已废弃删除，剩余需求见 `sfx_asset_manifest.md` §K |
 | 环境音 | ❌ **0 个**。需求 3 条（30s loop），见 `sfx_asset_manifest.md` §L |
 | 角色语音 | 🟡 **6 个文件已落盘**（`Art/audio/sfx/voice_benny_*.mp3`；3 条旧 32kHz/128kbps + `cutin_in_01` / `hit_01` 44.1kHz/256kbps + `bleed_01` 24kHz/96kbps 立体声，规格待统一） |
 | 已接线的语音 cue | 🟡 **6 个**：`voice_heal` / `select_player` / `fracture_apply` / `bleed_apply` / `battle_cutin_in` / `voice_hit` |
 | 语音播放通道 | ✅ **独立人声通道**（`BattleSfx.play_voice()`），新语音自动掐断上一条，连点不叠加 |
 | TTS 管线 | ✅ 声线基准为 `voice_benny_fracture_01`（`Sweet_Lady`，预设见 `tools/tts_voice_benny_selected.json`），44.1kHz FLAC 生产、44.1kHz MP3 入库 |
+| BGM 播放系统 | ✅ `BgmPlayer`（autoload）循环播放 + 场景切换交叉淡化 |
 | 真人配音 | 🔲 需求单已出（`benny_vo_brief.md`），**等录音** |
 
 **当前最关键的两条结论**（别再重复踩）：
@@ -52,7 +53,7 @@
 |---|---|---|---|
 | **物理音**（枪声、UI、脚步、装备、容器、合成、门） | 音效库检索 | `game-sfx-search` skill（FreeSound / Mixkit / AudioPapkin 等） | 65 个已落盘，**继续用这条路** |
 | **人声**（角色台词、痛呼、喘息） | 真人配音 或 TTS | `benny_vo_brief.md` / `tools/tts_minimax.py` | **进行中** |
-| **BGM / 环境音** | 音乐模型 或 音效库 | `batch_text_to_music` / `game-sfx-search` | 12 条待做 |
+| **BGM / 环境音** | 音乐模型 或 音效库 | `batch_text_to_music` / `game-sfx-search` | BGM 3 条已落盘，环境音 0 条 |
 
 ### 为什么人声不能继续用音效库
 
@@ -198,6 +199,25 @@ ffmpeg -i <file> -af volumedetect -f null - 2>&1 | grep max_volume
 ffmpeg -i in.flac -af loudnorm=I=-16:TP=-1.5:LRA=11 out.flac
 ```
 
+### BGM（音乐模型产出 → 无缝循环 → 入库）
+
+```bash
+# 1) 生成（一次最多 5 条；纯器乐不传 lyrics）
+mcode-tools connector call connector__matrix__batch_text_to_music --args-file <args.json>
+
+# 2) 下载
+mcode-tools get_asset_url <node_id>   # → 临时下载链接
+
+# 3) 剪成无缝循环 + 响度归一 + 入库规格
+python3 tools/build_bgm_loop.py \
+  --src Art/audio/bgm/_raw/<源曲>.wav \
+  --out Art/audio/bgm/bgm_main_menu.mp3 \
+  --target 120
+```
+
+`build_bgm_loop.py` 会打印客观体检结果（正文区间 / 单元时长 / 峰值 / 削波 / 循环接缝连续性）。
+细节见 [sfx_asset_manifest.md](sfx_asset_manifest.md) §K.1。
+
 ### 真人录音入库流程
 
 1. 录音 → 交 WAV（规格见 `benny_vo_brief.md` 第 3 节）
@@ -232,7 +252,7 @@ ffmpeg -i in.flac -af loudnorm=I=-16:TP=-1.5:LRA=11 out.flac
 | 3 | 3 个人形敌人的角色设定（人格、处境） | 用户提供 | 未定 |
 | 4 | 敌人是否"开口说话"还是"只要声音" | 用户决策 | 未定 |
 | 5 | 敌人 6 条 hit/down 中文台词 | 事项 4 | 可先写生理音版本（不依赖设定） |
-| 6 | 9 个 BGM + 3 个环境音 | 无 | 可用 `batch_text_to_music` / 音效库 |
+| 6 | 剩余 6 个 BGM + 3 个环境音 | 无 | 可用 `batch_text_to_music` / 音效库 |
 | 7 | 12 个语音 cue 的代码接线 | 音频落盘 | 事项 2 完成后可先做（用占位音频验证） |
 | 8 | 试 TTS 混合音色 | 无 | 事项 4（战场干练 vs 少年元气 的取向） |
 | 9 | 命名口径统一（manifest 补映射列） | 无 | 随时可做 |
@@ -260,3 +280,6 @@ ffmpeg -i in.flac -af loudnorm=I=-16:TP=-1.5:LRA=11 out.flac
 - **混合音色要置空 voice_id**：用 `timbre_weights` 时 `voice_setting.voice_id` 必须为空字符串。
 - **试听样本的峰值不一致**：不同情绪/音色的原始电平差可达 10 dB，横向对比时容易误判。入库前统一归一。
 - **Godot 总线未布局**：`conf/audio/ui_sfx.json` 的 `audio_bus` 填 `SFX`，但项目还没有 SFX/BGM/AMB 总线布局，`BattleSfx._has_bus()` 找不到会回落 `Master`。要做音量滑条需先补总线。
+- **音乐模型出的是短曲**：`batch_text_to_music` 产出普遍 20~55s 且带尾部 fade-out，达不到 §K 的 60~120s 规格，**必须自己剪成无缝循环**（`tools/build_bgm_loop.py`）。别直接把模型输出当成品入库。
+- **模型不一定听 prompt 的"不要人声"**：`bgm_command_center` 连续两版都生成了明显女声合唱；`bgm_battlefield_player` 第一版被评"合成器音色廉价、低频发闷"，换 prompt 后才可用。**多版候选要留给人评审**（`AGENTS.md` 一），别让 Agent 自己打分定稿。
+- **Godot 退出时不回收活跃播放体**：进程退出时仍在播放的 `AudioStreamPlayback` 不会被释放（裸 `AudioStreamPlayer` 实测同样残留）。`BgmPlayer._exit_tree()` 里 `stop()` 之后留了一点延时让 AudioServer 完成一次 mix。战场场景 headless 跑仍会报 1 个残留，来源是它自己的回合横幅音效 `sfx_turn_in` 演出未收尾，与 BGM 无关。

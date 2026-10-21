@@ -58,10 +58,10 @@ Boot.tscn ──► MainMenu.tscn ──► CommandCenter.tscn（前哨指挥台
 
 | 场景 | 脚本 | 说明 |
 |---|---|---|
-| `Boot.tscn` | `Script/boot.gd` | 启动场景：加载 `ItemDB`（`conf/items`）与 `EnemyDB`（`conf/enemies.json`），再跳转主菜单 |
-| `MainMenu.tscn` | `Script/main_menu.gd` | 主菜单：随机背景、开始新游戏、继续游戏、存读档界面 |
-| `CommandCenter.tscn` | `Script/command_center.gd` | 前哨指挥台：本地时间、信用点/辉石碎片展示、卡片入口。战斗、仓库、交易行已接入；温室／工厂／特勤处卡片已预留但未接场景 |
-| `Battlefield.tscn` | `Script/battlefield.gd` | 战场场景：回合制战棋、行动点、战斗遮罩、敌方行动演出、撤离结算 |
+| `Boot.tscn` | `Script/boot.gd` | 启动场景：加载 `ItemDB`（`conf/items`）与 `EnemyDB`（`conf/enemies.json`），再跳转主菜单。**无 BGM** |
+| `MainMenu.tscn` | `Script/main_menu.gd` | 主菜单：随机背景、开始新游戏、继续游戏、存读档界面。**无 BGM** |
+| `CommandCenter.tscn` | `Script/command_center.gd` | 前哨指挥台：本地时间、信用点/辉石碎片展示、卡片入口。战斗、仓库、交易行已接入；温室／工厂／特勤处卡片已预留但未接场景。**BGM `bgm_main_menu`** |
+| `Battlefield.tscn` | `Script/battlefield.gd` | 战场场景：回合制战棋、行动点、战斗遮罩、敌方行动演出、撤离结算。沿用指挥中心那首 BGM，不单独配 |
 | `Base.tscn` | `Script/base.gd` | 旧版基地场景，保留移动与存读档入口 |
 | `Warehouse.tscn` | `Script/inventory/warehouse.gd` | 仓库工作台：容器拖拽、装备与武器配件 |
 | `TradingPost.tscn` | `Script/trading_post.gd` | 交易行：仅售 Lv1 基础品，用于补缺防卡关 |
@@ -147,6 +147,7 @@ Battlefield (Node2D, y_sort_enabled = true, Script/battlefield.gd)
 | `Script/save/save_manager.gd` | 10 个存档槽位读写、版本迁移、当前存档缓存（自动加载） |
 | `Script/save/save_data.gd` / `player_save_data.gd` / `inventory_save_data.gd` / `quest_save_data.gd` / `story_save_data.gd` / `save_provider.gd` | 存档数据模型与场景侧 Provider |
 | `Script/boot.gd` / `main_menu.gd` / `command_center.gd` / `trading_post.gd` | 启动、主菜单、前哨指挥台、交易行 |
+| `Script/audio/bgm_player.gd` | BGM 播放系统（autoload `BgmPlayer`）：循环播放 `Art/audio/bgm/` 下的 BGM，场景切换交叉淡化，同一 cue 不重播 |
 
 ---
 
@@ -277,6 +278,7 @@ get_neighbors:
 | `Art/source/` | 绿幕母版与生成源素材 |
 | `Art/tilesets/urban_night/` | 地面、结构、道具图集（atlas），附 `README.md` 说明 |
 | `Art/ui/` | 界面素材 |
+| `Art/audio/bgm/` | 背景音乐：`bgm_main_menu.mp3`（唯一在用，接在指挥中心循环播放） |
 | `HUD/` | 范围高亮瓦片：`moverange.png`、`attack_range.png` |
 | `MAP/` | 旧版瓦片图集 `urban.png`、`indoor.png` |
 | `Items/icons/` | 9 个分类、95 张物品图标 PNG，背景色按 [inventory_background_colors.md](inventory_background_colors.md) 生成 |

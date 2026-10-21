@@ -102,6 +102,9 @@ func _ready():
 	hover_sprite.visible = false
 	hover_sprite2.visible = false
 
+	# 战场暂无专属 BGM：停掉上一场景（指挥中心）的音乐
+	BgmPlayer.stop()
+
 	if ItemDB.get_all_items().is_empty():
 		ItemDB.load_from_dir("res://conf/items")
 	if EnemyDB.get_all_ids().is_empty():

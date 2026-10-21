@@ -21,6 +21,7 @@ ItemDB="*res://Script/item/item_db.gd"
 SaveManager="*res://Script/save/save_manager.gd"
 EnemyDB="*res://Script/enemy_db.gd"
 UiSfx="*res://Script/ui/ui_sfx.gd"
+BgmPlayer="*res://Script/audio/bgm_player.gd"
 
 [display]
 

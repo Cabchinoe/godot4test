@@ -351,17 +351,68 @@
 
 > 全部 stereo / 48kHz / 24bit / 60~120s,可用 FMOD / Wwise 风格循环点剪辑。Godot 4 端通过 `AudioStreamPlayer.stream.loop = true` 处理。
 
-| cue key | 时长 | 场景 | 风格基调 |
-|---|---|---|---|
-| `bgm_main_menu` | 120s | 主菜单 | 钢琴 + 弦乐 + 缓慢 Pad;战后废墟中"家"的温度 |
-| `bgm_command_center` | 90s | 指挥中心 | 暖色调 acoustic + 轻微电流 base;建设希望 |
-| `bgm_battlefield_player` | 80s | 玩家回合(战区) | 紧缓电子 + 短脉冲;能推进但不压迫 |
-| `bgm_battlefield_enemy` | 80s | 敌方回合 | 慢节奏紧张 Pad + 低频心跳 + 警报 |
-| `bgm_battlefield_tense` | 60s | 紧张战斗(玩家回合击杀残血) | 鼓点 + 弦乐急推 + 危机感 |
-| `bgm_trading_post` | 75s | 贸易站 | 轻快原声吉他 + 街区市井感 |
-| `bgm_warehouse` | 60s | 仓库 | 安静环境 + 偶尔物件声;整理整顿 |
-| `bgm_victory` | 60s | 胜利结算 | 鼓号齐鸣 + 升华旋律 |
-| `bgm_defeat` | 60s | 失败结算 | 慢板沉郁 + 弦乐余音 + 寄望 |
+| cue key | 时长 | 场景 | 风格基调 | 落盘状态 |
+|---|---|---|---|---|
+| `bgm_main_menu` | 120s | 主菜单 | 钢琴 + 弦乐 + 缓慢 Pad;战后废墟中"家"的温度 | ✅ 91.5s，**当前唯一在用**：接在指挥中心 |
+| `bgm_battlefield_enemy` | 80s | 敌方回合 | 慢节奏紧张 Pad + 低频心跳 + 警报 | ⬜ 未生成 |
+| `bgm_battlefield_tense` | 60s | 紧张战斗(玩家回合击杀残血) | 鼓点 + 弦乐急推 + 危机感 | ⬜ 未生成 |
+| `bgm_trading_post` | 75s | 贸易站 | 轻快原声吉他 + 街区市井感 | ⬜ 未生成 |
+| `bgm_warehouse` | 60s | 仓库 | 安静环境 + 偶尔物件声;整理整顿 | ⬜ 未生成 |
+| `bgm_victory` | 60s | 胜利结算 | 鼓号齐鸣 + 升华旋律 | ⬜ 未生成 |
+| `bgm_defeat` | 60s | 失败结算 | 慢板沉郁 + 弦乐余音 + 寄望 | ⬜ 未生成 |
+
+> **当前取舍（2026-10-21）**：只保留 `bgm_main_menu` 一条，**接在指挥中心**播放；启动界面（Boot / 主菜单）保持无声。
+> 战场、仓库、交易行等场景不单独配 BGM —— 由 `BgmPlayer`（autoload）延续上一首，进战场即沿用指挥中心的曲子。
+> 曾生成过的 `bgm_command_center` / `bgm_battlefield_player` 及其备选版本**已废弃删除**，不在库内。
+
+**播放规则（BgmPlayer）· 按场景管音乐**
+
+| 场景 | BGM |
+|---|---|
+| 启动（Boot） | 无声 |
+| 主菜单 | 无声（`_ready` 里 `stop()`，从别处回主菜单时淡出） |
+| 指挥中心 | `bgm_main_menu` 循环（1.2s 淡入） |
+| 战场 | **无声**（`_ready` 里 `stop()`，离开指挥中心即淡出） |
+| 仓库 / 交易行 | 沿用进入时的状态（从指挥中心进 → 继续放指挥中心那首） |
+
+> 规则：**进哪个场景就播哪个场景的曲子；没有曲子的场景就停**。
+> 每个场景在 `_ready` 里显式声明（`BgmPlayer.play(cue)` 或 `BgmPlayer.stop()`），不依赖上一场景残留。
+
+### K.1 已落盘三首的制作方式（2026-10-21）
+
+- **生成**:`batch_text_to_music`（music 模型），每首单独一条 prompt，按上表的「风格基调」列写明配器 / 速度 / 调性 / 情绪,不加歌词（纯器乐）。
+- **原始产出是短曲**（19~54s,且带尾部 fade-out）,不满足 60~120s 规格 → 用 `tools/build_bgm_loop.py` 剪成可无缝循环的长曲。
+- **无缝循环做法**:取正文区间 → 尾巴 C 秒与开头 C 秒做等功率交叉淡化 → 得到首尾采样连续的循环单元 → 按目标时长重复该单元（每个接缝都落在设计好的连续点上）。
+- **入库规格**:48kHz / 立体声 / MP3 128kbps / EBU R128 两遍响度归一（-16 LUFS,TP -1.5dBTP）/ 峰值 ≤ -1dBFS / 无削波。
+- **命名**:`<cue key>.mp3`,落在 `res://Art/audio/bgm/`。
+- **Godot 导入**:`.import` 的 `loop` 置 `true`（运行时 `BgmPlayer` 也会再设一次,双保险）。
+
+#### 指挥中心 / 战场 的重做方向（2026-10-21 第二版 · 已废弃，仅存档参考）
+
+用户对第一版提出的硬要求,后续重做沿用：
+
+| 要求 | 写进 prompt 的约束 |
+|---|---|
+| 不允许人声 | `No singing, no choir, no humming, no voice, no vocal pad`（模型不一定听,必须每条都写死） |
+| 节奏要慢 | 明确 BPM 上限（指挥中心 60~62 / 战场 54~56） |
+| 不要布鲁斯 | `no blues, no jazz, no shuffle, no funk` |
+| 宏大叙事 | `epic cinematic` + 管弦（violins / cellos / horns / timpani / harp）+ 大厅混响 |
+| 战场要大、宽、慢,不要噼里啪啦的电子音 | `vast and wide` + `no EDM, no fast percussion, no hi-hats, no drum machine` + sub drone / 低频定音鼓脉冲 / 远景弦乐 |
+
+> 各出 A/B 两版交给用户试听取舍,Agent 不自行定稿（见 `AGENTS.md` 一）。落盘的 A 版在 `Art/audio/bgm/`,两个候选在 `Art/audio/bgm/_raw/cand_*.mp3`。
+> ⚠️ 这两首（指挥中心 / 战场）最终**未采用，已删除**；当前只留 `bgm_main_menu` 一条接在指挥中心。
+
+```bash
+# 重新生成 / 重建（改 prompt 或换源曲后重跑）
+python3 tools/build_bgm_loop.py \
+  --src Art/audio/bgm/_raw/<源曲>.wav \
+  --out Art/audio/bgm/bgm_main_menu.mp3 \
+  --target 120
+```
+
+> `--start` / `--end` 可指定循环正文区间（秒）。默认整曲,只自动裁掉尾部淡出到静音的一段。
+> **产出物一律由用户评审**（见 `AGENTS.md` 一）,Agent 不做主观择优。
+> 模型原始产出与备选版本留在 `Art/audio/bgm/_raw/`（已 gitignore）,确认定稿后清理。
 
 ---
 
