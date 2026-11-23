@@ -150,9 +150,14 @@ static func dirty_neighborhood(previous: Dictionary, current: Dictionary) -> Dic
 	return dirty
 
 
-static func build_render_densities(manager: LevelManager, visibility: BattleVisibility, tree: SceneTree) -> Dictionary:
+static func build_render_densities(
+	manager: LevelManager, visibility: BattleVisibility, tree: SceneTree,
+	fog_exempt_cells: Array[Vector3i] = []
+) -> Dictionary:
 	var densities: Dictionary = {}
 	var immediate_clear: Dictionary = {}
+	for cell in fog_exempt_cells:
+		immediate_clear[cell] = true
 	if tree and visibility.show_blocking_containers:
 		for container in tree.get_nodes_in_group("battle_containers"):
 			if container is BattleContainer and not container.is_queued_for_deletion() and visibility.is_container_exempt(container):
@@ -162,6 +167,9 @@ static func build_render_densities(manager: LevelManager, visibility: BattleVisi
 		var obstacle := manager.get_layer(level, "obstacle")
 		for grid in ground.get_used_cells():
 			var cell := Vector3i(grid.x, grid.y, level)
+			if immediate_clear.has(cell):
+				densities[cell] = 0
+				continue
 			var ground_data := ground.get_cell_tile_data(grid)
 			var obstacle_data := obstacle.get_cell_tile_data(grid) if obstacle else null
 			var can_hold_unit := ground_data != null and int(ground_data.get_custom_data("terrain")) == 0
@@ -170,7 +178,7 @@ static func build_render_densities(manager: LevelManager, visibility: BattleVisi
 			if not can_hold_unit:
 				immediate_clear[cell] = true
 			var density := 0
-			if can_hold_unit and not immediate_clear.has(cell):
+			if can_hold_unit:
 				density = roundi(visibility.get_fog_opacity(grid, level) * 10.0)
 			densities[cell] = density
 	return {"densities": densities, "immediate_clear": immediate_clear}

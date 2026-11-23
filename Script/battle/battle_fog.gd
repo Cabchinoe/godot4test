@@ -9,6 +9,7 @@ var mask_cache := FogMaskCache.new()
 var generation_jobs_per_frame := 2
 var generation_budget_usec := 2000
 var _level_manager: LevelManager
+var _fog_exempt_cells: Array[Vector3i]
 var _densities: Dictionary = {}
 var _immediate_clear: Dictionary = {}
 var _states: Dictionary = {}
@@ -21,8 +22,9 @@ var _view_rect := Rect2()
 var _last_dirty_count := 0
 
 
-func _init(level_manager: LevelManager) -> void:
+func _init(level_manager: LevelManager, fog_exempt_cells: Array[Vector3i] = []) -> void:
 	_level_manager = level_manager
+	_fog_exempt_cells = fog_exempt_cells.duplicate()
 	name = "BattleFog"
 	mask_cache.texture_ready.connect(_on_texture_ready)
 	for level in level_manager.get_all_levels():
@@ -38,7 +40,7 @@ func _init(level_manager: LevelManager) -> void:
 
 func refresh(visibility: BattleVisibility) -> void:
 	var tree := Engine.get_main_loop() as SceneTree
-	var field := FogNeighborhood.build_render_densities(_level_manager, visibility, tree)
+	var field := FogNeighborhood.build_render_densities(_level_manager, visibility, tree, _fog_exempt_cells)
 	var current: Dictionary = field["densities"]
 	var dirty := FogNeighborhood.dirty_neighborhood(_densities, current)
 	_densities = current

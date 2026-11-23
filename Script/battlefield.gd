@@ -193,7 +193,10 @@ func _ready():
 	enemy_ai.set_battle_presentation(battle_presentation)
 	var fog_config: Variant = battle_config.get("fog_of_war", {})
 	battle_visibility = BattleVisibility.new(bullet_range, fog_config if fog_config is Dictionary else {})
-	battle_fog = BattleFog.new(level_manager)
+	var fog_exempt_cells: Array[Vector3i] = []
+	if is_instance_valid(evacuation_marker):
+		fog_exempt_cells.append(BattleVisibility.cell_key(evacuation_grid, evacuation_level))
+	battle_fog = BattleFog.new(level_manager, fog_exempt_cells)
 	add_child(battle_fog)
 	player.profile_changed.connect(_request_visibility_refresh)
 	_refresh_visibility()
@@ -213,7 +216,11 @@ func _is_cell_visible(grid: Vector2i, level: int) -> bool:
 
 
 func _is_enemy_visible(grid: Vector2i, level: int) -> bool:
-	return battle_visibility == null or battle_visibility.is_enemy_visible(grid, level)
+	if battle_visibility == null:
+		return true
+	if grid == evacuation_grid and level == evacuation_level:
+		return battle_visibility.is_base_visible(grid, level)
+	return battle_visibility.is_enemy_visible(grid, level)
 
 
 func _is_container_visible(container: BattleContainer) -> bool:
@@ -249,8 +256,6 @@ func _apply_visibility() -> void:
 		enemy.visible = _is_enemy_visible(enemy.grid_pos, enemy.current_level)
 	for container in get_tree().get_nodes_in_group("battle_containers"):
 		container.visible = _is_container_visible(container)
-	if is_instance_valid(evacuation_marker):
-		evacuation_marker.visible = _is_cell_visible(evacuation_grid, evacuation_level)
 	if status_widget:
 		status_widget.refresh_visibility()
 	if is_instance_valid(_moving_enemy) and status_widget:
@@ -294,13 +299,13 @@ func _spawn_evacuation_point() -> void:
 	var data := evacuation_data as Dictionary
 	var grid := _to_grid(data.get("grid", []))
 	var level := maxi(1, int(data.get("level", 1)))
+	var ground := level_manager.get_layer(level, "ground")
+	var obstacle := level_manager.get_layer(level, "obstacle")
+	if ground == null or obstacle == null:
+		push_warning("Battlefield: missing layer for evacuation point")
+		return
 	if grid.x < 0 or grid.y < 0 or not player.pathfinder.is_walkable(grid, level, player):
 		push_warning("Battlefield: invalid evacuation grid %s lv%d" % [grid, level])
-		return
-	var obstacle := level_manager.get_layer(level, "obstacle")
-	var ground := level_manager.get_layer(level, "ground")
-	if obstacle == null or ground == null:
-		push_warning("Battlefield: missing layer for evacuation point")
 		return
 	evacuation_grid = grid
 	evacuation_level = level
@@ -310,9 +315,10 @@ func _spawn_evacuation_point() -> void:
 	evacuation_marker.animation = &"signal_flare"
 	evacuation_marker.scale = Vector2(1.0 / 32.0, 1.0 / 32.0)
 	evacuation_marker.position = ground.map_to_local(grid)
-	evacuation_marker.z_as_relative = true
+	evacuation_marker.z_as_relative = false
+	evacuation_marker.z_index = obstacle.z_index
 	evacuation_marker.add_to_group("evacuation_point")
-	obstacle.add_child(evacuation_marker)
+	ground.add_child(evacuation_marker)
 	evacuation_marker.play()
 	print("[Evacuation] placed at %s lv%d" % [evacuation_grid, evacuation_level])
 
@@ -1360,7 +1366,7 @@ func _is_in_attack_cells(node: Dictionary) -> bool:
 	return false
 
 func _is_in_unit_cells(node: Dictionary) -> bool:
-	if node.is_empty():
+	if node.is_empty() or not _is_enemy_visible(node["grid"], node["level"]):
 		return false
 	for cell in attack_unit_cells:
 		if cell["grid"] == node["grid"] and cell["level"] == node["level"]:

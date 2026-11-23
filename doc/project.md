@@ -43,7 +43,7 @@
 | [benny_vo_brief.md](benny_vo_brief.md) | 贝妮真人配音需求单（可直接交给配音演员）＋ [录音工作表](benny_vo_lines.csv) |
 | `tools/` | 音频生产脚本：TTS 客户端、音色设计客户端、台词清单、系统音色参考表、BGM 无缝循环构建（`build_bgm_loop.py`）、音乐生成请求封装（`music_gen.py`） |
 | `openspec/` | 能力规格（`specs/`）与历次变更归档（`changes/archive/`） |
-| [战场迷雾提案](../openspec/changes/add-battlefield-fog-of-war/proposal.md) | **逻辑已接入、素材待人工确认**：关卡开关/视距/阻挡容器显示例外；视距外 50/60/70/80% 浓度，≤70% 且射线通畅显示敌人；逐格 0.25s 渐变 |
+| [战场迷雾提案](../openspec/changes/add-battlefield-fog-of-war/proposal.md) | **逻辑已接入、素材待人工确认**：关卡开关/视距、阻挡容器例外、撤离格不铺雾且同格敌人只按基础视野显示；普通敌人按浓度与射线判定，逐格 0.25s 渐变 |
 | [battlefield_fog_visual_proposal.md](battlefield_fog_visual_proposal.md) | C 邻接融合方向与历史美术方案；当前 CPU 生成缓存路线以独立开发文档为准，未生成或替换正式素材 |
 | [battlefield_fog_cache_development.md](battlefield_fog_cache_development.md) | **核心已接入、人工视觉与移动端待验收**：C 融合、47/14 规则、CPU 浓度生成及 D4 复用；2,048 项字典、无稳态 LRU、CPU 过渡与退出清理 |
 

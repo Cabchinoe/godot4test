@@ -6,6 +6,8 @@
 
 `BattleFog` 使用逐层 Node2D + 逐格 Sprite2D；覆盖格的出现/消失通过 0.25s Sine EaseInOut 透明度渐变。重复刷新同一目标不重启动画，快速反向取消旧 tween 后从当前 alpha 继续，淡出结束释放节点。开局直接建立覆盖，退出时 tween 随节点取消。2026-11-23 起渐变支持目标 0%、50%、60%、70%、80%（视距外逐格增加），敌人可见性按逻辑浓度 ≤70% 且射线无阻挡判断，面板、点击及聚焦共用，不等待渐变中间帧。关卡可关闭迷雾，或仅对 `can_walk=false` 容器启用显示例外。规则见 `battlefield_combat_design.md` §10；正式图案仍待用户确认，当前保留中央透明留边技术占位。
 
+撤离点同层同格加入渲染免雾列表，不生成雾片，信号弹不抬到迷雾层。免雾不揭示单位：同格同层的敌人仍只按基础视野显示，攻击模式也不恢复其精灵、点击或目标高亮。
+
 > 版本 v2（2026-09-29）· 状态：P0–P4 已验收，P5 回归与文档同步完成（头盔/护甲「破」提示按当前取舍暂缓）。
 > 上游规则：`battlefield_combat_design.md`——本计划**不修改战斗规则**，只调整结算调用时序（roll / apply 拆分）。
 > 关联：`battlefield_art_asset_plan.md`（美术交付规范）、`unit_status_widget_proposal.md`（情报遮蔽）、`battle_status_bar_reuse_proposal.md`（状态栏组件）。
