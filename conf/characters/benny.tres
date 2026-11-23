@@ -8,6 +8,7 @@ script = ExtResource("1_definition")
 character_id = &"benny"
 display_name = "Benny"
 rarity = 4
+hearing_range = 12
 sprite_frames = ExtResource("2_sprites")
 default_loadout = {
 "backpack": "backpack_basic_01",

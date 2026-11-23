@@ -43,6 +43,9 @@
 | [benny_vo_brief.md](benny_vo_brief.md) | 贝妮真人配音需求单（可直接交给配音演员）＋ [录音工作表](benny_vo_lines.csv) |
 | `tools/` | 音频生产脚本：TTS 客户端、音色设计客户端、台词清单、系统音色参考表、BGM 无缝循环构建（`build_bgm_loop.py`）、音乐生成请求封装（`music_gen.py`） |
 | `openspec/` | 能力规格（`specs/`）与历次变更归档（`changes/archive/`） |
+| [战场迷雾提案](../openspec/changes/add-battlefield-fog-of-war/proposal.md) | **逻辑已接入、素材待人工确认**：关卡开关/视距/阻挡容器显示例外；视距外 50/60/70/80% 浓度，≤70% 且射线通畅显示敌人；逐格 0.25s 渐变 |
+| [battlefield_fog_visual_proposal.md](battlefield_fog_visual_proposal.md) | C 邻接融合方向与历史美术方案；当前 CPU 生成缓存路线以独立开发文档为准，未生成或替换正式素材 |
+| [battlefield_fog_cache_development.md](battlefield_fog_cache_development.md) | **核心已接入、人工视觉与移动端待验收**：C 融合、47/14 规则、CPU 浓度生成及 D4 复用；2,048 项字典、无稳态 LRU、CPU 过渡与退出清理 |
 
 改动上述任一规范时，需同步更新其声明依赖的文件（例如 tier 色卡对应 `apply_tier_backgrounds*.py` 的 `TIER_COLORS` 与 `doc/assets/tier_bg_palette.png`）。
 
@@ -113,6 +116,8 @@ Battlefield (Node2D, y_sort_enabled = true, Script/battlefield.gd)
 | 脚本 | 职责 |
 |---|---|
 | `Script/battlefield.gd` | 战场主控：状态机、行动菜单、高亮与路径、表现编排接入、撤离与结果结算 |
+| `Script/battle/battle_visibility.gd` / `battle_fog.gd` | 关卡迷雾配置、分档浓度、敌人与容器的独立显隐判定、可见区逐格节点与 CPU 渐变；规则见 `battlefield_combat_design.md` §10 |
+| `Script/battle/fog_neighborhood.gd` / `fog_mask_generator.gd` / `fog_mask_cache.gd` | 47/D4 规范键、14 基础轮廓与混合浓度 CPU 生成、2,048 项缓存、pending/revision 与活跃过渡帧；无自定义 GPU 特效或设备回读 |
 | `Script/battle/battle_presentation.gd` / `battle_cut_in.gd` / `battle_sfx.gd` | 攻击演出编排、全屏遮罩与空音效接入点；攻击在遮罩开火帧提交结算 |
 | `Script/battle/enemy_action_plan.gd` / `battle_camera.gd` / `turn_transition.gd` | 敌方行动计划、敌方回合镜头聚焦与回合横幅演出 |
 | `conf/levels/beginner_urban.json` | 新手街区关卡配置：回合上限、敌人编组、可搜索容器与待实现的加权掉落表 |
@@ -121,7 +126,7 @@ Battlefield (Node2D, y_sort_enabled = true, Script/battlefield.gd)
 | `Script/base.gd` | 旧版基地场景逻辑：选中/移动与存读档入口 |
 | `Script/level_manager.gd` | 楼层图层注册与 `y_offset` 查询（ground / obstacle / hud） |
 | `Script/pathfinder.gd` | 四向 BFS 与最短路；含墙体方向掩码与楼梯换层规则 |
-| `Script/bullet_range.gd` | DDA 弹道检测与射程范围计算 |
+| `Script/bullet_range.gd` | DDA 弹道检测与射程范围计算；`respect_height_limits` 默认开启，仅基础视野关闭高度限制，墙体和障碍遮挡保留 |
 | `Script/turn_controller.gd` | 回合与阶段（`PLAYER_PHASE` / `ENEMY_PHASE`）、回合上限与 `game_over` |
 | `Script/unit.gd` | `Unit` 基类：动画装配、AP、逐格移动与 `movement_finished` 信号 |
 | `Script/player.gd` | `Player`：干员等级、生命、装备与 `CharacterDefinition` 读取 |

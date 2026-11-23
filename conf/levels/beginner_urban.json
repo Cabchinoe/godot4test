@@ -2,6 +2,11 @@
   "id": "beginner_urban",
   "display_name": "新手街区：补给回收",
   "max_turns": 20,
+  "fog_of_war": {
+    "enabled": true,
+    "vision_range": 16,
+    "show_blocking_containers": true
+  },
   "evacuation": {
     "grid": [23, 5],
     "level": 1

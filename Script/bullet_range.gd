@@ -118,7 +118,7 @@ func _dda_path(origin: Vector2i, target: Vector2i) -> Array:
 
 	return steps
 
-func _is_path_clear(path: Array, travel_level: int, unit_cells: Array, block_on_unit: bool, allow_target_obstacle: bool = false) -> bool:
+func _is_path_clear(path: Array, travel_level: int, unit_cells: Array, block_on_unit: bool, allow_target_obstacle: bool = false, respect_height_limits: bool = true) -> bool:
 	var path_size: int = path.size()
 	for i in range(path_size):
 		var step = path[i]
@@ -154,7 +154,7 @@ func _is_path_clear(path: Array, travel_level: int, unit_cells: Array, block_on_
 		var to_lv := get_level_at(to_grid)
 		if to_lv == -1:
 			continue
-		if to_lv > travel_level:
+		if respect_height_limits and to_lv > travel_level:
 			return false
 		if _has_obstacle_block(to_grid, to_lv) and not (allow_target_obstacle and is_last):
 			return false
@@ -174,7 +174,7 @@ func _is_in_cells(grid: Vector2i, level: int, cells: Array) -> bool:
 func get_bullet_path(origin: Vector2i, target: Vector2i) -> Array:
 	return _dda_path(origin, target)
 
-func get_reachable_cells(origin: Vector2i, origin_level: int, max_range: int, unit_cells: Array = [], allow_target_obstacle: bool = false) -> Array[Dictionary]:
+func get_reachable_cells(origin: Vector2i, origin_level: int, max_range: int, unit_cells: Array = [], allow_target_obstacle: bool = false, respect_height_limits: bool = true) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 
 	for dy in range(-max_range, max_range + 1):
@@ -186,7 +186,7 @@ func get_reachable_cells(origin: Vector2i, origin_level: int, max_range: int, un
 			if target_level == -1:
 				continue
 
-			if target_level > origin_level:
+			if respect_height_limits and target_level > origin_level:
 				if abs(dx) > 1 or abs(dy) > 1:
 					continue
 				if dx != 0 and dy != 0:
@@ -214,19 +214,19 @@ func get_reachable_cells(origin: Vector2i, origin_level: int, max_range: int, un
 				if path.is_empty():
 					continue
 				var block_on_unit: bool = (target_level == origin_level)
-				if _is_path_clear(path, target_level, unit_cells, block_on_unit, allow_target_obstacle):
+				if _is_path_clear(path, target_level, unit_cells, block_on_unit, allow_target_obstacle, respect_height_limits):
 					result.append({"grid": target, "level": target_level})
 
 	return result
 
-func can_reach_cell(origin: Vector2i, origin_level: int, target: Vector2i, target_level: int, max_range: int, unit_cells: Array = [], allow_target_obstacle: bool = false) -> bool:
+func can_reach_cell(origin: Vector2i, origin_level: int, target: Vector2i, target_level: int, max_range: int, unit_cells: Array = [], allow_target_obstacle: bool = false, respect_height_limits: bool = true) -> bool:
 	if target_level == -1 or origin == target:
 		return false
 	var dx := target.x - origin.x
 	var dy := target.y - origin.y
 	if abs(dx) > max_range or abs(dy) > max_range:
 		return false
-	for cell in get_reachable_cells(origin, origin_level, max_range, unit_cells, allow_target_obstacle):
+	for cell in get_reachable_cells(origin, origin_level, max_range, unit_cells, allow_target_obstacle, respect_height_limits):
 		if cell["grid"] == target and cell["level"] == target_level:
 			return true
 	return false

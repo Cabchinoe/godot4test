@@ -1,5 +1,15 @@
 # 战场敌人与容器美术资产清单
 
+## 战场迷雾补充（2026-10-23）
+
+迷雾为 `tile_overlay`：1024 级母版、64×64 RGBA 运行时图，一个 grid 一个中央独立烟团，四周至少各 4px 全透明，主体允许不透明。二次元为主、少量浮世绘影响；不再要求四向无缝或整面填满。候选在 `Art/tilesets/urban_night/_review/fog_of_war/centered_09/`、`centered_10/`，图案仍待用户评审。确认后才转入 `overlays/fog_of_war.png` 并登记 manifest。原始图和旧候选不得由 Agent 自评剔除。运行时使用每格 alpha 渐变，不需要生成淡出序列帧。
+
+2026-11-23 更新：上述候选未获用户批准，继续保留而不接线。新优化方向见 [battlefield_fog_visual_proposal.md](battlefield_fog_visual_proposal.md)，只提案不生图。素材核心建议 alpha=1，50/60/70/80% 浓度交给节点调制，避免图片本身半透明再相乘造成遮挡不足；四周仍全透明。
+
+同日后续方向以 [battlefield_fog_cache_development.md](battlefield_fog_cache_development.md) 为准：用户选 C 融合效果、47 邻接规则与旋转翻转复用，评估 14 种基础轮廓 CPU 按需生成，不要求预制母图；只有雾区外轮廓渐隐，不再每格强制四边留空。混合浓度最终贴图已包含绝对 alpha，稳定显示时节点不得再次乘浓度。开发设计待实现、样例仍须用户评审。
+
+CPU 路线现已实现并接入战场，不需要母图 PNG；14 个轮廓、47 方向展开、正常/墙后孔洞合成图和 CPU 过渡帧见 `Art/tilesets/urban_night/_review/fog_of_war/cpu_cache/`。输出由实际 GDScript 生成器产生，未使用模型视觉评分，不自动转入正式图集；技术检查通过不代表人工视觉已验收。
+
 > 本清单面向下一批 AI 生成与导入。运行时规格遵循 `Art/tilesets/urban_night/README.md`、`manifest.json` 与本项目的 Urban Night 风格；所有资产必须先交付高分辨率母版，再导出运行时 PNG。
 
 ## 1. 已有资产审计

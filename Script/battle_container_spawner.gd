@@ -1,6 +1,8 @@
 class_name BattleContainerSpawner
 extends RefCounted
 
+signal container_spawned(container: BattleContainer)
+
 const DEFAULT_CLOSED_TEXTURE := "res://Art/tilesets/urban_night/props/containers/supply_crate_closed_b.png"
 const DEFAULT_OPENED_TEXTURE := "res://Art/tilesets/urban_night/props/containers/supply_crate_open_b.png"
 const DEFAULT_EMPTY_TEXTURE := "res://Art/tilesets/urban_night/props/containers/supply_crate_empty_b.png"
@@ -39,6 +41,7 @@ func spawn(data: Dictionary) -> BattleContainer:
 	var world_position := ground.to_global(ground.map_to_local(grid))
 	world_position.y += level_manager.get_offset(level)
 	container.global_position = world_position
+	container_spawned.emit(container)
 	return container
 
 

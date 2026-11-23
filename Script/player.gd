@@ -131,6 +131,9 @@ func has_equipped_weapon() -> bool:
 func get_attack_range() -> int:
 	return maxi(1, int(_get_equipped_weapon_data().get("range", base_attack_range)))
 
+func get_hearing_range() -> int:
+	return maxi(0, character_definition.hearing_range if character_definition else 12)
+
 func get_attack_cost() -> int:
 	return maxi(0, int(_get_equipped_weapon_data().get("attack_cost", base_attack_cost)))
 

@@ -320,32 +320,37 @@ tile_set = SubResource("TileSet_a6jrf")
 
 [node name="obstacle" type="TileMapLayer" parent="Ground10" unique_id=1279065108]
 z_index = 1
+z_as_relative = false
 tile_map_data = PackedByteArray("AAAKAAIAAgACAAAAAAAJAAIAAgACAAEAAAAHAAAAAQACAAEAAAAIAAAAAQADAAEAAAAQAAIAAgACAAEAAAA=")
 tile_set = SubResource("TileSet_seu75")
 occlusion_enabled = false
 rendering_quadrant_size = 64
 
 [node name="HUD" type="TileMapLayer" parent="Ground10" unique_id=1154932871]
-z_index = 2
+z_index = 3
+z_as_relative = false
 tile_set = SubResource("TileSet_jq2sk")
 
 [node name="Ground20" type="TileMapLayer" parent="." unique_id=614030258]
-z_index = 3
+z_index = 10
+z_as_relative = false
 position = Vector2(0, -16)
 tile_map_data = PackedByteArray("AAALAAIAAQAAAAAAAAAMAAIAAQAAAAAAAAANAAIAAQAAAAAAAAAOAAIAAQAAAAAAAAAPAAIAAQAAAAAAAAAIAAIAAQAAAAAAAAAHAAIAAQAAAAAAAAAGAAIAAQAAAAAAAAAFAAIAAQAAAAAAAAA=")
 tile_set = SubResource("TileSet_ycdy4")
 
 [node name="obstacle" type="TileMapLayer" parent="Ground20" unique_id=905550917]
-z_index = 4
+z_index = 11
+z_as_relative = false
 position = Vector2(0, 4)
 scale = Vector2(0.25, 0.25)
 
 [node name="HUD" type="TileMapLayer" parent="Ground20" unique_id=383947561]
-z_index = 5
+z_index = 13
+z_as_relative = false
 tile_set = SubResource("TileSet_vivmo")
 
 [node name="HUD" type="TileMapLayer" parent="." unique_id=408327660]
-z_index = 10
+z_index = 20
 tile_set = SubResource("TileSet_1bvp3")
 
 [node name="CoverSprite" type="Line2D" parent="HUD" unique_id=659449558]

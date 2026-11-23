@@ -9,6 +9,9 @@
 # BGM 原始产出与备选候选（评审阶段，定稿后清理，不入库）
 /Art/audio/bgm/_raw/
 
+# 迷雾候选、效果预览和诊断导出（运行时 CPU 生成，不依赖这些评审文件）
+/Art/tilesets/urban_night/_review/fog_of_war/
+
 # TTS 运行时缓存（断点续跑用）
 .tts_cache.json
 __pycache__/

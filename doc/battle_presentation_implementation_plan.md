@@ -1,5 +1,11 @@
 # 战场表现层实施计划（战斗遮罩 / 敌人行动序列 / 回合演出 / 音效接入点）
 
+## 迷雾渐变补充（2026-10-23）
+
+2026-11-23 **CPU 路线已接入**：详见 [battlefield_fog_cache_development.md](battlefield_fog_cache_development.md)。浓度和柔边烘焙进最终小图，0.25s 过渡用旧/新 alpha 的 CPU 插值（6 个步进），节点不再乘浓度。2,048 项缓存按需生成并常驻至战场退出，D4 复用，过渡只保留活跃帧，支持从当前帧快速反向。稳定画面不生成纹理，只处理活跃渐变格；下段单图调制描述为前一阶段，当前以本段和开发文档为准。人工视觉与移动端性能仍待验收。
+
+`BattleFog` 使用逐层 Node2D + 逐格 Sprite2D；覆盖格的出现/消失通过 0.25s Sine EaseInOut 透明度渐变。重复刷新同一目标不重启动画，快速反向取消旧 tween 后从当前 alpha 继续，淡出结束释放节点。开局直接建立覆盖，退出时 tween 随节点取消。2026-11-23 起渐变支持目标 0%、50%、60%、70%、80%（视距外逐格增加），敌人可见性按逻辑浓度 ≤70% 且射线无阻挡判断，面板、点击及聚焦共用，不等待渐变中间帧。关卡可关闭迷雾，或仅对 `can_walk=false` 容器启用显示例外。规则见 `battlefield_combat_design.md` §10；正式图案仍待用户确认，当前保留中央透明留边技术占位。
+
 > 版本 v2（2026-09-29）· 状态：P0–P4 已验收，P5 回归与文档同步完成（头盔/护甲「破」提示按当前取舍暂缓）。
 > 上游规则：`battlefield_combat_design.md`——本计划**不修改战斗规则**，只调整结算调用时序（roll / apply 拆分）。
 > 关联：`battlefield_art_asset_plan.md`（美术交付规范）、`unit_status_widget_proposal.md`（情报遮蔽）、`battle_status_bar_reuse_proposal.md`（状态栏组件）。

@@ -49,7 +49,7 @@ func set_intel_tracker(tracker: UnitIntelTracker) -> void:
 
 
 func show_for(unit: Unit) -> void:
-	if unit == null or not is_instance_valid(unit):
+	if unit == null or not is_instance_valid(unit) or not unit.is_visible_in_tree():
 		hide_panel()
 		return
 	if _unit == unit and visible:
@@ -76,6 +76,11 @@ func hide_panel() -> void:
 	visible = false
 
 
+func refresh_visibility() -> void:
+	if is_instance_valid(_unit) and not _unit.is_visible_in_tree():
+		hide_panel()
+
+
 func refresh() -> void:
 	if _unit == null or not is_instance_valid(_unit):
 		hide_panel()
@@ -92,6 +97,7 @@ func refresh() -> void:
 
 
 func _process(_delta: float) -> void:
+	refresh_visibility()
 	if not visible or _unit == null or not is_instance_valid(_unit):
 		return
 	var viewport := get_viewport()

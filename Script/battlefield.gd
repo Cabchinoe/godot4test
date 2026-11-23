@@ -39,11 +39,15 @@ const ATTACK_GREEN_ATLAS := Vector2i(1, 0)
 var level_manager: LevelManager
 var turn_controller: TurnController
 var bullet_range: BulletRange
+var battle_visibility: BattleVisibility
+var battle_fog: BattleFog
+var _movement_audio: BattleMovementAudio
+var _visibility_refresh_pending := false
+var _moving_enemy: Unit
 var combat_resolver: BattleCombatResolver
 var battle_cut_in: BattleCutIn
 var battle_presentation: BattlePresentation
 var _sfx: BattleSfx
-var _move_sfx: Dictionary = {}
 var _last_move_hover_sfx_msec: int = -1000000
 var battle_camera: BattleCamera
 var turn_transition: TurnTransition
@@ -71,7 +75,6 @@ var pending_recalc_range: bool = false
 const DEFAULT_MOVE_INTERVAL: float = 0.3
 const FAST_MOVE_INTERVAL: float = 0.01
 const ENEMY_MOVE_INTERVAL: float = 0.3
-const MOVE_SFX_MIN_RING_MSEC: int = 450
 const MOVE_HOVER_SFX_COOLDOWN_MSEC: int = 60
 const ENEMY_MOVE_MARKER_SOURCE_ID := 2
 var skip_held: bool = false
@@ -150,10 +153,14 @@ func _ready():
 	add_child(battle_cut_in)
 	battle_presentation = BATTLE_PRESENTATION_SCRIPT.new(combat_resolver, battle_cut_in)
 	_sfx = BattleSfx.new(false, self, &"SFX")
+	_movement_audio = BattleMovementAudio.new()
+	add_child(_movement_audio)
+	_movement_audio.configure(_sfx)
 	battle_camera = BATTLE_CAMERA_SCRIPT.new(camera)
 	turn_transition = TURN_TRANSITION_SCENE.instantiate()
 	add_child(turn_transition)
 	container_spawner = BATTLE_CONTAINER_SPAWNER_SCRIPT.new(level_manager)
+	container_spawner.container_spawned.connect(_on_battle_container_spawned)
 	_spawn_map_containers()
 	_spawn_evacuation_point()
 
@@ -184,13 +191,80 @@ func _ready():
 		unit_intel.register_unit(enemy)
 	enemy_ai = EnemyAI.new(bullet_range, combat_resolver)
 	enemy_ai.set_battle_presentation(battle_presentation)
+	var fog_config: Variant = battle_config.get("fog_of_war", {})
+	battle_visibility = BattleVisibility.new(bullet_range, fog_config if fog_config is Dictionary else {})
+	battle_fog = BattleFog.new(level_manager)
+	add_child(battle_fog)
+	player.profile_changed.connect(_request_visibility_refresh)
+	_refresh_visibility()
 	turn_controller.start_game()
 
 func _exit_tree() -> void:
+	if is_instance_valid(_movement_audio):
+		_movement_audio.stop_all()
 	if inventory:
 		WarehouseService.clear_all_temporary_containers(inventory)
 	if player_save_provider:
 		SaveManager.unregister_provider(player_save_provider)
+
+
+func _is_cell_visible(grid: Vector2i, level: int) -> bool:
+	return battle_visibility == null or battle_visibility.is_visible(grid, level)
+
+
+func _is_enemy_visible(grid: Vector2i, level: int) -> bool:
+	return battle_visibility == null or battle_visibility.is_enemy_visible(grid, level)
+
+
+func _is_container_visible(container: BattleContainer) -> bool:
+	return battle_visibility == null or battle_visibility.is_container_visible(container)
+
+
+func _request_visibility_refresh() -> void:
+	if battle_visibility == null or _visibility_refresh_pending:
+		return
+	_visibility_refresh_pending = true
+	_refresh_visibility.call_deferred()
+
+
+func _refresh_visibility() -> void:
+	_visibility_refresh_pending = false
+	if battle_visibility == null or not is_inside_tree():
+		return
+	battle_visibility.refresh_base(player)
+	if current_state == State.ATTACK_STATE:
+		_clear_all_highlights()
+		_enter_attack()
+	else:
+		_apply_visibility()
+		if current_state == State.MOVE_STATE and not player.is_moving:
+			_show_move_range()
+
+
+func _apply_visibility() -> void:
+	if battle_visibility == null:
+		return
+	battle_fog.refresh(battle_visibility)
+	for enemy in get_tree().get_nodes_in_group("enemy"):
+		enemy.visible = _is_enemy_visible(enemy.grid_pos, enemy.current_level)
+	for container in get_tree().get_nodes_in_group("battle_containers"):
+		container.visible = _is_container_visible(container)
+	if is_instance_valid(evacuation_marker):
+		evacuation_marker.visible = _is_cell_visible(evacuation_grid, evacuation_level)
+	if status_widget:
+		status_widget.refresh_visibility()
+	if is_instance_valid(_moving_enemy) and status_widget:
+		if _moving_enemy.visible:
+			status_widget.set_read_only(true)
+			status_widget.show_for(_moving_enemy)
+		else:
+			status_widget.hide_panel()
+
+
+func _on_battle_container_spawned(container: BattleContainer) -> void:
+	container.visible = _is_container_visible(container)
+	container.tree_exited.connect(_request_visibility_refresh)
+	_request_visibility_refresh()
 
 
 func _load_level_config() -> Dictionary:
@@ -482,30 +556,19 @@ func _on_player_movement_finished() -> void:
 
 
 func _on_unit_step_taken(_grid_position: Vector2i, _level: int, unit: Unit) -> void:
-	if _sfx == null or unit == null or not is_instance_valid(unit):
+	if unit == null or not is_instance_valid(unit):
 		return
-	if _move_sfx.has(unit):
-		return
-	var player := _sfx.play(&"move_step", {"attacker": unit})
-	if player != null:
-		_move_sfx[unit] = {"player": player, "started_msec": Time.get_ticks_msec()}
+	if unit == player or current_state == State.ATTACK_STATE:
+		_refresh_visibility()
+	else:
+		_apply_visibility()
+	if _movement_audio:
+		_movement_audio.step(unit, player)
 
 
 func _on_unit_move_finished(unit: Unit) -> void:
-	if not _move_sfx.has(unit):
-		return
-	var info: Dictionary = _move_sfx[unit]
-	_move_sfx.erase(unit)
-	var player := info.get("player") as AudioStreamPlayer
-	if not is_instance_valid(player) or not player.playing:
-		return
-	var elapsed_msec := Time.get_ticks_msec() - int(info.get("started_msec", 0))
-	var hold := maxf(0.0, float(MOVE_SFX_MIN_RING_MSEC - elapsed_msec) / 1000.0)
-	var tween := create_tween()
-	if hold > 0.0:
-		tween.tween_interval(hold)
-	tween.tween_property(player, "volume_db", -60.0, 0.08)
-	tween.tween_callback(player.stop)
+	if _movement_audio:
+		_movement_audio.finish(unit, player)
 
 
 func _play_move_hover_sfx() -> void:
@@ -546,7 +609,8 @@ func _resolve_turn_status_feedback(unit: Unit) -> void:
 		if unit == player:
 			status_bar.status_icons.pulse(effect_id)
 			_flash_player_injury()
-		_show_injury_damage(unit, damage, str(event.get("effect", "流血")))
+		if unit == player or _is_enemy_visible(unit.grid_pos, unit.current_level):
+			_show_injury_damage(unit, damage, str(event.get("effect", "流血")))
 	if had_injury_damage:
 		await get_tree().create_timer(0.58).timeout
 	_is_resolving_turn_status = false
@@ -637,28 +701,32 @@ func _on_phase_changed(phase):
 		skip_held = false
 
 func _run_enemy_phase() -> void:
+	var did_focus := false
 	for e in get_tree().get_nodes_in_group("enemy"):
 		if e.is_defeated:
 			continue
-		if _has_pending_injury_damage(e) and battle_camera:
+		var may_focus := _is_enemy_visible(e.grid_pos, e.current_level)
+		if may_focus and _has_pending_injury_damage(e) and battle_camera:
 			await battle_camera.focus_on(e)
+			did_focus = true
 		await _resolve_turn_status_feedback(e)
 		_finalize_deferred_defeats()
 		if _battle_finished:
-			if battle_camera:
+			if did_focus and battle_camera:
 				await battle_camera.release()
 			return
 		if e.is_defeated:
 			continue
 		var plan := enemy_ai.decide_turn(e)
-		await _play_enemy_turn(e, plan)
+		var focused := await _play_enemy_turn(e, plan, may_focus)
+		did_focus = did_focus or focused
 		_finalize_deferred_defeats()
 		if _battle_finished:
-			if battle_camera:
+			if did_focus and battle_camera:
 				await battle_camera.release()
 			return
 		status_bar.refresh()
-	if battle_camera:
+	if did_focus and battle_camera:
 		await battle_camera.release()
 
 
@@ -670,12 +738,13 @@ func _has_pending_injury_damage(unit: Unit) -> bool:
 	return false
 
 
-func _play_enemy_turn(enemy: Unit, plan: EnemyActionPlan) -> void:
+func _play_enemy_turn(enemy: Unit, plan: EnemyActionPlan, may_focus: bool) -> bool:
 	if enemy == null or plan == null or enemy.is_defeated:
-		return
-	if not _plan_has_visible_action(enemy, plan):
-		return
-	if battle_camera:
+		return false
+	if not _plan_has_action(enemy, plan):
+		return false
+	var focused := may_focus and battle_camera != null
+	if focused:
 		await battle_camera.focus_on(enemy)
 	for step in plan.steps:
 		if enemy.is_defeated or _battle_finished:
@@ -684,9 +753,10 @@ func _play_enemy_turn(enemy: Unit, plan: EnemyActionPlan) -> void:
 		if kind == &"move":
 			var path: Array[Dictionary] = step.get("path", [])
 			if path.size() > 1:
-				status_widget.set_read_only(true)
-				status_widget.show_for(enemy)
+				_moving_enemy = enemy
+				_apply_visibility()
 				await _play_enemy_move(enemy, step)
+				_moving_enemy = null
 				status_widget.hide_panel()
 				status_widget.set_read_only(false)
 				continue
@@ -695,9 +765,10 @@ func _play_enemy_turn(enemy: Unit, plan: EnemyActionPlan) -> void:
 	if status_widget:
 		status_widget.hide_panel()
 		status_widget.set_read_only(false)
+	return focused
 
 
-func _plan_has_visible_action(enemy: Unit, plan: EnemyActionPlan) -> bool:
+func _plan_has_action(enemy: Unit, plan: EnemyActionPlan) -> bool:
 	for step in plan.steps:
 		var kind := step.get("kind", &"") as StringName
 		if kind == &"move" and (step.get("path", []) as Array).size() > 1:
@@ -714,7 +785,8 @@ func _play_enemy_move(enemy: Unit, step: Dictionary) -> void:
 	var path: Array[Dictionary] = step.get("path", [])
 	if path.size() <= 1:
 		return
-	await _draw_enemy_move_path(path)
+	if _is_enemy_visible(enemy.grid_pos, enemy.current_level):
+		await _draw_enemy_move_path(path)
 	var original_interval := enemy.move_interval
 	enemy.move_interval = ENEMY_MOVE_INTERVAL
 	_is_playing_enemy_move = true
@@ -737,11 +809,15 @@ func _play_enemy_move(enemy: Unit, step: Dictionary) -> void:
 func _draw_enemy_move_path(path: Array[Dictionary]) -> void:
 	_clear_enemy_move_markers()
 	for node in path:
+		if not _is_enemy_visible(node["grid"], node["level"]):
+			continue
 		_show_enemy_move_marker(node["grid"], node["level"])
 		await get_tree().create_timer(ENEMY_MOVE_INTERVAL).timeout
 
 
 func _show_enemy_move_marker(grid: Vector2i, level: int) -> void:
+	if not _is_enemy_visible(grid, level):
+		return
 	var hud := level_manager.get_layer(level, "hud")
 	if hud == null:
 		return
@@ -942,6 +1018,9 @@ func _change_state(new_state: int):
 	hover_sprite2.visible = false
 	hover_sprite2.clear_points()
 	_clear_all_highlights()
+	if battle_visibility:
+		battle_visibility.set_attack_cells([])
+		_apply_visibility()
 	if context_menu.visible:
 		context_menu.hide()
 	if container_action_menu and container_action_menu.visible:
@@ -1230,6 +1309,8 @@ func _show_move_range():
 	reachable_cells = player.pathfinder.bfs(player.grid_pos, player.current_level, player.action_points, player)
 	print("Player at: ", player.grid_pos, " level: ", player.current_level, " Reachable: ", reachable_cells.size())
 	for node in reachable_cells:
+		if not _is_cell_visible(node["grid"], node["level"]):
+			continue
 		if node["grid"] == player.grid_pos and node["level"] == player.current_level:
 			continue
 		var hud = level_manager.get_layer(node["level"], "hud")
@@ -1243,6 +1324,9 @@ func _enter_attack():
 		return
 	attack_unit_cells = _collect_targetable_cells()
 	attack_cells = bullet_range.get_reachable_cells(player.grid_pos, player.current_level, player.get_attack_range(), attack_unit_cells)
+	if battle_visibility:
+		battle_visibility.set_attack_cells(attack_cells)
+		_apply_visibility()
 	print("[Attack] enter mode, cells=", attack_cells.size())
 	for cell in attack_cells:
 		var hud = level_manager.get_layer(cell["level"], "hud")
@@ -1253,6 +1337,12 @@ func _enter_attack():
 
 func _draw_gun_line(target_grid: Vector2i, target_level: int):
 	hover_sprite2.clear_points()
+	for step in bullet_range.get_bullet_path(player.grid_pos, target_grid):
+		var grid: Vector2i = step["to"]
+		var level := bullet_range.get_level_at(grid)
+		if level != -1 and not _is_cell_visible(grid, level):
+			hover_sprite2.visible = false
+			return
 	var origin_ground := level_manager.get_layer(player.current_level, "ground")
 	var origin_world := origin_ground.to_global(origin_ground.map_to_local(player.grid_pos))
 	hover_sprite2.add_point(hover_layer.to_local(origin_world))
@@ -1310,7 +1400,7 @@ func _get_enemy_at_node(node: Dictionary) -> Unit:
 	if node.is_empty():
 		return null
 	for enemy in get_tree().get_nodes_in_group("enemy"):
-		if not enemy.is_defeated and enemy.grid_pos == node["grid"] and enemy.current_level == node["level"]:
+		if not enemy.is_defeated and enemy.grid_pos == node["grid"] and enemy.current_level == node["level"] and _is_enemy_visible(enemy.grid_pos, enemy.current_level):
 			return enemy
 	return null
 
@@ -1319,7 +1409,7 @@ func _get_containers_near(mouse_world: Vector2) -> Array[BattleContainer]:
 	var closest_distance := INF
 	for node in get_tree().get_nodes_in_group("battle_containers"):
 		var container := node as BattleContainer
-		if container == null:
+		if container == null or not _is_container_visible(container):
 			continue
 		var distance := mouse_world.distance_to(container.global_position)
 		if distance > container.interaction_radius:
@@ -1409,7 +1499,11 @@ func _describe_container(container: BattleContainer) -> Dictionary:
 
 
 func _show_container_action_menu(candidates: Array[BattleContainer], screen_position: Vector2i) -> void:
-	var sorted := _sorted_containers(candidates)
+	var visible_candidates: Array[BattleContainer] = []
+	for container in candidates:
+		if is_instance_valid(container) and _is_container_visible(container):
+			visible_candidates.append(container)
+	var sorted := _sorted_containers(visible_candidates)
 	if sorted.is_empty():
 		return
 	_pending_containers = sorted
@@ -1469,7 +1563,7 @@ func _on_context_menu_search_requested() -> void:
 
 
 func _search_container(container: BattleContainer) -> void:
-	if container == null:
+	if not is_instance_valid(container) or not _is_container_visible(container):
 		return
 	var had_loot := container.has_remaining_loot(inventory)
 	container.set_depleted(not had_loot and container.has_seeded_loot())
@@ -1577,6 +1671,8 @@ func _spawn_map_containers() -> void:
 func _on_unit_defeated(unit: Unit) -> void:
 	if unit == null or _pending_defeats.has(unit):
 		return
+	if _movement_audio:
+		_movement_audio.stop_for(unit)
 	if _sfx != null and (battle_presentation == null or not battle_presentation.is_busy()):
 		_sfx.play(&"unit_down", {"attacker": unit})
 	unit.remove_from_group("units")
@@ -1605,6 +1701,7 @@ func _finalize_deferred_defeats() -> void:
 			if drop:
 				_reorder_containers_at_grid(drop.grid_pos, drop.current_level)
 		unit.queue_free()
+	_request_visibility_refresh()
 
 func _on_player_damaged(result: Dictionary) -> void:
 	if turn_controller:
@@ -1619,6 +1716,8 @@ func _end_battle_as_success() -> void:
 	if _battle_finished:
 		return
 	_battle_finished = true
+	if _movement_audio:
+		_movement_audio.stop_all()
 	_change_state(State.IDLE)
 	_hide_all_battle_panels()
 	status_bar.set_actions_enabled(false)
@@ -1669,6 +1768,8 @@ func _draw_path(path: Array[Dictionary]):
 func _draw_path_on(line: Line2D, path: Array[Dictionary]) -> void:
 	line.clear_points()
 	for node in path:
+		if not _is_cell_visible(node["grid"], node["level"]):
+			break
 		var ground = level_manager.get_layer(node["level"], "ground")
 		var cell_local = ground.map_to_local(node["grid"])
 		var cell_world = ground.to_global(cell_local)
